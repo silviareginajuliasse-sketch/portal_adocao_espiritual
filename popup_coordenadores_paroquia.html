@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selecionar Coordenadores - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --bg-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--bg-white);
+            width: 100%;
+            max-width: 550px;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Close Button */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: #777;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-red);
+        }
+
+        /* Header Area */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: #777;
+        }
+
+        .search-container {
+            width: 220px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            font-style: italic;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .header-divider {
+            height: 2px;
+            background-color: var(--primary-red);
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        /* List Area */
+        .collaborators-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+
+        /* Custom Scrollbar */
+        .collaborators-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .collaborators-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .collaborators-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .collaborators-list::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 5px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .list-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #777;
+            border-radius: 3px;
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        .list-item.selected .custom-checkbox {
+            background-color: #eee;
+            border-color: #555;
+        }
+
+        .list-item.selected .custom-checkbox::after {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 10px;
+            color: #333;
+        }
+
+        .item-text {
+            font-size: 1.1rem;
+            color: #777;
+            font-weight: 400;
+        }
+
+        /* Footer Area */
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .footer-logo-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .save-btn {
+            background-color: #ae3326;
+            color: white;
+            border: none;
+            padding: 12px 45px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .save-btn:hover {
+            background-color: #8b1e1e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="modal-container">
+        <i class="fa-solid fa-xmark close-btn" onclick="window.history.back()"></i>
+
+        <div class="modal-header">
+            <h2 class="modal-title">Coordenadores</h2>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="busca" id="search-input" onkeyup="filterList()">
+            </div>
+        </div>
+
+        <div class="header-divider"></div>
+
+        <div class="collaborators-list" id="collaborators-list">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div class="modal-footer">
+            <div class="footer-logo">
+                <img src="./logo_circular.png" alt="Logo">
+                <div class="footer-logo-text">Adoção<br>Espiritual</div>
+            </div>
+            <button class="save-btn" onclick="saveSelection()">Salvar</button>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const id_paroquia = urlParams.get('id_paroquia');
+        
+        let allCoordinators = [];
+        let selectedColabIds = new Set();
+
+        function toggleSelection(element) {
+            const colabId = parseInt(element.getAttribute('data-id'));
+            if (element.classList.contains('selected')) {
+                element.classList.remove('selected');
+                selectedColabIds.delete(colabId);
+            } else {
+                element.classList.add('selected');
+                selectedColabIds.add(colabId);
+            }
+        }
+
+        function filterList() {
+            const input = document.getElementById('search-input');
+            const filter = input.value.toLowerCase();
+            const list = document.getElementById('collaborators-list');
+            const items = list.getElementsByClassName('list-item');
+
+            for (let i = 0; i < items.length; i++) {
+                const text = items[i].getElementsByClassName('item-text')[0].innerText.toLowerCase();
+                if (text.indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+
+        async function loadData() {
+            if (!id_paroquia) {
+                alert("Erro: ID da paróquia ausente na URL.");
+                return;
+            }
+
+            try {
+                // Fetch already linked coordinators for the parish
+                const linkedCoordinators = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
+                linkedCoordinators.forEach(c => {
+                    selectedColabIds.add(c.id_colaborador);
+                });
+
+                // Fetch all collaborators and filter to active coordinators (id_perfil === 4)
+                const collaborators = await fetchData('colaboradores');
+                allCoordinators = collaborators.filter(c => c.status === 'ativo' && c.id_perfil === 4);
+
+                const listContainer = document.getElementById('collaborators-list');
+                listContainer.innerHTML = '';
+
+                if (allCoordinators.length === 0) {
+                    listContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhum coordenador ativo cadastrado no sistema.</div>';
+                    return;
+                }
+
+                allCoordinators.forEach(c => {
+                    const isSelected = selectedColabIds.has(c.id_colaborador);
+                    const div = document.createElement('div');
+                    div.className = `list-item${isSelected ? ' selected' : ''}`;
+                    div.setAttribute('data-id', c.id_colaborador);
+                    div.onclick = () => toggleSelection(div);
+
+                    div.innerHTML = `
+                        <div class="custom-checkbox"></div>
+                        <span class="item-text">${c.nome_colaborador} - ${c.cidade || ''} - ${c.sigla_estado || ''}</span>
+                    `;
+                    listContainer.appendChild(div);
+                });
+            } catch (err) {
+                console.error("Erro ao carregar dados dos coordenadores:", err);
+            }
+        }
+
+        async function saveSelection() {
+            if (!id_paroquia) return;
+
+            const selectedArray = Array.from(selectedColabIds);
+            
+            // Build the payload
+            const payload = {
+                id_paroquia: parseInt(id_paroquia),
+                coordenadores: selectedArray
+            };
+
+            try {
+                const response = await postData('paroquia_coordenadores/save', payload);
+                if (response.success) {
+                    // Update localStorage
+                    const formattedCoordinators = allCoordinators
+                        .filter(c => selectedColabIds.has(c.id_colaborador))
+                        .map(c => ({
+                            id_colaborador: c.id_colaborador,
+                            nome_colaborador: c.nome_colaborador,
+                            status: c.status
+                        }));
+
+                    localStorage.setItem('temp_paroquia_coordenadores', JSON.stringify(formattedCoordinators));
+                    alert("Coordenadores salvos com sucesso!");
+                    window.history.back();
+                } else {
+                    alert("Erro ao salvar coordenadores: " + (response.error || "Erro desconhecido"));
+                }
+            } catch (error) {
+                console.error("Erro ao salvar coordenadores no banco:", error);
+                alert("Erro ao salvar coordenadores no banco de dados.");
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+
+</html>

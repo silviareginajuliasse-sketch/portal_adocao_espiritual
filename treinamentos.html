@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamentos - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>:root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #eee;
+            --btn-accent: #b25e5e;
+            --light-blue: #f0f7ff;
+            --orange: #ff851b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.05;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            /* Lavanda/Roxo */
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            /* Hidden by default */
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+            color: var(--btn-blue);
+        }
+
+        .sidebar-item i {
+            width: 25px;
+            text-align: center;
+            color: #777;
+        }
+
+        .sidebar-item:hover i {
+            color: var(--btn-blue);
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .account-toggle.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        /* Gray Banner Title */
+        .banner-title {
+            background-color: #f0f0f0;
+            padding: 15px 20px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .banner-text {
+            color: #7f8c8d;
+            font-size: 1.25rem;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .banner-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .banner-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Main Content */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        @media (min-width: 900px) {
+            .layout-split {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        /* Instructions Sidebar Styles */
+        .instructions-sidebar {
+            flex: 0 0 380px;
+            font-size: 0.95rem;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .instructions-sidebar-title {
+            font-size: 1.1rem;
+            color: #444;
+            font-weight: 500;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 20px;
+        }
+
+        .instructions-sidebar-text {
+            margin-bottom: 20px;
+        }
+
+        .instructions-sidebar-text i,
+        .instructions-sidebar-text img {
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+
+        .instructions-sidebar-tip {
+            font-style: italic;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+            margin-top: 20px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Search & Subtitle Row */
+        .search-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        .subtitle-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-style: normal;
+            font-size: 1.5rem;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .subtitle-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 5px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-style: italic;
+            color: #888;
+            outline: none;
+            width: 160px;
+        }
+
+        /* List Area */
+        .list-container {
+            border-top: 2px solid var(--primary-red);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            gap: 15px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .list-item.selected {
+            background-color: var(--light-blue);
+        }
+
+        .trash-icon {
+            color: #555;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .archdiocese-name {
+            color: #707b7c;
+            font-size: 0.95rem;
+            font-weight: 400;
+            flex-grow: 1;
+        }
+
+        /* Pagination & Footer Actions */
+        .list-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .export-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .excel-icon {
+            color: #1d6f42;
+            /* Excel Green */
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .excel-icon:hover {
+            opacity: 0.8;
+        }
+
+        .export-separator {
+            width: 1px;
+            height: 24px;
+            background-color: var(--primary-red);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.95rem;
+        }
+
+        .page-num {
+            color: #777;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
+
+        .page-num.active {
+            color: #3498db;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .next-link {
+            color: #777;
+            text-decoration: none;
+        }
+
+        /* Desktop Media Query */
+        @media (min-width: 768px) {
+            .search-input {
+                width: 250px;
+            }
+        }
+
+        /* Filter Modal */
+        .filter-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .filter-modal-overlay.active {
+            display: flex;
+        }
+
+        .filter-modal {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-search-bar {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .filter-search-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 9px 12px;
+            font-style: italic;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .filter-search-bar button {
+            background: #1652b4;
+            border: none;
+            padding: 9px 14px;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .filter-field {
+            margin-bottom: 14px;
+        }
+
+        .filter-field label {
+            display: block;
+            font-size: 0.95rem;
+            color: #7f8c8d;
+            font-weight: 400;
+            margin-bottom: 4px;
+        }
+
+        .filter-field select,
+        .filter-field input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: #555;
+            outline: none;
+            background: white;
+        }
+
+        .filter-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+
+        .filter-encontrar-btn {
+            background: #1652b4;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 9px 30px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .filter-encontrar-btn:hover {
+            background: #12408d;
+        }
+
+        /* Dropdown Menu - Standardized */
+
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+</style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item" id="nav-home"><i class="fa-solid fa-house"></i>
+                    Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a>
+            </li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a>
+            </li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
+            </li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item" id="nav-arquidioceses"><i
+                        class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item" id="nav-paroquias"><i
+                        class="fa-solid fa-house-chimney-window"></i> Paróquias e instituições pró-vida</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a>
+            </li>
+            <li><a href="treinamentos.html" class="sidebar-item" id="nav-treinamentos"><i
+                        class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+
+        <div class="layout-split">
+            <!-- Left Side: Instructions -->
+            <aside class="instructions-sidebar">
+                <h2 class="instructions-sidebar-title">Orientações de uso</h2>
+
+                <div class="instructions-sidebar-text">
+                    Nessa página são listados todos os treinamentos cadastrados no sistema.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Ao clicar sobre o ícone lixeira, <i class="fa-regular fa-trash-can"></i> o treinamento será excluído
+                    definitivamente, caso não existam colaboradores vinculados a ele.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Ao clicar sobre o ícone de inclusão <img src="./arquidioceses-header-icon.png" style="width: 18px;">
+                    o usuário é direcionado para a página de inclusão de Treinamentos. Apenas usuários com o perfil
+                    Coordenador Nacional poderão realizar inclusões.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Na lista de Treinamentos, ao clicar sobre o nome do treinamento o sistema apresentará todos os dados
+                    do cadastro, para que sejam alterados se necessário.
+                </div>
+
+                <div class="instructions-sidebar-tip">
+                    Dica: Utilize o campo busca, localizado acima da lista, para filtrar os treinamentos pelo nome ou
+                    parte de uma expressão.
+                </div>
+            </aside>
+
+            <!-- Right Side: Existing Content -->
+            <div class="main-content">
+                <!-- Search Header -->
+                <div class="search-row" id="header-search-row">
+                    <div class="subtitle-with-icon" onclick="goToRegistro('new')" style="cursor: pointer;">
+                        <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
+                        Lista de Treinamentos
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-input" placeholder="busca"
+                            oninput="filterList()">
+                    </div>
+                </div>
+
+                <!-- The List -->
+                <div class="list-container">
+                    <div class="list-item" onclick="goToRegistro('edit')">
+                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
+                        <span class="archdiocese-name">Formação de Novos Coordenadores</span>
+                    </div>
+                    <div class="list-item" onclick="goToRegistro('edit')">
+                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
+                        <span class="archdiocese-name">Treinamento de Oração e Espiritualidade</span>
+                    </div>
+                    <div class="list-item selected" onclick="goToRegistro('edit')">
+                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
+                        <span class="archdiocese-name">Capacitação para Líderes Paroquiais</span>
+                    </div>
+                    <div class="list-item" onclick="goToRegistro('edit')">
+                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
+                        <span class="archdiocese-name">Encontro de Formação em Bioética</span>
+                    </div>
+                    <div class="list-item" onclick="goToRegistro('edit')">
+                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
+                        <span class="archdiocese-name">Retiro Espiritual para Colaboradores</span>
+                    </div>
+                    <div class="list-item" onclick="goToRegistro('edit')">
+                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
+                        <span class="archdiocese-name">Workshop de Gestão e Organização Pastoral</span>
+                    </div>
+                </div>
+
+                <!-- List Footer -->
+                <div class="list-footer">
+                    <div class="export-group">
+                        <i class="fa-solid fa-sliders" title="Filtrar"
+                            style="color: #1a3a6b; font-size: 1.2rem; cursor: pointer;" onclick="openFilterModal()"></i>
+                        <div class="export-separator"></div>
+                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel"
+                            onclick="exportToExcel()"></i>
+                        <div class="export-separator"></div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        <span class="page-num active">1</span>
+                        <span class="page-num">2</span>
+                        <span class="page-num">3</span>
+                        <a href="#" class="next-link">Seguinte ></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Filter Modal -->
+    <div class="filter-modal-overlay" id="filter-modal-overlay" onclick="closeFilterModal(event)">
+        <div class="filter-modal">
+            <div class="filter-search-bar">
+                <input type="text" placeholder="O que você procura?" id="filter-busca-geral">
+                <button><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            <div class="filter-field">
+                <label>Forma de treinamento</label>
+                <select id="filter-forma">
+                    <option value="ambos" selected>Ambos</option>
+                    <option value="presencial">Presencial</option>
+                    <option value="online">Online</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Nome do treinamento</label>
+                <input type="text" id="filter-nome" placeholder="Digite parte do nome">
+            </div>
+            <div class="filter-field">
+                <label>Instrutor do treinamento</label>
+                <input type="text" id="filter-instrutor" placeholder="Digite parte do nome">
+            </div>
+            <div class="filter-field">
+                <label>Ano do treinamento</label>
+                <input type="text" id="filter-ano" placeholder="exemplo: 2026">
+            </div>
+            <div class="filter-modal-footer">
+                <button class="filter-encontrar-btn" onclick="applyFilter()">Encontrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/header.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        const API_URL = window.location.protocol === 'file:'
+            ? `http://${window.location.hostname || 'localhost'}:3000/api`
+            : '/api';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSidebarLinks();
+            loadTrainings();
+        });
+
+        async function loadTrainings() {
+            try {
+                const response = await fetch(`${API_URL}/treinamentos`);
+                if (!response.ok) throw new Error('Failed to fetch');
+                const list = await response.json();
+                
+                const listContainer = document.querySelector('.list-container');
+                if (!listContainer) return;
+                
+                if (list.length === 0) {
+                    listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhum treinamento cadastrado.</div>';
+                    return;
+                }
+                
+                listContainer.innerHTML = list.map(t => {
+                    const statusText = (t.status || 'agendado').replace('_', ' ').toUpperCase();
+                    const label = `${escapeHTML(t.titulo)} - ${escapeHTML(t.forma_treinamento || 'Presencial')} (Qualifica para: ${escapeHTML(t.qualifica_para)}) [${escapeHTML(statusText)}]`;
+                    return `
+                        <div class="list-item" onclick="editTraining(${t.id_treinamento})">
+                            <i class="fa-regular fa-trash-can trash-icon" onclick="deleteTraining(event, ${t.id_treinamento})"></i>
+                            <span class="archdiocese-name">${label}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error loading trainings:', err);
+                const listContainer = document.querySelector('.list-container');
+                if (listContainer) {
+                    const errDiv = document.createElement('div');
+                    errDiv.style.cssText = 'padding: 10px 15px; text-align: center; color: #c0392b; font-size: 0.9rem; background-color: #fdf2f2; border-top: 1px solid #f8b4b4; font-style: italic;';
+                    errDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="margin-right: 5px;"></i> Erro ao conectar ao servidor: ${err.message}. Exibindo dados locais/offline.`;
+                    listContainer.appendChild(errDiv);
+                }
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function editTraining(id) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `registro_treinamentos.html?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&mode=edit&id=${id}`;
+        }
+
+        async function deleteTraining(event, id) {
+            event.stopPropagation();
+            if (!confirm('Deseja realmente excluir este treinamento?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/treinamentos/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('Treinamento excluído com sucesso!');
+                    loadTrainings();
+                } else {
+                    alert('Erro ao excluir treinamento: ' + (result.error || 'Erro desconhecido.'));
+                }
+            } catch (err) {
+                console.error('Error deleting training:', err);
+                alert('Erro de conexão ao excluir o treinamento.');
+            }
+        }
+
+        function updateSidebarLinks() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+
+            const archLink = document.getElementById('nav-arquidioceses');
+            if (archLink) {
+                const currentHref = archLink.getAttribute('href').split('?')[0];
+                archLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+
+            const homeLink = document.getElementById('nav-home');
+            if (homeLink) {
+                const currentHref = homeLink.getAttribute('href').split('?')[0];
+                homeLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            toggleIcon.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                toggleIcon.classList.remove('active');
+            }
+        }
+
+        function filterList() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const items = document.querySelectorAll('.list-item');
+
+            items.forEach(item => {
+                const name = item.querySelector('.archdiocese-name').textContent.toLowerCase();
+                if (name.includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function goToRegistro(mode) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `registro_treinamentos.html?nome=${nome}&cpf=${cpf}&mode=${mode}`;
+        }
+
+        function exportToExcel() {
+            const items = document.querySelectorAll('.list-item');
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const fileName = `treinamentos_${timestamp}.xls`;
+
+            // Estilos do Projeto
+            const headerBg = "#8b1e1e"; // Vermelho Primário
+            const headerTextColor = "#ffffff";
+
+            // Construção do conteúdo HTML que o Excel interpreta com estilos
+            let htmlContent = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <x:ExcelWorkbook>
+                            <x:ExcelWorksheets>
+                                <x:ExcelWorksheet>
+                                    <x:Name>Treinamentos</x:Name>
+                                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                                </x:ExcelWorksheet>
+                            </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                    </xml>
+                    <![endif]-->
+                    <style>
+                        table { border-collapse: collapse; }
+                        .header-row td {
+                            background-color: ${headerBg} !important;
+                            color: ${headerTextColor} !important;
+                            font-weight: bold;
+                            height: 30px;
+                            text-align: left;
+                            border: 0.5pt solid #000;
+                            padding: 5px;
+                        }
+                        .data-row td {
+                            border: 0.5pt solid #ccc;
+                            padding: 5px;
+                            color: #333;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <table>
+                        <tr class="header-row">
+                            <td>Lista de Treinamentos</td>
+                        </tr>
+            `;
+
+            let count = 0;
+            items.forEach(item => {
+                if (window.getComputedStyle(item).display !== 'none') {
+                    const name = item.querySelector('.archdiocese-name').textContent;
+                    htmlContent += `
+                        <tr class="data-row">
+                            <td>${name}</td>
+                        </tr>
+                    `;
+                    count++;
+                }
+            });
+
+            htmlContent += `
+                    </table>
+                </body>
+                </html>
+            `;
+
+            if (count === 0) {
+                alert("Não há dados para exportar com o filtro atual.");
+                return;
+            }
+
+            // Download do arquivo formatado
+            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function openFilterModal() {
+            document.getElementById('filter-modal-overlay').classList.add('active');
+        }
+
+        function closeFilterModal(event) {
+            // Close only if clicking the overlay (not the modal itself)
+            if (event.target === document.getElementById('filter-modal-overlay')) {
+                document.getElementById('filter-modal-overlay').classList.remove('active');
+            }
+        }
+
+        function applyFilter() {
+            const nome = document.getElementById('filter-nome').value.toLowerCase();
+            const instrutor = document.getElementById('filter-instrutor').value.toLowerCase();
+            const buscaGeral = document.getElementById('filter-busca-geral').value.toLowerCase();
+
+            const items = document.querySelectorAll('.list-item');
+            items.forEach(item => {
+                const itemName = item.querySelector('.archdiocese-name').textContent.toLowerCase();
+                const matchNome = nome === '' || itemName.includes(nome);
+                const matchGeral = buscaGeral === '' || itemName.includes(buscaGeral);
+                item.style.display = (matchNome && matchGeral) ? 'flex' : 'none';
+            });
+
+            document.getElementById('filter-modal-overlay').classList.remove('active');
+        }
+
+        
+    </script>
+</body>
+
+</html>

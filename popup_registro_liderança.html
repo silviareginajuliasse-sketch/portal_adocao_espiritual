@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Liderança Arquidiocesana - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #7f8c8d;
+            --border-color: #ddd;
+            --bg-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--bg-white);
+            width: 100%;
+            max-width: 900px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            position: relative;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Close Button */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: #bbb;
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-red);
+        }
+
+        /* Header */
+        .modal-header {
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: var(--primary-red);
+        }
+
+        /* Form Layout */
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-field,
+        .select-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-dark);
+            outline: none;
+            background: white;
+            transition: border-color 0.2s;
+            height: 42px;
+        }
+
+        .input-field:focus,
+        .select-field:focus {
+            border-color: #b25e5e;
+        }
+
+        /* Select Chevron Styling */
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-field {
+            appearance: none;
+            padding-right: 35px;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.95rem;
+        }
+
+        /* Specific Column Widths */
+        .col-titulo {
+            flex: 0 0 200px;
+            min-width: 160px;
+        }
+
+        .col-nome {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .col-periodo {
+            flex: 0 0 280px;
+            min-width: 240px;
+        }
+
+        .col-endereco {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .col-cep {
+            flex: 0 0 160px;
+            min-width: 130px;
+        }
+
+        .col-telefone {
+            flex: 0 0 200px;
+            min-width: 160px;
+        }
+
+        .col-email {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .col-date-small {
+            flex: 0 0 150px;
+            min-width: 130px;
+        }
+
+        .col-salvar {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            min-width: 200px;
+        }
+
+        /* Save Button */
+        .save-btn {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 50px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.25);
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .save-btn:hover {
+            background-color: #6e1616;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.35);
+        }
+
+        .save-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            body {
+                align-items: flex-start;
+                overflow-y: auto;
+                height: auto;
+                padding: 10px;
+            }
+
+            .modal-container {
+                padding: 20px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 15px;
+            }
+
+            .col-titulo,
+            .col-nome,
+            .col-periodo,
+            .col-endereco,
+            .col-cep,
+            .col-telefone,
+            .col-email,
+            .col-date-small {
+                flex: 1 1 100%;
+                width: 100%;
+            }
+
+            .col-salvar {
+                justify-content: center;
+                margin-top: 15px;
+            }
+
+            .save-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="modal-container">
+        <!-- Close Button -->
+        <i class="fa-solid fa-xmark close-btn" onclick="window.history.back()"></i>
+
+        <header class="modal-header">
+            <h1 class="modal-title">Cadastro de liderança arquidiocesana</h1>
+        </header>
+
+        <main class="modal-body">
+            <form id="lideranca-form">
+                <!-- Row 1: Título, Nome, Período na função -->
+                <div class="form-row">
+                    <div class="form-group col-titulo">
+                        <label class="form-label" for="titulo-select">Título <span>*</span></label>
+                        <div class="select-wrapper">
+                            <select class="select-field" id="titulo-select" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="Arcebispo">Arcebispo</option>
+                                <option value="Bispo Auxiliar">Bispo Auxiliar</option>
+                                <option value="Bispo">Bispo</option>
+                                <option value="Bispo emérito">Bispo emérito</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="form-group col-nome">
+                        <label class="form-label" for="nome-input">Nome <span>*</span></label>
+                        <input type="text" class="input-field" id="nome-input" required>
+                    </div>
+                    <div class="form-group col-periodo">
+                        <label class="form-label">Período na função</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" class="input-field" id="inicio-input" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" style="text-align: center;">
+                            <input type="text" class="input-field" id="fim-input" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" style="text-align: center;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Endereço completo, CEP -->
+                <div class="form-row">
+                    <div class="form-group col-endereco">
+                        <label class="form-label" for="endereco-input">Endereço completo</label>
+                        <input type="text" class="input-field" id="endereco-input">
+                    </div>
+                    <div class="form-group col-cep">
+                        <label class="form-label" for="cep-input">CEP</label>
+                        <input type="text" class="input-field" id="cep-input" placeholder="99999-999" maxlength="9" oninput="maskCEP(this)">
+                    </div>
+                </div>
+
+                <!-- Row 3: Telefone de Contato, E-mail de Contato, Aniv. natalício, Aniv. sacerdotal -->
+                <div class="form-row">
+                    <div class="form-group col-telefone">
+                        <label class="form-label" for="telefone-input">Telefone de Contato</label>
+                        <input type="text" class="input-field" id="telefone-input" placeholder="(00) 00000-0000" maxlength="15" oninput="maskPhone(this)">
+                    </div>
+                    <div class="form-group col-email">
+                        <label class="form-label" for="email-input">E-mail de Contato</label>
+                        <input type="email" class="input-field" id="email-input">
+                    </div>
+                    <div class="form-group col-date-small">
+                        <label class="form-label" for="aniv-natal-input">Aniv. natalício</label>
+                        <input type="text" class="input-field" id="aniv-natal-input" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" style="text-align: center;">
+                    </div>
+                    <div class="form-group col-date-small">
+                        <label class="form-label" for="aniv-sacer-input">Aniv. sacerdotal</label>
+                        <input type="text" class="input-field" id="aniv-sacer-input" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" style="text-align: center;">
+                    </div>
+                </div>
+
+                <!-- Row 4: Aniv. episcopal, Salvar -->
+                <div class="form-row">
+                    <div class="form-group col-date-small">
+                        <label class="form-label" for="aniv-episc-input">Aniv. episcopal</label>
+                        <input type="text" class="input-field" id="aniv-episc-input" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" style="text-align: center;">
+                    </div>
+                    <div class="col-salvar">
+                        <button type="submit" class="save-btn">Salvar</button>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        // Retrieve parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const index = urlParams.get('index'); // Represents index in array if editing
+        const id_arquidiocese = urlParams.get('id_arquidiocese');
+
+        // Helper masks
+        function maskDate(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 8);
+            if (value.length > 4) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2, 4) + '/' + value.substring(4);
+            } else if (value.length > 2) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2);
+            } else {
+                input.value = value;
+            }
+        }
+
+        function maskCEP(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 8);
+            if (value.length > 5) {
+                input.value = value.substring(0, 5) + '-' + value.substring(5);
+            } else {
+                input.value = value;
+            }
+        }
+
+        function maskPhone(input) {
+            let v = input.value.replace(/\D/g, "");
+            if (v.length > 10) {
+                v = v.substring(0, 11);
+                v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+            } else if (v.length > 5) {
+                v = v.substring(0, 10);
+                v = v.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+            } else if (v.length > 2) {
+                v = v.replace(/^(\d{2})(\d*)$/, "($1) $2");
+            } else {
+                input.value = v;
+            }
+            input.value = v;
+        }
+
+        async function loadTitles() {
+            const select = document.getElementById('titulo-select');
+            try {
+                const titles = await fetchData('arquidiocese_lideranca/titulos');
+                if (titles && titles.length > 0) {
+                    select.innerHTML = '<option value="" disabled selected>Selecione...</option>';
+                    titles.forEach(t => {
+                        const option = document.createElement('option');
+                        option.value = t;
+                        option.textContent = t;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error("Erro ao carregar títulos da API:", err);
+            }
+        }
+
+        // On Load: Populate details if editing
+        window.onload = async function () {
+            await loadTitles();
+
+            if (index !== null) {
+                const tempLiderancas = JSON.parse(localStorage.getItem('temp_arquidiocese_lideranca') || '[]');
+                const member = tempLiderancas[index];
+                if (member) {
+                    document.getElementById('titulo-select').value = member.titulo || '';
+                    document.getElementById('nome-input').value = member.nome || '';
+                    document.getElementById('inicio-input').value = member.inicio || '';
+                    document.getElementById('fim-input').value = member.fim || '';
+                    document.getElementById('endereco-input').value = member.endereco || '';
+                    document.getElementById('cep-input').value = member.cep || '';
+                    document.getElementById('telefone-input').value = member.telefone || '';
+                    document.getElementById('email-input').value = member.email || '';
+                    document.getElementById('aniv-natal-input').value = member.anivNatal || '';
+                    document.getElementById('aniv-sacer-input').value = member.anivSacer || '';
+                    document.getElementById('aniv-episc-input').value = member.anivEpisc || '';
+                }
+            }
+        };
+
+        // On Submit: Save data back to localStorage and DB, and go back
+        document.getElementById('lideranca-form').onsubmit = async function (e) {
+            e.preventDefault();
+
+            const tempLiderancas = JSON.parse(localStorage.getItem('temp_arquidiocese_lideranca') || '[]');
+            const existingMember = index !== null ? tempLiderancas[index] : null;
+            const id_lideranca_arquidiocese = existingMember ? existingMember.id_lideranca_arquidiocese : null;
+
+            const member = {
+                id_lideranca_arquidiocese: id_lideranca_arquidiocese,
+                titulo: document.getElementById('titulo-select').value,
+                nome: document.getElementById('nome-input').value.trim(),
+                inicio: document.getElementById('inicio-input').value.trim(),
+                fim: document.getElementById('fim-input').value.trim(),
+                endereco: document.getElementById('endereco-input').value.trim(),
+                cep: document.getElementById('cep-input').value.trim(),
+                telefone: document.getElementById('telefone-input').value.trim(),
+                email: document.getElementById('email-input').value.trim(),
+                anivNatal: document.getElementById('aniv-natal-input').value.trim(),
+                anivSacer: document.getElementById('aniv-sacer-input').value.trim(),
+                anivEpisc: document.getElementById('aniv-episc-input').value.trim()
+            };
+
+            if (!member.titulo || !member.nome) {
+                alert("Por favor, preencha todos os campos obrigatórios (*)");
+                return;
+            }
+
+            if (!id_arquidiocese) {
+                alert("Erro: Não foi possível identificar a arquidiocese (id_arquidiocese ausente).");
+                return;
+            }
+
+            // Save to database
+            const dataToSave = {
+                id_arquidiocese: parseInt(id_arquidiocese),
+                id_lideranca_arquidiocese: id_lideranca_arquidiocese,
+                titulo: member.titulo,
+                nome_lider: member.nome,
+                data_inicio_lider: member.inicio,
+                data_fim_lider: member.fim,
+                endereco_completo: member.endereco,
+                cep: member.cep,
+                telefone_lider: member.telefone,
+                email_lider: member.email,
+                data_aniv_natalicio: member.anivNatal,
+                data_aniv_sacerdotal: member.anivSacer,
+                data_aniv_episcopal: member.anivEpisc
+            };
+
+            try {
+                const response = await postData('arquidiocese_lideranca/save', dataToSave);
+                if (response.success) {
+                    // Update id_lideranca_arquidiocese for local state
+                    member.id_lideranca_arquidiocese = response.id;
+                    
+                    if (index !== null) {
+                        tempLiderancas[index] = member;
+                    } else {
+                        tempLiderancas.push(member);
+                    }
+                    localStorage.setItem('temp_arquidiocese_lideranca', JSON.stringify(tempLiderancas));
+                    alert("Liderança salva com sucesso!");
+                    window.history.back();
+                } else {
+                    alert("Erro ao salvar liderança: " + (response.error || "Erro desconhecido"));
+                }
+            } catch (error) {
+                console.error("Erro ao salvar liderança no banco:", error);
+                alert("Erro ao salvar liderança no banco de dados: " + error.message);
+            }
+        };
+    </script>
+</body>
+
+</html>

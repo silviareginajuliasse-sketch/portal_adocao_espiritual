@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusão de Treinamento - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>:root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #777;
+            --btn-accent: #b25e5e;
+            /* Terracota */
+            --btn-blue: #1652b4;
+            --label-blue: #5499c7;
+            --label-orange: #d35400;
+            --label-teal: #16a085;
+            --bg-gray: #fafafa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .account-toggle.active {
+            transform: rotate(180deg);
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+            color: var(--btn-blue);
+        }
+
+        .sidebar-item i {
+            width: 25px;
+            text-align: center;
+            color: #777;
+        }
+
+        /* Dropdown Menu */
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        /* Layout Split Styles */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        @media (min-width: 900px) {
+            .layout-split {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        /* Instructions Sidebar */
+        .instructions-sidebar {
+            display: none;
+        }
+
+        .instructions-sidebar-title {
+            font-size: 1.25rem;
+            color: #444;
+            font-weight: 500;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 25px;
+        }
+
+        .instructions-sidebar-text {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Page Title */
+        .page-title-container {
+            display: flex;
+            align-items: baseline;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            color: var(--primary-red);
+            font-size: 1.85rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .mandatory-notice {
+            color: var(--primary-red);
+            font-style: italic;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        /* Decorative Divider */
+        .title-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #333, transparent);
+            margin-top: -15px;
+            margin-bottom: 30px;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .title-divider::after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 5%;
+            right: 5%;
+            height: 12px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 75%);
+        }
+
+        .form-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+            position: relative;
+        }
+
+        /* Help Icon Styles */
+        .help-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            position: absolute;
+            top: 30px;
+            right: 35px;
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+
+        .help-icon-container:hover {
+            transform: scale(1.05);
+        }
+
+        .help-icon-circle {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #3498db;
+            background-color: white;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Help Modal */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        .help-card {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .help-card-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: #777;
+            cursor: pointer;
+        }
+
+        .help-card-title {
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .help-card-content {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Form Grid */
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group.full-width {
+            width: 100%;
+            flex: 0 0 100%;
+        }
+
+        .form-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .form-label.gray-label {
+            color: #7f8c8d;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field,
+        .select-field,
+        .textarea-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #333;
+            outline: none;
+            background: white;
+        }
+
+        .select-field {
+            appearance: none;
+            padding-right: 30px;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+        }
+
+        .metadata-value {
+            font-size: 1rem;
+            color: #666;
+            padding: 8px 0;
+        }
+
+        /* Instructor List Section */
+        .instructor-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .instructor-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .instructor-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 5px 0;
+        }
+
+        .instructor-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #eee;
+            flex-shrink: 0;
+        }
+
+        .instructor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .instructor-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #2e7d32;
+            /* Greenish as in image */
+            min-width: 220px;
+            white-space: nowrap;
+        }
+
+        .instructor-delete {
+            color: #555;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+
+        .instructor-details {
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        /* Footer Actions */
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .action-btns-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        .back-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+            font-size: 1.25rem;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+            padding: 10px 35px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border: none;
+            padding: 10px 45px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Helper classes for coloring labels as per image */
+        .blue-label {
+            color: #7f8c8d;
+        }
+
+        /* Tabs Navigation Styles */
+        .tabs-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 12px 25px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-red);
+        }
+
+        .tab-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tab-btn:disabled:hover {
+            background-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Participants Tab Styles */
+        .participants-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            margin-top: 10px;
+        }
+
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px 20px;
+            padding: 10px 0;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .participant-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #e0f2f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .participant-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .participant-avatar i {
+            font-size: 1.5rem;
+            color: #00897b;
+        }
+
+        .participant-name {
+            color: #2e7d32;
+            font-weight: 500;
+            font-size: 1.05rem;
+            flex: 1;
+        }
+
+        .participant-delete {
+            color: #777;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .participant-delete:hover {
+            color: var(--primary-red);
+        }
+
+        @media (max-width: 800px) {
+            .participants-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .participants-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dropdown Menu - Standardized */
+
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+</style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a>
+            </li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a>
+            </li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
+            </li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a>
+            </li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i>
+                    Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a>
+            </li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i>
+                    Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        <div class="layout-split">
+            <!-- Left Side: Instructions -->
+            <aside class="instructions-sidebar">
+                <h2 class="instructions-sidebar-title">Orientações de uso</h2>
+
+                <div class="instructions-sidebar-text">
+                    O cadastro de treinamentos é fundamental no registro dos colaboradores que foram preparados para
+                    participar ativamente do movimento da Adoção Espiritual.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Apenas colaboradores treinados poderão assumir funções de coordenação nas arquidioceses e paróquias,
+                    além de representar a Adoção Espiritual em suas atividades.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Um treinamento não pode ser excluído se houverem colaboradores registrados no mesmo.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Os campos sinalizados com asterisco (*) são de preenchimento obrigatório. Verifique o correto
+                    preenchimento para garantir um cadastro limpo.
+                </div>
+            </aside>
+
+            <!-- Right Side: Content -->
+            <div class="main-content">
+
+                <div class="form-card">
+                    <!-- Help Icon -->
+                    <div class="help-icon-container" onclick="toggleHelp()">
+                        <div class="help-icon-circle">?</div>
+                        <span class="help-text">Ajuda</span>
+                    </div>
+
+                    <!-- Title and Notice Row -->
+                    <div class="page-title-container">
+                        <h1 class="page-title" id="page-title-text">Inclusão de Treinamento</h1>
+                        <span class="mandatory-notice">Os campos assinalados com asterisco (*) são de preenchimento obrigatório.</span>
+                    </div>
+
+                    <div class="title-divider"></div>
+
+                    <!-- Tabs Navigation -->
+                    <div class="tabs-container">
+                        <button type="button" class="tab-btn active" id="tab-btn-dados" onclick="switchTab(event, 'tab-dados')">
+                            <i class="fa-solid fa-clipboard-list"></i> IDENTIFICAÇÃO
+                        </button>
+                        <button type="button" class="tab-btn" id="tab-btn-datas" onclick="switchTab(event, 'tab-datas')">
+                            <i class="fa-solid fa-calendar-day"></i> DATAS E INSTRUTORES
+                        </button>
+                        <button type="button" class="tab-btn" id="tab-btn-participantes" onclick="switchTab(event, 'tab-participantes')">
+                            <i class="fa-solid fa-users"></i> PARTICIPANTES
+                        </button>
+                    </div>
+
+                    <form id="form-treinamento">
+                        <!-- Tab Content: Dados -->
+                        <div id="tab-dados" class="tab-content active">
+                            <!-- Metadata Row -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1; min-width: 150px;">
+                                    <label class="form-label blue-label">Forma de treinamento <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="input-forma">
+                                            <option value="Presencial" selected>Presencial</option>
+                                            <option value="On-line">Online</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 2; min-width: 280px;">
+                                    <label class="form-label blue-label">Qualifica para <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="input-qualifica_para">
+                                            <option value="Colaborador Adoção Espiritual" selected>Colaborador Adoção Espiritual</option>
+                                            <option value="Coordenador Paroquial">Coordenador Paroquial</option>
+                                            <option value="Coordenador Regional">Coordenador Regional</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;">
+                                    <label class="form-label blue-label">Incluído em</label>
+                                    <div class="metadata-value" id="metadata-criado-em">--</div>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;">
+                                    <label class="form-label blue-label">Atualizado em</label>
+                                    <div class="metadata-value" id="metadata-atualizado-em">--</div>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;">
+                                    <label class="form-label blue-label">Por</label>
+                                    <div class="metadata-value" id="metadata-registrado-por">--</div>
+                                </div>
+                            </div>
+
+                            <!-- Main Fields -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 0 0 200px;">
+                                    <label class="form-label blue-label">Status <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="input-status">
+                                            <option value="agendado" selected>Agendado</option>
+                                            <option value="em_andamento">Em andamento</option>
+                                            <option value="concluido">Concluído</option>
+                                            <option value="cancelado">Cancelado</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 250px;">
+                                    <label class="form-label blue-label">Nome do treinamento <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-titulo" placeholder="">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label blue-label">Local do treinamento <span
+                                            style="font-size: 0.8rem; color: #8b1e1e; font-weight: 400;">* obrigatório
+                                            apenas se a forma de treinamento for presencial</span></label>
+                                    <input type="text" class="input-field" id="input-local" placeholder="">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label blue-label">Observações</label>
+                                    <input type="text" class="input-field" id="input-obs" placeholder="">
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons Row -->
+                            <div class="footer-actions">
+                                <button type="button" class="back-btn" onclick="window.location.href='treinamentos.html'">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <div class="action-btns-right">
+                                    <button type="button" class="btn-secondary" id="btn-excluir">Excluir</button>
+                                    <button type="submit" class="btn-primary">Salvar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Datas e Instrutores -->
+                        <div id="tab-datas" class="tab-content">
+                            <div class="instructor-section" style="margin-top: 0;">
+                                <div class="section-title">
+                                    <img src="./arquidioceses-header-icon.png"
+                                        style="width: 22px; height: 22px; object-fit: contain; cursor: pointer;" alt="Icon"
+                                        onclick="openPopupTreinador()">
+                                    Instrutores e datas
+                                </div>
+
+                                <ul class="instructor-list" id="instructor-list">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Participantes -->
+                        <div id="tab-participantes" class="tab-content">
+                            <div class="participants-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 10px; cursor: pointer;" onclick="openPopupColaboradores()">
+                                    <!-- Column 1 -->
+                                    <rect x="0" y="8" width="5" height="5" />
+                                    <rect x="0" y="15" width="5" height="5" />
+                                    <rect x="0" y="22" width="5" height="5" />
+                                    <!-- Column 2 -->
+                                    <rect x="7" y="15" width="5" height="5" />
+                                    <rect x="7" y="22" width="5" height="5" />
+                                    <!-- Column 3 -->
+                                    <rect x="14" y="22" width="5" height="5" />
+                                    <!-- Floating blocks -->
+                                    <rect x="9" y="4" width="5" height="5" />
+                                    <rect x="16" y="11" width="5" height="5" />
+                                    <rect x="20" y="1" width="5" height="5" />
+                                </svg>
+                                Participantes do treinamento
+                            </div>
+
+                            <div class="participants-grid" id="participants-list">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/js/header.js"></script>
+    <script>
+        
+
+        const API_URL = window.location.protocol === 'file:'
+            ? `http://${window.location.hostname || 'localhost'}:3000/api`
+            : '/api';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const idTreinamento = urlParams.get('id');
+        const mode = urlParams.get('mode');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const btnExcluir = document.getElementById('btn-excluir');
+            if (mode === 'edit' && idTreinamento) {
+                btnExcluir.style.display = 'inline-block';
+                btnExcluir.addEventListener('click', deleteTreinamento);
+                await loadTreinamentoData(idTreinamento);
+
+                document.getElementById('tab-btn-datas').removeAttribute('disabled');
+                document.getElementById('tab-btn-datas').removeAttribute('title');
+                document.getElementById('tab-btn-participantes').removeAttribute('disabled');
+                document.getElementById('tab-btn-participantes').removeAttribute('title');
+            } else {
+                btnExcluir.style.display = 'none';
+                
+                const userName = localStorage.getItem('user_nome') || '';
+                document.getElementById('metadata-registrado-por').innerText = userName.toUpperCase() || '--';
+                document.getElementById('metadata-criado-em').innerText = '--';
+                document.getElementById('metadata-atualizado-em').innerText = '--';
+                document.getElementById('page-title-text').innerText = 'Inclusão de Treinamento';
+
+                document.getElementById('tab-btn-datas').setAttribute('disabled', 'true');
+                document.getElementById('tab-btn-datas').setAttribute('title', 'Salve os dados de identificação primeiro para liberar esta aba');
+                document.getElementById('tab-btn-participantes').setAttribute('disabled', 'true');
+                document.getElementById('tab-btn-participantes').setAttribute('title', 'Salve os dados de identificação primeiro para liberar esta aba');
+            }
+            
+            document.getElementById('form-treinamento').addEventListener('submit', handleFormSubmit);
+
+            const tabParam = urlParams.get('tab');
+            if (tabParam) {
+                switchTab(null, tabParam);
+            }
+        });
+
+        async function loadTreinamentoData(id) {
+            try {
+                const response = await fetch(`${API_URL}/treinamentos/${id}`);
+                if (!response.ok) {
+                    alert('Erro ao carregar dados do treinamento.');
+                    return;
+                }
+                const t = await response.json();
+                
+                document.getElementById('page-title-text').innerText = 'Alteração de Treinamento';
+                
+                document.getElementById('input-forma').value = t.forma_treinamento || 'Presencial';
+                document.getElementById('input-qualifica_para').value = t.qualifica_para || 'Colaborador Adoção Espiritual';
+                document.getElementById('input-status').value = t.status || 'agendado';
+                document.getElementById('input-titulo').value = t.titulo || '';
+                document.getElementById('input-local').value = t.local || '';
+                document.getElementById('input-obs').value = t.obs_treinamento || '';
+                
+                document.getElementById('metadata-criado-em').innerText = formatDateTime(t.criado_em);
+                document.getElementById('metadata-atualizado-em').innerText = formatDateTime(t.atualizado_em);
+                document.getElementById('metadata-registrado-por').innerText = (t.nome_atualizador || '').toUpperCase() || '--';
+
+                await loadInstructorsList(id);
+                await loadParticipantsList(id);
+            } catch (err) {
+                console.error('Erro ao buscar dados do treinamento:', err);
+                alert('Erro de conexão ao buscar dados do treinamento.');
+            }
+        }
+
+        function formatDateTime(isoString) {
+            if (!isoString) return '--';
+            try {
+                const date = new Date(isoString);
+                if (isNaN(date.getTime())) return '--';
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+            } catch (e) {
+                return '--';
+            }
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const forma = document.getElementById('input-forma').value;
+            const qualificaPara = document.getElementById('input-qualifica_para').value;
+            const status = document.getElementById('input-status').value;
+            const titulo = document.getElementById('input-titulo').value.trim();
+            const local = document.getElementById('input-local').value.trim();
+            const obs = document.getElementById('input-obs').value.trim();
+            
+            if (!titulo) {
+                alert('O Nome do treinamento é obrigatório.');
+                document.getElementById('input-titulo').focus();
+                return;
+            }
+            if (!forma) {
+                alert('A Forma de treinamento é obrigatória.');
+                document.getElementById('input-forma').focus();
+                return;
+            }
+            if (!qualificaPara) {
+                alert('O campo Qualifica para é obrigatório.');
+                document.getElementById('input-qualifica_para').focus();
+                return;
+            }
+            if (!status) {
+                alert('O status do treinamento é obrigatório.');
+                document.getElementById('input-status').focus();
+                return;
+            }
+            if (forma === 'Presencial' && !local) {
+                alert('O campo Local do treinamento é obrigatório para treinamentos presenciais.');
+                document.getElementById('input-local').focus();
+                return;
+            }
+            
+            const idColaborador = localStorage.getItem('user_id_colaborador') || null;
+            
+            const payload = {
+                forma_treinamento: forma,
+                titulo: titulo,
+                obs_treinamento: obs,
+                qualifica_para: qualificaPara,
+                local: forma === 'Presencial' ? local : null,
+                status: status,
+                id_colaborador_atualiza: idColaborador
+            };
+            
+            if (mode === 'edit' && idTreinamento) {
+                payload.id_treinamento = parseInt(idTreinamento);
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/treinamentos/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                let result;
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { success: false, error: text || 'Erro de formato na resposta do servidor.' };
+                }
+                
+                if (response.ok && result.success) {
+                    alert(mode === 'edit' ? 'Treinamento atualizado com sucesso!' : 'Treinamento incluído com sucesso!');
+                    window.location.href = `treinamentos.html?nome=${encodeURIComponent(urlParams.get('nome') || '')}&cpf=${encodeURIComponent(urlParams.get('cpf') || '')}`;
+                } else {
+                    alert('Erro ao salvar treinamento: ' + (result.error || 'Erro desconhecido.'));
+                }
+            } catch (err) {
+                console.error('Erro ao salvar treinamento:', err);
+                alert('Erro de conexão ao tentar salvar o treinamento: ' + err.message);
+            }
+        }
+
+        async function deleteTreinamento() {
+            if (!idTreinamento) return;
+            if (!confirm('Deseja realmente excluir este treinamento?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/treinamentos/${idTreinamento}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('Treinamento excluído com sucesso!');
+                    window.location.href = `treinamentos.html?nome=${encodeURIComponent(urlParams.get('nome') || '')}&cpf=${encodeURIComponent(urlParams.get('cpf') || '')}`;
+                } else {
+                    alert('Erro ao excluir treinamento: ' + (result.error || 'Erro desconhecido.'));
+                }
+            } catch (err) {
+                console.error('Erro ao excluir treinamento:', err);
+                alert('Erro de conexão ao tentar excluir o treinamento.');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        function switchTab(event, tabId) {
+            const btn = event ? event.currentTarget : document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+            if (btn && btn.hasAttribute('disabled')) {
+                return;
+            }
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (btn) btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function toggleHelp() {
+            document.getElementById('help-overlay').classList.toggle('active');
+        }
+
+        function openPopupTreinador() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id') || '';
+            const mode = urlParams.get('mode') || '';
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            const title = document.getElementById('input-titulo').value || '';
+            window.location.href = `popup_treinador_treinamento.html?id=${id}&mode=${mode}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&training_title=${encodeURIComponent(title)}`;
+        }
+
+        function openPopupColaboradores() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id') || '';
+            const mode = urlParams.get('mode') || '';
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            const title = document.getElementById('input-titulo').value || '';
+            window.location.href = `popup_colaboradores.html?id=${id}&mode=${mode}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&training_title=${encodeURIComponent(title)}`;
+        }
+
+        async function loadInstructorsList(id) {
+            const listEl = document.getElementById('instructor-list');
+            if (!listEl) return;
+            listEl.innerHTML = '<li class="instructor-item">Carregando instrutores...</li>';
+
+            try {
+                const response = await fetch(`${API_URL}/treinamentos/${id}/instrutores`);
+                if (!response.ok) {
+                    listEl.innerHTML = '<li class="instructor-item">Erro ao carregar instrutores.</li>';
+                    return;
+                }
+                const instructors = await response.json();
+                listEl.innerHTML = '';
+                
+                if (instructors.length === 0) {
+                    listEl.innerHTML = '<li class="instructor-item" style="color: #777; font-style: italic;">Nenhum instrutor registrado.</li>';
+                    return;
+                }
+
+                instructors.forEach(inst => {
+                    const li = document.createElement('li');
+                    li.className = 'instructor-item';
+                    li.style.cursor = 'pointer';
+                    li.onclick = () => editInstructor(inst.id_agenda_treinamento);
+
+                    let avatarHtml = '';
+                    if (inst.foto_colaborador) {
+                        avatarHtml = `<img src="${inst.foto_colaborador}" alt="${inst.nome_colaborador}">`;
+                    } else {
+                        avatarHtml = `
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e0f2f1; color: #00897b;">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        `;
+                    }
+
+                    const dataFormatada = formatDateBr(inst.data);
+                    const horaInicioFormatada = formatTime(inst.hora_inicio);
+                    const horaFimFormatada = formatTime(inst.hora_fim);
+                    const pautaFormatada = inst.pauta ? (inst.pauta.length > 40 ? inst.pauta.substring(0, 40) + '...' : inst.pauta) : '';
+
+                    li.innerHTML = `
+                        <div class="instructor-avatar">
+                            ${avatarHtml}
+                        </div>
+                        <div class="instructor-name">${inst.nome_colaborador}</div>
+                        <i class="fa-regular fa-trash-can instructor-delete" style="cursor: pointer;" onclick="event.stopPropagation(); deleteInstructor(${inst.id_agenda_treinamento})"></i>
+                        <div class="instructor-details">Dia ${dataFormatada} - De ${horaInicioFormatada} até ${horaFimFormatada}${pautaFormatada ? ` - Pauta: ${pautaFormatada}` : ''}</div>
+                    `;
+                    listEl.appendChild(li);
+                });
+            } catch (err) {
+                console.error('Erro ao listar instrutores:', err);
+                listEl.innerHTML = '<li class="instructor-item">Erro ao carregar instrutores.</li>';
+            }
+        }
+
+        function formatDateBr(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('T')[0].split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const parts = timeStr.split(':');
+            if (parts.length >= 2) {
+                return `${parts[0]}:${parts[1]}`;
+            }
+            return timeStr;
+        }
+
+        function editInstructor(agendaId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id') || '';
+            const mode = urlParams.get('mode') || '';
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            const title = document.getElementById('input-titulo').value || '';
+            window.location.href = `popup_treinador_treinamento.html?id=${id}&mode=${mode}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&training_title=${encodeURIComponent(title)}&agenda_id=${agendaId}`;
+        }
+
+        async function deleteInstructor(idAgenda) {
+            if (!confirm('Deseja realmente remover este instrutor/horário deste treinamento?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/treinamento_instrutores/${idAgenda}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('Instrutor removido com sucesso!');
+                    if (idTreinamento) {
+                        await loadInstructorsList(idTreinamento);
+                    }
+                } else {
+                    alert('Erro ao remover instrutor: ' + (result.error || 'Erro desconhecido.'));
+                }
+            } catch (err) {
+                console.error('Erro ao remover instrutor:', err);
+                alert('Erro ao remover instrutor.');
+            }
+        }
+
+        async function loadParticipantsList(id) {
+            const listEl = document.getElementById('participants-list');
+            if (!listEl) return;
+            listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; grid-column: span 3;">Carregando participantes...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/treinamentos/${id}/participantes`);
+                if (!response.ok) {
+                    listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e; grid-column: span 3;">Erro ao carregar participantes.</div>';
+                    return;
+                }
+                const participants = await response.json();
+                listEl.innerHTML = '';
+                
+                if (participants.length === 0) {
+                    listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-style: italic; grid-column: span 3;">Nenhum participante registrado.</div>';
+                    return;
+                }
+
+                participants.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'participant-item';
+
+                    const cidadeStr = p.cidade ? ` - ${p.cidade}` : '';
+
+                    item.innerHTML = `
+                        <input type="checkbox" class="participant-checkbox" ${p.presenca ? 'checked' : ''} onchange="togglePresence(${p.id}, this.checked)" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                        <i class="fa-regular fa-trash-can participant-delete" style="cursor: pointer; font-size: 1rem; flex-shrink: 0; margin-left: 5px; margin-right: 5px;" onclick="deleteParticipant(${p.id})"></i>
+                        <span class="participant-name" style="color: #333; font-weight: 500; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}">
+                            ${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}
+                        </span>
+                    `;
+                    listEl.appendChild(item);
+                });
+            } catch (err) {
+                console.error('Erro ao listar participantes:', err);
+                listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e; grid-column: span 3;">Erro ao carregar participantes.</div>';
+            }
+        }
+
+        async function togglePresence(idParticipant, checked) {
+            try {
+                const response = await fetch(`${API_URL}/treinamento_participantes/${idParticipant}/presenca`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ presenca: checked })
+                });
+                
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    alert('Erro ao atualizar presença do participante.');
+                }
+            } catch (err) {
+                console.error('Erro ao atualizar presença:', err);
+                alert('Erro de conexão ao atualizar presença.');
+            }
+        }
+
+        async function deleteParticipant(idParticipant) {
+            if (!confirm('Deseja realmente remover este participante deste treinamento?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/treinamento_participantes/${idParticipant}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('Participante removido com sucesso!');
+                    if (idTreinamento) {
+                        await loadParticipantsList(idTreinamento);
+                    }
+                } else {
+                    alert('Erro ao remover participante: ' + (result.error || 'Erro desconhecido.'));
+                }
+            } catch (err) {
+                console.error('Erro ao remover participante:', err);
+                alert('Erro de conexão ao tentar remover o participante.');
+            }
+        }
+    </script>
+
+    <!-- Help Modal -->
+    <div class="help-overlay" id="help-overlay" onclick="toggleHelp()">
+        <div class="help-card" onclick="event.stopPropagation()">
+            <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
+            <h2 class="help-card-title">Orientações de uso</h2>
+            <div class="help-card-content">
+                <p style="margin-bottom: 15px;">O cadastro de treinamentos é fundamental no registro dos colaboradores que foram preparados para participar ativamente do movimento da Adoção Espiritual.</p>
+                <p style="margin-bottom: 15px;">Apenas colaboradores treinados poderão assumir funções de coordenação nas arquidioceses e paróquias, além de representar a Adoção Espiritual em suas atividades.</p>
+                <p style="margin-bottom: 15px;">Um treinamento não pode ser excluído se houverem colaboradores registrados no mesmo.</p>
+                <p style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px; font-style: italic; color: #555;">Dica: Os campos sinalizados com asterisco (*) são de preenchimento obrigatório. Verifique o correto preenchimento para garantir um cadastro limpo.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

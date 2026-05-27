@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colaboradores - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #999;
+            --btn-accent: #b25e5e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            /* Blue filter to match portal brand: #1652b4 (approximate) */
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.05;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            background-color: white;
+            border-bottom: 2px solid #eee;
+            width: 100%;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        /* Main Content Container */
+        .main-container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Titles */
+        .page-title {
+            text-align: center;
+            color: var(--primary-red);
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }
+
+        /* Desktop Split Layout */
+        .content-split {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* Intro Text */
+        .intro-section {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .intro-text {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+
+        .count-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary-red);
+        }
+
+        .portal-description {
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        /* Form Styles */
+        .login-form-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: var(--btn-accent);
+            box-shadow: 0 0 0 2px rgba(178, 94, 94, 0.1);
+        }
+
+        .forgot-password {
+            font-size: 0.9rem;
+            color: var(--primary-red);
+            text-decoration: underline;
+            cursor: pointer;
+            width: fit-content;
+        }
+
+        /* Submit Button */
+        .submit-btn-wrapper {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .submit-btn {
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139, 30, 30, 0.3);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 20px rgba(139, 30, 30, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* Desktop Media Query */
+        @media (min-width: 768px) {
+            .main-container {
+                padding: 60px 40px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+                margin-top: 0;
+                margin-bottom: 30px;
+                text-align: left;
+            }
+
+            .content-split {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 80px;
+            }
+
+            .intro-section {
+                flex: 1;
+                padding-right: 20px;
+            }
+
+            .login-form-container {
+                flex: 0 0 380px;
+                margin: 0;
+                background: #fdfdfd;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        .error-container {
+            display: none;
+            background-color: #fdf2f2;
+            border: 1px solid #f8b4b4;
+            color: #9b1c1c;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 500;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">
+            <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />
+            <i class="fa-solid fa-hands-holding-child" style="display: none; font-size: 24px; color: #333;"></i>
+            <div class="header-title">Adoção<br>Espiritual</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <div class="content-split">
+            <!-- Left: Intro (Desktop) / Top: Intro (Mobile) -->
+            <section class="intro-section">
+                <h1 class="page-title">
+                    Colaboradores<br>
+                    Adoção Espiritual
+                </h1>
+
+                <p class="intro-text">Seja bem-vindo ao Portal de Colaboradores da Adoção Espiritual.</p>
+                <p class="count-text">Já somos 9.999 colaboradores cadastrados.</p>
+                <p class="portal-description">
+                    Aqui você poderá conhecer os colaboradores de sua coordenação, ver o calendário de eventos
+                    planejados para o ano e acessar o registro de atividades que os colabores participaram para divulgar
+                    a Adoção Espiritual nas dioceses e arquidioceses.
+                </p>
+            </section>
+
+            <!-- Right: Form (Desktop) / Bottom: Form (Mobile) -->
+            <div class="login-form-container">
+                <form class="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Colaborador (código, telefone ou e-mail) <span>*</span></label>
+                        <input type="text" id="identificacao" class="input-field" oninput="handleIdInput(this)"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Senha <span>*</span></label>
+                        <input type="password" id="senha" class="input-field" required>
+                    </div>
+
+                    <div id="error-message" class="error-container"></div>
+
+                    <a class="forgot-password">Esqueci minha senha</a>
+
+                    <div class="submit-btn-wrapper">
+                        <button type="submit" class="submit-btn">Continuar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? '/api'
+            : 'http://localhost:3000/api';
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const colaboradorInput = document.getElementById('identificacao');
+            const senhaInput = document.getElementById('senha');
+            const errorDiv = document.getElementById('error-message');
+            
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+                errorDiv.innerText = '';
+            }
+            
+            const colaborador = colaboradorInput.value;
+            const senha = senhaInput.value;
+            
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ colaborador, senha })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const colab = data.colaborador;
+                    // Passo 3: redirecionar o usuário para menu_principal_2.html passando os campos apelido_colaborador e id_colaborador por parâmetro de URL (nome e id_colaborador)
+                    window.location.href = `menu_principal_2.html?nome=${encodeURIComponent(colab.apelido_colaborador)}&id_colaborador=${encodeURIComponent(colab.id_colaborador)}`;
+                } else {
+                    const errMsg = data.error || 'Erro ao realizar login.';
+                    if (errorDiv) {
+                        errorDiv.innerText = errMsg;
+                        errorDiv.style.display = 'block';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro de login:', err);
+                if (errorDiv) {
+                    errorDiv.innerText = 'Erro ao conectar ao servidor.';
+                    errorDiv.style.display = 'block';
+                }
+            }
+        }
+
+        function handleIdInput(input) {
+            let v = input.value;
+            if (/^\d/.test(v) && !v.includes('@') && v.length <= 15) {
+                input.value = maskPhone(v);
+            }
+        }
+
+        function maskPhone(v) {
+            v = v.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+            return v;
+        }
+    </script>
+</body>
+
+</html>

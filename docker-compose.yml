@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: adocao_espiritual_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root@2026
+      MYSQL_DATABASE: adocao_espiritual
+      MYSQL_USER: adocao_user
+      MYSQL_PASSWORD: adocao@2026
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: adocao_espiritual_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root@2026
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
+  api:
+    build: ./backend
+    container_name: adocao_espiritual_api
+    restart: unless-stopped
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=adocao_user
+      - DB_PASSWORD=adocao@2026
+      - DB_NAME=adocao_espiritual
+    volumes:
+      - .:/usr/src/app/public
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
+    driver: local

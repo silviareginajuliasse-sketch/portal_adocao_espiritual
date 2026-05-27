@@ -1,0 +1,2109 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusão de Colaborador - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #777;
+            --btn-accent: #b25e5e;
+            /* Terracota */
+            --btn-blue: #1652b4;
+            --label-blue: #5499c7;
+            --label-orange: #d35400;
+            --label-teal: #16a085;
+            --bg-gray: #fafafa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+            color: var(--btn-blue);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Container */
+        .main-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 10px 20px 40px 20px;
+        }
+
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        @media (min-width: 900px) {
+            .layout-split {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+
+        /* Instructions Sidebar (Hidden) */
+        .instructions-sidebar {
+            display: none;
+        }
+
+        .instructions-sidebar-title {
+            font-size: 1.25rem;
+            color: #444;
+            font-weight: 500;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 25px;
+        }
+
+        .instructions-sidebar-text {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            width: 100%;
+        }
+
+        .page-title-container {
+            display: flex;
+            align-items: baseline;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            color: var(--primary-red);
+            font-size: 1.85rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .mandatory-notice {
+            color: var(--primary-red);
+            font-style: italic;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .form-card {
+            background-color: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eee;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Form Grid */
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group.full-width {
+            width: 100%;
+            flex: 0 0 100%;
+        }
+
+        .form-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field,
+        .select-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #333;
+            outline: none;
+            background: white;
+        }
+
+        .select-field {
+            appearance: none;
+            padding-right: 30px;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+        }
+
+        .metadata-label {
+            font-size: 0.8rem;
+            color: #009688; /* Teal color from image */
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .metadata-value {
+            font-size: 0.95rem;
+            color: #333;
+            padding: 5px 0;
+            font-weight: 400;
+        }
+
+        .metadata-value.bold {
+            font-weight: 700;
+            color: #b71c1c; /* Dark red for code */
+        }
+
+        /* Footer Actions */
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .action-btns-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        .back-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+            font-size: 1.25rem;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+            padding: 10px 35px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border: none;
+            padding: 10px 45px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Tabs Styling */
+        .tabs-container {
+            display: flex;
+            gap: 60px; /* Increased space between tabs */
+            margin: 0 -10px 25px -10px;
+            border-bottom: 1px solid #ddd;
+            padding: 0 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #777;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            outline: none;
+            text-transform: uppercase; /* Tab titles in uppercase */
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-red);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-red);
+        }
+
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-red);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* List Styles (from colaboradores.html) */
+        .list-container {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95rem;
+            color: #777;
+        }
+
+        .list-item:hover {
+            background-color: #fcfcfc;
+        }
+
+        .trash-icon {
+            color: #999;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .trash-icon:hover {
+            color: var(--primary-red);
+        }
+
+        .search-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .subtitle-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #777;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .subtitle-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 240px;
+            font-size: 0.9rem;
+            font-style: italic;
+            outline: none;
+        }
+
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .modal-content-card {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: #777;
+            cursor: pointer;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-red);
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            color: #777;
+            font-weight: 400;
+        }
+
+        .modal-search {
+            width: 200px;
+        }
+
+        .modal-list {
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .modal-list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-list-item input[type="checkbox"] {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .modal-list-item label {
+            font-size: 0.95rem;
+            color: #888;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 25px;
+        }
+
+        .modal-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #000;
+            line-height: 1.1;
+        }
+
+        .modal-logo img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .btn-modal-save {
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border: none;
+            padding: 10px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.2);
+        }
+
+        .btn-modal-save:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Help Icon Styles */
+        .help-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            position: absolute;
+            top: 30px;
+            right: 35px;
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+
+        .help-icon-container:hover {
+            transform: scale(1.05);
+        }
+
+        .help-icon-circle {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #3498db;
+            background-color: white;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Help Modal */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        .help-card {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .help-card-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: #777;
+            cursor: pointer;
+        }
+
+        .help-card-title {
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .help-card-content {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Decorative Divider */
+        .title-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #333, transparent);
+            margin-top: -15px;
+            margin-bottom: 30px;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .title-divider::after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 5%;
+            right: 5%;
+            height: 12px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 75%);
+        }
+
+        /* Photo Upload Area (Circular like Minha Conta) */
+        .photo-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .colaborador-avatar {
+            width: 100px;
+            height: 100px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            transition: all 0.2s ease;
+            overflow: visible;
+        }
+
+        .colaborador-avatar:hover {
+            border-color: var(--primary-red);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            transform: scale(1.02);
+        }
+
+        #colaborador-avatar-content,
+        #avatar-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .colaborador-avatar img,
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .colaborador-avatar .camera-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 26px;
+            height: 26px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a>
+            </li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner
+                    aniversariantes</a>
+            </li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
+            </li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a>
+            </li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i>
+                    Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a>
+            </li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i>
+                    Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i
+                        class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        <div class="layout-split">
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <div class="form-card">
+                    <!-- Help Icon -->
+                    <div class="help-icon-container" onclick="toggleHelp()">
+                        <div class="help-icon-circle">?</div>
+                        <span class="help-text">Ajuda</span>
+                    </div>
+
+                    <!-- Header inside white card -->
+                    <div class="page-title-container">
+                        <h1 class="page-title" id="page-title-text">Inclusão de Colaborador</h1>
+                        <p class="mandatory-notice">
+                            Os campos assinalados com asterisco (*) são de preenchimento obrigatório.
+                        </p>
+                    </div>
+
+                    <div class="title-divider"></div>
+
+                    <form id="form-colaborador" onsubmit="salvarColaborador(event)" onkeydown="if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') event.preventDefault();">
+                        <div class="tabs-container">
+                            <button type="button" class="tab-btn active" onclick="switchTab(event, 'tab-dados')"><i
+                                    class="fa-solid fa-circle-user" style="color: #00bcd4; margin-right: 8px;"></i>
+                                Dados Pessoais</button>
+                            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-talentos')"><i
+                                    class="fa-solid fa-star" style="color: #f1c40f; margin-right: 8px;"></i>
+                                TALENTOS E OBSERVAÇÕES</button>
+                            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-paroquias')"><i
+                                    class="fa-solid fa-church" style="margin-right: 8px;"></i> Paróquia</button>
+                            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-treinamentos')"><i
+                                    class="fa-solid fa-chalkboard-user" style="margin-right: 8px;"></i>
+                                Treinamentos</button>
+                            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-atividades')"><i
+                                    class="fa-solid fa-list-ul" style="color: #1652b4; margin-right: 8px;"></i>
+                                Atividades</button>
+                        </div>
+
+                        <!-- Tab: Dados Pessoais -->
+                        <div id="tab-dados" class="tab-content active">
+                            <!-- Rows 1-2 wrapper: fields left + photo right -->
+                            <div style="display: flex; gap: 20px; margin-bottom: 25px; align-items: flex-start;">
+                                <!-- Left side: metadata, status, senha, perfil, pais -->
+                                <div style="flex: 1; min-width: 0;">
+                                    <!-- Row 1: Metadata + Status -->
+                                    <div class="form-row" style="align-items: flex-end; gap: 15px; margin-bottom: 15px;">
+                                        <div class="form-group" style="flex: 0 0 50px;">
+                                            <div class="metadata-label">Código</div>
+                                            <div class="metadata-value bold" id="metadata-codigo">--</div>
+                                        </div>
+                                        <div class="form-group" style="flex: 0 0 110px;">
+                                            <div class="metadata-label">Incluído em</div>
+                                            <div class="metadata-value" id="metadata-criado">--</div>
+                                        </div>
+                                        <div class="form-group" style="flex: 0 0 110px;">
+                                            <div class="metadata-label">Atualizado em</div>
+                                            <div class="metadata-value" id="metadata-atualizado">--</div>
+                                        </div>
+                                        <div class="form-group" style="flex: 0 0 130px;">
+                                            <div class="metadata-label">Registrado por</div>
+                                            <div class="metadata-value" id="metadata-registrado">--</div>
+                                        </div>
+                                        <div class="form-group" style="flex: 1; min-width: 140px;">
+                                            <label class="form-label">Status <span>*</span></label>
+                                            <div class="input-wrapper">
+                                                <select class="select-field" id="select-status" required>
+                                                    <option value="Ativo" selected>Ativo</option>
+                                                    <option value="Inativo">Inativo</option>
+                                                </select>
+                                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Row 2: Senha + Perfil + País -->
+                                    <div class="form-row" style="align-items: flex-end; gap: 15px;">
+                                        <div class="form-group" style="flex: 1.5; min-width: 150px;">
+                                            <label class="form-label">Senha <span>*</span></label>
+                                            <input type="password" class="input-field" id="input-senha" placeholder="Digite a senha" required>
+                                        </div>
+                                        <div class="form-group" style="flex: 2; min-width: 180px;">
+                                            <label class="form-label">Perfil do colaborador <span>*</span></label>
+                                            <div class="input-wrapper">
+                                                <select class="select-field" id="select-perfil" required>
+                                                    <option value="" disabled selected>Selecione...</option>
+                                                </select>
+                                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="flex: 1.5; min-width: 150px;">
+                                            <label class="form-label">País <span>*</span></label>
+                                            <div class="input-wrapper">
+                                                <select class="select-field" id="select-pais" required>
+                                                    <option value="" disabled selected>Selecione...</option>
+                                                </select>
+                                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Right side: Photo upload (Circular like Minha Conta) -->
+                                <div class="photo-upload-container" style="flex: 0 0 110px; align-self: center; margin-top: 15px;">
+                                    <div class="colaborador-avatar" onclick="document.getElementById('input-foto-colaborador').click();" title="Clique para alterar a foto do colaborador">
+                                        <div id="colaborador-avatar-content">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <div class="camera-badge">
+                                            <i class="fa-solid fa-camera"></i>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="input-foto-colaborador" accept="image/*" style="display: none;" onchange="handleFotoColaborador(event)">
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Name, Known As, Gender, Birth -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 3;">
+                                    <label class="form-label">Nome completo <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-nome" placeholder="Digite o nome completo" required>
+                                </div>
+                                <div class="form-group" style="flex: 2;">
+                                    <label class="form-label">Como é conhecido <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-apelido" placeholder="Apelido ou nome social" required>
+                                </div>
+                                <div class="form-group" style="flex: 1.2;">
+                                    <label class="form-label">Sexo <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="select-sexo" required>
+                                            <option value="" disabled selected>Selecione...</option>
+                                            <option value="Masculino">Masculino</option>
+                                            <option value="Feminino">Feminino</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 1.2;">
+                                    <label class="form-label">Data nascimento <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-nascimento" placeholder="DD/MM/YYYY" maxlength="10" oninput="maskDate(this)" required>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Phone & Email -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Telefone/WhatsApp <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-telefone" placeholder="(00) 00000-0000" maxlength="15" oninput="maskPhone(this)" required>
+                                </div>
+                                <div class="form-group" style="flex: 3;">
+                                    <label class="form-label">E-mail <span>*</span></label>
+                                    <input type="email" class="input-field" id="input-email" placeholder="exemplo@email.com" required>
+                                </div>
+                            </div>
+
+                            <!-- Row 4: Address & City -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 3;">
+                                    <label class="form-label">Endereço completo <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-endereco" placeholder="Rua, número, complemento, bairro" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Cidade <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-cidade" placeholder="Digite a cidade" required>
+                                </div>
+                            </div>
+
+                            <!-- Row 5: State & CEP -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 0 0 220px;">
+                                    <label class="form-label">Estado <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="select-estado" required>
+                                            <option value="" disabled selected>Selecione...</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 0 0 120px;">
+                                    <label class="form-label">CEP <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-cep" placeholder="00000-000" maxlength="9" oninput="maskCEP(this)" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Talentos e Observações -->
+                        <div id="tab-talentos" class="tab-content">
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Talentos ou conhecimentos profissionais que você gostaria
+                                        de colocar a disposição da Adoção Espiritual</label>
+                                    <textarea class="input-field" id="textarea-talentos" rows="6"
+                                        placeholder="Descreva as habilidades, dons e talentos do colaborador..."
+                                        style="resize: vertical; min-height: 120px;"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label">O que te motivou a ser um colaborador paroquial da Adoção
+                                        Espiritual</label>
+                                    <textarea class="input-field" id="textarea-motivo" rows="6"
+                                        placeholder="Compartilhe suas motivações e expectativas..."
+                                        style="resize: vertical; min-height: 120px;"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Observações Gerais</label>
+                                    <textarea class="input-field" id="textarea-observacoes" rows="6"
+                                        placeholder="Outras informações relevantes sobre o colaborador..."
+                                        style="resize: vertical; min-height: 120px;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Paróquias -->
+                        <div id="tab-paroquias" class="tab-content">
+                            <!-- Row 1: País & Metadata -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" style="color: #5d6d7e;">País</label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field">
+                                            <option value="">Selecione...</option>
+                                            <option value="Brasil" selected>Brasil</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Inclusão no cadastro</label>
+                                    <div class="metadata-value">18/04/2026</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Registrado por</label>
+                                    <div class="metadata-value">--</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Última atualização</label>
+                                    <div class="metadata-value">18/04/2026</div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Estado, Arquidiocese, Regional -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" style="color: #5d6d7e;">Estado</label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field">
+                                            <option value="">Selecione...</option>
+                                            <option value="RJ">Rio de Janeiro</option>
+                                            <option value="MG">Minas Gerais</option>
+                                            <option value="SP">São Paulo</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 2;">
+                                    <label class="form-label" style="color: #5d6d7e;">Arquidiocese</label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field">
+                                            <option value="">Selecione...</option>
+                                            <option value="1">Arquidiocese de São Sebastião do Rio de Janeiro</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="color: #5d6d7e;">Regional</label>
+                                    <div class="metadata-value">Leste 1</div>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Paróquia -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label class="form-label" style="color: #5d6d7e;">Paróquia</label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field">
+                                            <option value="">Selecione...</option>
+                                            <option value="1">Nossa Senhora de Guadalupe</option>
+                                            <option value="2">São Pedro do Mar</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group"></div>
+                            </div>
+
+                            <!-- Row 4: Grupos -->
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label" style="color: #5d6d7e;">Participação em grupos da
+                                        paróquia</label>
+                                    <input type="text" class="input-field" placeholder="">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Treinamentos -->
+                        <div id="tab-treinamentos" class="tab-content">
+                            <div class="search-row">
+                                <div class="subtitle-with-icon">
+                                    <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon"
+                                        onclick="openModal()" style="cursor: pointer;">
+                                    Treinamentos Realizados
+                                </div>
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="busca">
+                                </div>
+                            </div>
+
+                            <div class="list-container">
+                                <div class="list-item">
+                                    <i class="fa-regular fa-trash-can trash-icon"></i>
+                                    <span>Vigésimo segundo treinamento de colaboradores da Adoção Espiritual -
+                                        14/09/2025</span>
+                                </div>
+                                <div class="list-item">
+                                    <i class="fa-regular fa-trash-can trash-icon"></i>
+                                    <span>Segundo treinamento de Formação de Coordenador Paroquial</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Atividades -->
+                        <div id="tab-atividades" class="tab-content">
+                            <div class="search-row">
+                                <div class="subtitle-with-icon">
+                                    <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon"
+                                        onclick="openAtividadesModal()" style="cursor: pointer;">
+                                    Atividades em que participou
+                                </div>
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="busca">
+                                </div>
+                            </div>
+
+                            <div class="list-container">
+                                <div class="list-item">
+                                    <i class="fa-regular fa-trash-can trash-icon"></i>
+                                    <span>Primeiro encontro Arquidiocese do Rio de Janeiro - 28/02/2026</span>
+                                </div>
+                                <div class="list-item">
+                                    <i class="fa-regular fa-trash-can trash-icon"></i>
+                                    <span>Quarto Retiro Adoção Espiritual - 14/03/2026</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="footer-actions">
+                            <button type="button" class="back-btn" onclick="window.location.href='colaboradores.html'">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <div class="action-btns-right">
+                                <button type="button" id="btn-delete" class="btn-secondary">Excluir</button>
+                                <button type="submit" id="btn-save" class="btn-primary">Salvar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Help Modal -->
+    <div class="help-overlay" id="help-overlay" onclick="toggleHelp()">
+        <div class="help-card" onclick="event.stopPropagation()">
+            <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
+            <h2 class="help-card-title">Orientações de uso</h2>
+            <div class="help-card-content">
+                <p style="margin-bottom: 15px;">Composto por quatro abas, o cadastro de colaboradores reúne em uma única página o conjunto de informações de mesmo interesse.</p>
+                
+                <p style="margin-bottom: 10px;">O cadastro só pode ser incluído ou alterado por usuários com o perfil Coordenador Nacional, Coordenador Arquidiocesano ou Coordenador Paroquial, observando as seguintes particularidades nas abas de paróquias, treinamentos e Atividades:</p>
+                <ul style="margin-bottom: 15px; margin-left: 20px;">
+                    <li>Coordenador Nacional: sem restrição</li>
+                    <li>Coordenador Arquidiocesano: Apenas paróquias de sua arquidiocese</li>
+                    <li>Coordenador Paroquial: Apenas a paróquia que coordena</li>
+                </ul>
+
+                <p>Um colaborador não poderá ser excluído se houver registro de informações de Paróquias, Treinamentos e Atividades. Se por algum motivo o colaborador não deve mais surgir nas funções de registros/cadastros, o mesmo deve colocado no status Inativo.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentColaboradorId = null;
+
+        // --- Helper: Date mask (DD/MM/AAAA) ---
+        function maskDate(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 8);
+            if (value.length > 4) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2, 4) + '/' + value.substring(4);
+            } else if (value.length > 2) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2);
+            } else {
+                input.value = value;
+            }
+        }
+
+        // --- Helper: Telephone mask ((XX) XXXXX-XXXX) ---
+        function maskPhone(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 11);
+            if (value.length > 10) {
+                input.value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
+            } else if (value.length > 6) {
+                input.value = `(${value.substring(0, 2)}) ${value.substring(2, 6)}-${value.substring(6)}`;
+            } else if (value.length > 2) {
+                input.value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+            } else if (value.length > 0) {
+                input.value = `(${value}`;
+            } else {
+                input.value = '';
+            }
+        }
+
+        // --- Helper: CEP mask (00000-000) ---
+        function maskCEP(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 8);
+            if (value.length > 5) {
+                input.value = value.substring(0, 5) + '-' + value.substring(5);
+            } else {
+                input.value = value;
+            }
+        }
+
+        // --- Helper: format date ISO → DD/MM/YYYY ---
+        function formatDate(isoString) {
+            if (!isoString) return '--';
+            const date = new Date(isoString);
+            const day   = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year  = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // --- Helper: populate a <select> from an array ---
+        function populateSelect(selectId, data, valueKey, textKey, defaultText) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueKey];
+                option.text  = item[textKey];
+                select.appendChild(option);
+            });
+        }
+
+        // --- Helper: Handle collaborator photo upload ---
+        let fotoColaboradorBase64 = null;
+
+        function handleFotoColaborador(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione um arquivo de imagem válido.');
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert('A imagem deve ter no máximo 2MB.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fotoColaboradorBase64 = e.target.result;
+                localStorage.setItem('adocao_colaborador_photo', fotoColaboradorBase64);
+                applyColaboradorPhoto(fotoColaboradorBase64);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function applyColaboradorPhoto(photoData) {
+            const avatarContent = document.getElementById('colaborador-avatar-content');
+            if (avatarContent) {
+                if (photoData) {
+                    avatarContent.innerHTML = `<img src="${photoData}" alt="Foto do colaborador">`;
+                } else {
+                    avatarContent.innerHTML = `<i class="fa-solid fa-user"></i>`;
+                }
+            }
+        }
+
+        function resetFotoUpload() {
+            fotoColaboradorBase64 = null;
+            localStorage.removeItem('adocao_colaborador_photo');
+            applyColaboradorPhoto(null);
+            const input = document.getElementById('input-foto-colaborador');
+            if (input) input.value = '';
+        }
+
+        // --- Load Profiles dropdown from perfil_colaboradores ---
+        async function loadProfiles() {
+            try {
+                const res = await fetch(`${API_URL}/perfil_colaboradores`);
+                if (!res.ok) throw new Error('Falha ao carregar perfis');
+                const data = await res.json();
+                populateSelect('select-perfil', data, 'id_perfil', 'nome_perfil', 'Selecione...');
+            } catch (err) {
+                console.error('Erro ao carregar perfis:', err);
+            }
+        }
+
+        // --- Load Countries dropdown ---
+        async function loadCountries() {
+            try {
+                const res = await fetch(`${API_URL}/pais`);
+                if (!res.ok) throw new Error('Falha ao carregar países');
+                const data = await res.json();
+                populateSelect('select-pais', data, 'id_pais', 'nome_pais', 'Selecione...');
+            } catch (err) {
+                console.error('Erro ao carregar países:', err);
+            }
+        }
+
+        // --- Load Status dropdown from situacao ---
+        async function loadStatus() {
+            try {
+                const res = await fetch(`${API_URL}/situacao`);
+                if (!res.ok) throw new Error('Falha ao carregar situações');
+                const data = await res.json();
+                populateSelect('select-status', data, 'nome_situacao', 'nome_situacao', 'Selecione...');
+            } catch (err) {
+                console.error('Erro ao carregar situações:', err);
+            }
+        }
+
+        // --- Load States filtered by selected country ---
+        async function loadStates(id_pais) {
+            const selectEstado = document.getElementById('select-estado');
+            if (!id_pais) {
+                selectEstado.innerHTML = '<option value="" disabled selected>Selecione o país primeiro</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/estados/pais/${id_pais}`);
+                if (!res.ok) throw new Error('Falha ao carregar estados');
+                const data = await res.json();
+                populateSelect('select-estado', data, 'id_estado', 'nome_estado', 'Selecione...');
+            } catch (err) {
+                console.error('Erro ao carregar estados:', err);
+            }
+        }
+
+        // --- Event: When country changes, reload states ---
+        async function handlePaisChange() {
+            const id_pais = document.getElementById('select-pais').value;
+            await loadStates(id_pais);
+        }
+
+        // --- Show inline validation error ---
+        function showError(message) {
+            let errorBox = document.getElementById('form-error-box');
+            if (!errorBox) {
+                errorBox = document.createElement('div');
+                errorBox.id = 'form-error-box';
+                errorBox.style.cssText = `
+                    background: #fdecea; border: 1px solid #e74c3c; color: #c0392b;
+                    padding: 12px 18px; border-radius: 8px; margin-bottom: 18px;
+                    font-size: 0.93rem; display: flex; align-items: center; gap: 10px;
+                `;
+                const form = document.getElementById('form-colaborador');
+                form.insertAdjacentElement('afterbegin', errorBox);
+            }
+            errorBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${message}`;
+            errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function clearError() {
+            const errorBox = document.getElementById('form-error-box');
+            if (errorBox) errorBox.remove();
+        }
+
+        // --- Save Colaborador ---
+        async function salvarColaborador(event) {
+            event.preventDefault();
+            clearError();
+
+            // Read field values
+            const status       = document.getElementById('select-status').value;
+            const senha        = document.getElementById('input-senha').value.trim();
+            const id_perfil    = document.getElementById('select-perfil').value;
+            const id_pais      = document.getElementById('select-pais').value;
+            const nome         = document.getElementById('input-nome').value.trim();
+            const apelido      = document.getElementById('input-apelido').value.trim();
+            const sexo         = document.getElementById('select-sexo').value;
+            const nascimento   = document.getElementById('input-nascimento').value.trim();
+            const telefone     = document.getElementById('input-telefone').value.trim();
+            const email        = document.getElementById('input-email').value.trim();
+            const endereco     = document.getElementById('input-endereco').value.trim();
+            const cidade       = document.getElementById('input-cidade').value.trim();
+            const id_estado    = document.getElementById('select-estado').value;
+            const cep          = document.getElementById('input-cep').value.trim();
+
+            const talentos     = document.getElementById('textarea-talentos').value.trim();
+            const motivou      = document.getElementById('textarea-motivo').value.trim();
+            const observacoes  = document.getElementById('textarea-observacoes').value.trim();
+
+            // Validation
+            if (!id_perfil) return showError('Por favor, selecione o Perfil do colaborador.');
+            if (!id_pais)   return showError('Por favor, selecione o País.');
+            if (!nome)      return showError('Por favor, preencha o Nome completo.');
+            if (!apelido)   return showError('Por favor, preencha o campo "Como é conhecido".');
+            if (!sexo)      return showError('Por favor, selecione o Sexo.');
+            if (!nascimento) return showError('Por favor, preencha a Data de nascimento.');
+            if (!telefone)  return showError('Por favor, preencha o Telefone/WhatsApp.');
+            if (telefone.length < 14) return showError('Por favor, preencha o Telefone/WhatsApp completo com DDD.');
+            if (!email)     return showError('Por favor, preencha o E-mail.');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) return showError('Por favor, insira um E-mail válido.');
+            if (!endereco)  return showError('Por favor, preencha o Endereço completo.');
+            if (!cidade)    return showError('Por favor, preencha a Cidade.');
+            if (!id_estado) return showError('Por favor, selecione o Estado.');
+            if (!cep)       return showError('Por favor, preencha o CEP.');
+            if (cep.length < 9) return showError('Por favor, insira um CEP válido.');
+            if (!senha && !currentColaboradorId) return showError('Por favor, defina uma Senha para o colaborador.');
+
+            const payload = {
+                id_colaborador:   currentColaboradorId || null,
+                nome_colaborador: nome,
+                apelido_colaborador: apelido,
+                sexo,
+                email,
+                telefone,
+                id_perfil,
+                data_nascimento:  nascimento,
+                endereco,
+                cidade,
+                cep,
+                id_estado,
+                senha,
+                status,
+                talentos_colaborador: talentos,
+                motivou_AE: motivou,
+                obs_colaborador: observacoes,
+                foto_base64: fotoColaboradorBase64 || null,
+                foto_colaborador: fotoColaboradorBase64 || null
+            };
+
+            try {
+                const saveBtn = document.getElementById('btn-save');
+                saveBtn.disabled = true;
+                saveBtn.innerText = 'Salvando...';
+
+                const res = await fetch(`${API_URL}/colaboradores/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+
+                if (!res.ok || !result.success) {
+                    throw new Error(result.error || 'Erro ao salvar colaborador.');
+                }
+
+                // Update metadata after save
+                if (!currentColaboradorId) {
+                    currentColaboradorId = result.id;
+                    document.getElementById('metadata-codigo').innerText = result.id;
+                    document.getElementById('metadata-criado').innerText = formatDate(new Date().toISOString());
+                    document.getElementById('metadata-atualizado').innerText = '--';
+                    document.getElementById('page-title-text').innerText = 'Atualização de Colaborador';
+                    saveBtn.innerText = 'Atualizar';
+                } else {
+                    document.getElementById('metadata-atualizado').innerText = formatDate(new Date().toISOString());
+                    saveBtn.innerText = 'Atualizar';
+                }
+
+                saveBtn.disabled = false;
+
+                // Success message
+                clearError();
+                let successBox = document.getElementById('form-success-box');
+                if (!successBox) {
+                    successBox = document.createElement('div');
+                    successBox.id = 'form-success-box';
+                    successBox.style.cssText = `
+                        background: #eafaf1; border: 1px solid #27ae60; color: #1e8449;
+                        padding: 12px 18px; border-radius: 8px; margin-bottom: 18px;
+                        font-size: 0.93rem; display: flex; align-items: center; gap: 10px;
+                    `;
+                    document.getElementById('form-colaborador').insertAdjacentElement('afterbegin', successBox);
+                }
+                successBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Colaborador salvo com sucesso!`;
+                setTimeout(() => { if (successBox) successBox.remove(); }, 4000);
+
+            } catch (err) {
+                console.error('Erro ao salvar:', err);
+                showError(err.message);
+                document.getElementById('btn-save').disabled = false;
+                document.getElementById('btn-save').innerText = currentColaboradorId ? 'Atualizar' : 'Salvar';
+            }
+        }
+
+        // --- Toggle Help ---
+        function toggleHelp() {
+            document.getElementById('help-overlay').classList.toggle('active');
+        }
+
+        // --- Init: update user info and load dropdowns ---
+        async function updateUserName() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf  = urlParams.get('cpf')  || '';
+
+            // Header Update
+            const userDisplay = document.getElementById('user-display');
+            const userId = document.getElementById('user-id');
+            if (userDisplay) userDisplay.innerText = nome;
+            if (userId) userId.innerText = cpf;
+
+            // Dropdown Update
+            const dropdownName = document.getElementById('dropdown-full-name');
+            const dropdownId   = document.getElementById('dropdown-id');
+            if (dropdownName) dropdownName.innerText = nome;
+            if (dropdownId)   dropdownId.innerText = cpf;
+
+            // Generate Initials if no photo
+            const userInitials = document.getElementById('user-initials');
+            if (userInitials && !localStorage.getItem('adocao_user_photo')) {
+                const initials = nome.split(' ')
+                    .filter(n => n.length > 0)
+                    .map(n => n[0])
+                    .join('')
+                    .substring(0, 2)
+                    .toUpperCase();
+                userInitials.innerHTML = `<span style="font-weight: 700; color: #557db5;">${initials || '??'}</span>`;
+            }
+
+            // Load saved photo if exists
+            loadProfilePhoto();
+
+            // If editing, try to load saved collaborator photo, otherwise keep it empty (default silhouette)
+            const colabId = urlParams.get('id');
+            if (colabId) {
+                const savedColabPhoto = localStorage.getItem('adocao_colaborador_photo');
+                if (savedColabPhoto) {
+                    fotoColaboradorBase64 = savedColabPhoto;
+                    applyColaboradorPhoto(savedColabPhoto);
+                } else {
+                    applyColaboradorPhoto(null);
+                }
+            } else {
+                // New collaborator: clear photo data
+                fotoColaboradorBase64 = null;
+                localStorage.removeItem('adocao_colaborador_photo');
+                applyColaboradorPhoto(null);
+            }
+
+            // Set new-record metadata
+            const today = new Date();
+            document.getElementById('metadata-criado').innerText    = formatDate(today.toISOString());
+            document.getElementById('metadata-atualizado').innerText = '--';
+
+            // Load dropdowns
+            await Promise.all([loadProfiles(), loadCountries(), loadStatus()]);
+
+            // Bind country change
+            document.getElementById('select-pais').addEventListener('change', handlePaisChange);
+
+            // Bind delete button
+            const deleteBtn = document.getElementById('btn-delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    if (!currentColaboradorId) {
+                        alert('Nenhum colaborador carregado para exclusão.');
+                        return;
+                    }
+                    if (!confirm('Deseja realmente excluir este colaborador?')) return;
+                    try {
+                        const res = await fetch(`${API_URL}/colaboradores/${currentColaboradorId}`, {
+                            method: 'DELETE'
+                        });
+                        if (!res.ok) throw new Error('Erro ao excluir colaborador.');
+                        alert('Colaborador excluído com sucesso.');
+                        window.location.href = 'colaboradores.html';
+                    } catch (err) {
+                        showError(err.message);
+                    }
+                });
+            }
+
+            // If editing an existing collaborator
+            if (colabId) {
+                currentColaboradorId = colabId;
+                await loadCollaboratorData(colabId);
+            }
+        }
+
+        // --- Helper: load existing collaborator data ---
+        async function loadCollaboratorData(id) {
+            try {
+                const res = await fetch(`${API_URL}/colaboradores/${id}`);
+                if (!res.ok) throw new Error('Não foi possível carregar os dados do colaborador.');
+                const c = await res.json();
+
+                // Set metadata & title
+                document.getElementById('metadata-codigo').innerText = c.id_colaborador;
+                document.getElementById('metadata-criado').innerText = formatDate(c.criado_em);
+                document.getElementById('metadata-atualizado').innerText = c.atualizado_em ? formatDate(c.atualizado_em) : '--';
+                document.getElementById('page-title-text').innerText = 'Atualização de Colaborador';
+                
+                const saveBtn = document.getElementById('btn-save');
+                if (saveBtn) saveBtn.innerText = 'Atualizar';
+
+                // Fill form fields
+                if (c.status) {
+                    const statusSelect = document.getElementById('select-status');
+                    if (statusSelect) {
+                        const targetVal = c.status.toLowerCase();
+                        let found = false;
+                        for (let i = 0; i < statusSelect.options.length; i++) {
+                            if (statusSelect.options[i].value.toLowerCase() === targetVal) {
+                                statusSelect.selectedIndex = i;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) statusSelect.value = '';
+                    }
+                } else {
+                    document.getElementById('select-status').value = '';
+                }
+                document.getElementById('select-perfil').value = c.id_perfil || '';
+                
+                // If there's an id_pais, set it and trigger country change to load states
+                const paisSelect = document.getElementById('select-pais');
+                if (paisSelect) {
+                    paisSelect.value = c.id_pais || '';
+                    await handlePaisChange(); // This loads states for this country
+                }
+                
+                document.getElementById('input-nome').value = c.nome_colaborador || '';
+                document.getElementById('input-apelido').value = c.apelido_colaborador || '';
+                document.getElementById('select-sexo').value = c.sexo || '';
+                
+                // Date formatting for birthday
+                if (c.data_nascimento) {
+                    const birthday = new Date(c.data_nascimento);
+                    const day = String(birthday.getUTCDate()).padStart(2, '0');
+                    const month = String(birthday.getUTCMonth() + 1).padStart(2, '0');
+                    const year = birthday.getUTCFullYear();
+                    document.getElementById('input-nascimento').value = `${day}/${month}/${year}`;
+                } else {
+                    document.getElementById('input-nascimento').value = '';
+                }
+                
+                document.getElementById('input-telefone').value = c.telefone || '';
+                maskPhone(document.getElementById('input-telefone'));
+                
+                document.getElementById('input-email').value = c.email || '';
+                document.getElementById('input-endereco').value = c.endereco || '';
+                document.getElementById('input-cidade').value = c.cidade || '';
+                
+                // Set state select value (after states are loaded)
+                const estadoSelect = document.getElementById('select-estado');
+                if (estadoSelect) {
+                    estadoSelect.value = c.id_estado || '';
+                }
+                
+                document.getElementById('input-cep').value = c.cep || '';
+                maskCEP(document.getElementById('input-cep'));
+
+                // Prefill Talentos e Observacoes textareas
+                document.getElementById('textarea-talentos').value = c.talentos_colaborador || '';
+                document.getElementById('textarea-motivo').value = c.motivou_AE || '';
+                document.getElementById('textarea-observacoes').value = c.obs_colaborador || '';
+
+                // Passwords are not prefilled for security, but the field is optional for updates
+                document.getElementById('input-senha').value = '';
+                document.getElementById('input-senha').removeAttribute('required');
+
+                // Load collaborator photo if exists
+                const dbPhoto = c.foto_colaborador || c.foto_base64;
+                if (dbPhoto) {
+                    fotoColaboradorBase64 = dbPhoto;
+                    localStorage.setItem('adocao_colaborador_photo', dbPhoto);
+                    applyColaboradorPhoto(dbPhoto);
+                } else {
+                    const savedPhoto = localStorage.getItem('adocao_colaborador_photo');
+                    if (savedPhoto) {
+                        fotoColaboradorBase64 = savedPhoto;
+                        applyColaboradorPhoto(savedPhoto);
+                    } else {
+                        applyColaboradorPhoto(null);
+                    }
+                }
+
+            } catch (err) {
+                console.error(err);
+                showError(err.message);
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64Image = e.target.result;
+                    localStorage.setItem('adocao_user_photo', base64Image);
+                    applyPhoto(base64Image);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadProfilePhoto() {
+            const savedPhoto = localStorage.getItem('adocao_user_photo');
+            if (savedPhoto) applyPhoto(savedPhoto);
+        }
+
+        function applyPhoto(photoData) {
+            const userInitials = document.getElementById('user-initials');
+            if (userInitials) userInitials.innerHTML = `<img src="${photoData}" style="width: 100%; height: 100%; object-fit: cover;" alt="User">`;
+            const avatarContent = document.getElementById('avatar-content');
+            if (avatarContent) avatarContent.innerHTML = `<img src="${photoData}" class="user-photo" alt="Profile">`;
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown   = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            const deleteBtn = document.getElementById('btn-delete');
+            const saveBtn   = document.getElementById('btn-save');
+            if (deleteBtn && saveBtn) {
+                if (tabId === 'tab-treinamentos' || tabId === 'tab-atividades') {
+                    deleteBtn.style.display = 'none';
+                    saveBtn.style.display   = 'none';
+                } else if (tabId === 'tab-paroquias') {
+                    deleteBtn.style.display = 'none';
+                    saveBtn.style.display   = 'block';
+                } else {
+                    deleteBtn.style.display = 'block';
+                    saveBtn.style.display   = 'block';
+                }
+            }
+        }
+
+        window.onclick = function (event) {
+            const dropdown   = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+            const modalTr = document.getElementById('modal-treinamentos');
+            const modalAt = document.getElementById('modal-atividades');
+            if (event.target == modalTr) closeModal();
+            if (event.target == modalAt) closeAtividadesModal();
+        };
+
+        function openModal()            { document.getElementById('modal-treinamentos').style.display = 'flex'; }
+        function closeModal()           { document.getElementById('modal-treinamentos').style.display = 'none'; }
+        function openAtividadesModal()  { document.getElementById('modal-atividades').style.display  = 'flex'; }
+        function closeAtividadesModal() { document.getElementById('modal-atividades').style.display  = 'none'; }
+
+        window.onload = updateUserName;
+    </script>
+
+    <!-- Modal Treinamentos -->
+    <div id="modal-treinamentos" class="modal-overlay">
+        <div class="modal-content-card">
+            <i class="fa-solid fa-xmark modal-close" onclick="closeModal()"></i>
+
+            <div class="modal-header">
+                <span class="modal-title">Treinamentos</span>
+                <div class="search-container">
+                    <input type="text" class="search-input modal-search" placeholder="busca">
+                </div>
+            </div>
+
+            <div class="modal-list">
+                <div class="modal-list-item">
+                    <input type="checkbox" id="tr-1">
+                    <label for="tr-1">Vigésimo segundo treinamento de colaboradores da Adoção Espiritual -
+                        14/09/2025</label>
+                </div>
+                <div class="modal-list-item">
+                    <input type="checkbox" id="tr-2">
+                    <label for="tr-2">Segundo treinamento de Formação de Coordenador Paroquial</label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="modal-logo">
+                    <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo">
+                    <div style="font-size: 0.7rem; font-weight: 600;">Adoção<br>Espiritual</div>
+                </div>
+                <button type="button" class="btn-modal-save" onclick="closeModal()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Atividades -->
+    <div id="modal-atividades" class="modal-overlay">
+        <div class="modal-content-card">
+            <i class="fa-solid fa-xmark modal-close" onclick="closeAtividadesModal()"></i>
+
+            <div class="modal-header">
+                <span class="modal-title">Atividades</span>
+                <div class="search-container">
+                    <input type="text" class="search-input modal-search" placeholder="busca">
+                </div>
+            </div>
+
+            <div class="modal-list">
+                <div class="modal-list-item">
+                    <input type="checkbox" id="at-1">
+                    <label for="at-1">Primeiro encontro Arquidiocese do Rio de Janeiro - 28/02/2026</label>
+                </div>
+                <div class="modal-list-item">
+                    <input type="checkbox" id="at-2">
+                    <label for="at-2">Quarto Retiro Adoção Espiritual - 14/03/2026</label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="modal-logo">
+                    <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo">
+                    <div style="font-size: 0.7rem; font-weight: 600;">Adoção<br>Espiritual</div>
+                </div>
+                <button type="button" class="btn-modal-save" onclick="closeAtividadesModal()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

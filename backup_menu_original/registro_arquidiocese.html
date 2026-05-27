@@ -1,0 +1,1179 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Arquidiocese - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #777;
+            --btn-accent: #b25e5e;
+            /* Terracota */
+            --btn-blue: #1652b4;
+            --label-blue: #5499c7;
+            --label-orange: #d35400;
+            --label-teal: #16a085;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            /* Lavanda/Roxo */
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            /* Hidden by default */
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+            color: var(--btn-blue);
+        }
+
+        .sidebar-item i {
+            width: 25px;
+            text-align: center;
+            color: #777;
+        }
+
+        .sidebar-item:hover i {
+            color: var(--btn-blue);
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .account-toggle.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Subtitle Title */
+        .subtitle-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-style: normal;
+            font-size: 1.5rem;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+
+        .subtitle-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        /* Layout Split Styles */
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        @media (min-width: 900px) {
+            .layout-split {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        /* Instructions Sidebar Styles */
+        .instructions-sidebar {
+            flex: 0 0 380px;
+            font-size: 0.95rem;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .instructions-sidebar-title {
+            font-size: 1.1rem;
+            color: #444;
+            font-weight: 500;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 20px;
+        }
+
+        .instructions-sidebar-text {
+            margin-bottom: 20px;
+        }
+
+        .instructions-sidebar-text i,
+        .instructions-sidebar-text img {
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+
+        .instructions-sidebar-tip {
+            font-style: italic;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+            margin-top: 20px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Main Content */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        .form-card {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
+
+        .mandatory-notice {
+            color: var(--primary-red);
+            font-style: italic;
+            font-size: 0.85rem;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 400;
+            line-height: 1.2;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-field,
+        .select-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #555;
+            outline: none;
+            background: white;
+        }
+
+        .select-field {
+            appearance: none;
+            padding-right: 30px;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.9rem;
+        }
+
+        /* Footer Buttons */
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .back-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+            font-size: 1.25rem;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: scale(1.05);
+        }
+
+        .submit-btn {
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 40px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .delete-btn {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+            border-radius: 20px;
+            padding: 10px 30px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background-color: #fdf0f0;
+        }
+
+        .action-group-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Desktop Adjustments */
+        @media (min-width: 768px) {
+            .main-container {
+                padding-top: 20px;
+            }
+
+            .form-card {
+                background-color: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+                border: 1px solid #eee;
+            }
+
+            .registro-form {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px 30px;
+            }
+
+            .form-group.full-width {
+                grid-column: span 2;
+            }
+
+            .footer-actions {
+                grid-column: span 2;
+                margin-top: 10px;
+            }
+
+            .subtitle-with-icon {
+                margin-top: 0;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="#" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item" id="nav-home"><i class="fa-solid fa-house"></i>
+                    Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a>
+            </li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a>
+            </li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
+            </li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item" id="nav-arquidioceses"><i
+                        class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item" id="nav-paroquias"><i
+                        class="fa-solid fa-house-chimney-window"></i> Paróquias e instituições pró-vida</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a>
+            </li>
+            <li><a href="treinamentos.html" class="sidebar-item" id="nav-treinamentos"><i
+                        class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+    <script src="assets/js/api.js"></script>
+
+    <main class="main-container">
+
+        <div class="layout-split">
+            <!-- Left Side: Instructions -->
+            <aside class="instructions-sidebar">
+                <h2 class="instructions-sidebar-title">Orientações de uso</h2>
+
+                <div class="instructions-sidebar-text">
+                    O cadastro de arquidiocese é necessário para o cadastro de novas paróquias.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Apenas colaboradores com o Perfil Coordenador Nacional tem permissão para incluir ou alterar
+                    cadastros de Arquidioceses.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Um registro de arquidiocese não pode ser excluído se houverem Paróquias registradas na Arquidiocese.
+                    Caso deseje que o nome da Arquidiocese não seja mais apresentado no cadastro de Paróquias altere o
+                    campo Status para Inativo.
+                </div>
+
+                <div class="instructions-sidebar-text">
+                    Reforçando: para excluir definitivamente uma Arquidiocese, lembrando que só é possível se não houver
+                    Paróquia vinculada, clique no botão Excluir.
+                </div>
+            </aside>
+
+            <!-- Right Side: Form -->
+            <div class="main-content">
+
+                <div class="subtitle-with-icon">
+                    <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
+                    <span id="page-title-text">Atualização de Arquidiocese</span>
+                </div>
+
+                <div class="form-card">
+                    <p class="mandatory-notice">
+                        Os campos assinalados com asterisco (*) são de preenchimento obrigatório.
+                    </p>
+
+                    <form class="registro-form" id="arquidiocese-form" onsubmit="saveArquidiocese(event)">
+
+                        <div class="form-group">
+                            <label class="form-label">País <span>*</span></label>
+                            <div class="input-wrapper">
+                                <select class="select-field" id="country-select" required onchange="loadStatesByCountry()">
+                                    <option value="" disabled selected>Carregando...</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Estado <span>*</span></label>
+                            <div class="input-wrapper">
+                                <select class="select-field" id="state-select" required onchange="loadRegionalsByState()">
+                                    <option value="" disabled selected>Selecione um país primeiro</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Regional <span>*</span></label>
+                            <div class="input-wrapper">
+                                <select class="select-field" id="regional-select" required>
+                                    <option value="" disabled selected>Selecione o estado primeiro</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Cidade <span>*</span></label>
+                            <input type="text" class="input-field" id="city-input" placeholder="" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Nome da arquidiocese <span>*</span></label>
+                            <input type="text" class="input-field" id="name-input" placeholder="" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Arcebispo</label>
+                            <input type="text" class="input-field" id="bishop-input" placeholder="">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Status <span>*</span></label>
+                            <div class="input-wrapper">
+                                <select class="select-field" id="status-select" required>
+                                    <option value="" disabled selected></option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="footer-actions">
+                            <button type="button" class="back-btn" onclick="goBack()">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <div class="action-group-right">
+                                <button type="button" class="delete-btn italic" id="delete-btn"
+                                    onclick="deleteArquidiocese()">Excluir</button>
+                                <button type="submit" class="submit-btn italic">Atualizar</button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function updateUserName() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            const mode = urlParams.get('mode') || 'new';
+
+            // Header Update
+            document.getElementById('user-display').innerText = nome;
+            document.getElementById('user-id').innerText = cpf;
+
+            // Dropdown Update
+            document.getElementById('dropdown-full-name').innerText = nome;
+            document.getElementById('dropdown-id').innerText = cpf;
+
+            // Generate Initials
+            const initials = nome.split(' ')
+                .filter(n => n.length > 0)
+                .map(n => n[0])
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
+            document.getElementById('user-initials').innerText = initials || '??';
+
+            // Load saved photo if exists
+            loadProfilePhoto();
+
+            // Update sidebar links with current params
+            updateSidebarLinks();
+
+            // Title Logic
+            if (mode === 'new') {
+                document.getElementById('page-title-text').innerText = 'Inclusão de Arquidiocese';
+                const submitBtn = document.querySelector('.submit-btn');
+                if (submitBtn) submitBtn.innerText = 'Salvar';
+            } else {
+                document.getElementById('page-title-text').innerText = 'Atualização de Arquidiocese';
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function updateSidebarLinks() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+
+            const archLink = document.getElementById('nav-arquidioceses');
+            if (archLink) {
+                const currentHref = archLink.getAttribute('href').split('?')[0];
+                archLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+
+            const homeLink = document.getElementById('nav-home');
+            if (homeLink) {
+                const currentHref = homeLink.getAttribute('href').split('?')[0];
+                homeLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+        }
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64Image = e.target.result;
+                    localStorage.setItem('adocao_user_photo', base64Image);
+                    applyPhoto(base64Image);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadProfilePhoto() {
+            const savedPhoto = localStorage.getItem('adocao_user_photo');
+            if (savedPhoto) {
+                applyPhoto(savedPhoto);
+            }
+        }
+
+        function applyPhoto(photoData) {
+            // Update Header
+            const headerInitials = document.getElementById('user-initials');
+            if (headerInitials) headerInitials.innerHTML = `<img src="${photoData}" alt="User">`;
+
+            // Update Dropdown Avatar
+            const avatarContent = document.getElementById('avatar-content');
+            if (avatarContent) avatarContent.innerHTML = `<img src="${photoData}" class="user-photo" alt="Profile">`;
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            toggleIcon.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                toggleIcon.classList.remove('active');
+            }
+        }
+
+        async function loadCountries() {
+            const select = document.getElementById('country-select');
+            try {
+                const countries = await fetchData('pais');
+                select.innerHTML = '<option value="" disabled selected>Selecione um país</option>';
+                
+                countries.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id_pais;
+                    option.textContent = p.nome_pais;
+                    if (p.nome_pais.toUpperCase() === 'BRASIL') option.selected = true;
+                    select.appendChild(option);
+                });
+
+                // Carrega estados inicialmente se houver país selecionado
+                if (select.value) loadStatesByCountry();
+            } catch (error) {
+                console.error("Erro ao carregar países:", error);
+                select.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        async function loadStatesByCountry() {
+            const countryId = document.getElementById('country-select').value;
+            const stateSelect = document.getElementById('state-select');
+            
+            if (!countryId) return;
+
+            stateSelect.innerHTML = '<option value="" disabled selected>Carregando estados...</option>';
+
+            try {
+                const response = await fetch(`${API_URL}/estados/pais/${countryId}`);
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                const states = await response.json();
+                
+                stateSelect.innerHTML = '<option value="" disabled selected>Selecione o estado</option>';
+                
+                states.forEach(est => {
+                    const option = document.createElement('option');
+                    option.value = est.id_estado;
+                    option.textContent = `${est.sigla_estado} - ${est.nome_estado}`;
+                    stateSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Erro ao carregar estados:", error);
+                stateSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        async function loadRegionalsByState() {
+            const stateId = document.getElementById('state-select').value;
+            const regionalSelect = document.getElementById('regional-select');
+            
+            if (!stateId) return;
+
+            regionalSelect.innerHTML = '<option value="" disabled selected>Carregando regionais...</option>';
+
+            try {
+                const response = await fetch(`${API_URL}/regionais/estado/${stateId}`);
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                const regionals = await response.json();
+                
+                regionalSelect.innerHTML = '<option value="" disabled selected>Selecione a regional</option>';
+                
+                regionals.forEach(reg => {
+                    const option = document.createElement('option');
+                    option.value = reg.id_regional;
+                    option.textContent = reg.nome_regional;
+                    regionalSelect.appendChild(option);
+                });
+
+                if (regionals.length === 1) {
+                    regionalSelect.value = regionals[0].id_regional;
+                }
+            } catch (error) {
+                console.error("Erro ao carregar regionais:", error);
+                regionalSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        async function deleteArquidiocese() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const name = document.getElementById('name-input').value;
+            const nomeUser = urlParams.get('nome') || '';
+            const cpfUser = urlParams.get('cpf') || '';
+
+            if (!id) {
+                alert("Não é possível excluir um novo registro.");
+                return;
+            }
+
+            if (confirm(`Deseja realmente excluir a arquidiocese "${name}"?`)) {
+                try {
+                    const response = await fetch(`${API_URL}/arquidioceses/${id}`, { method: 'DELETE' });
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert("Arquidiocese excluída com sucesso!");
+                        window.location.href = `arquidioceses.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}`;
+                    } else {
+                        alert("Erro ao excluir: " + (result.error || "Erro desconhecido"));
+                    }
+                } catch (error) {
+                    console.error("Erro ao excluir:", error);
+                    alert("Erro ao excluir arquidiocese.");
+                }
+            }
+        }
+
+        async function saveArquidiocese(event) {
+            event.preventDefault();
+
+            const countryId = document.getElementById('country-select').value;
+            const stateId = document.getElementById('state-select').value;
+            const regionalId = document.getElementById('regional-select').value;
+            const city = document.getElementById('city-input').value.trim();
+            const name = document.getElementById('name-input').value.trim();
+            const bishop = document.getElementById('bishop-input').value.trim();
+            const status = document.getElementById('status-select').value;
+
+            // Validação (terminados com *)
+            if (!countryId || !stateId || !regionalId || !city || !name || !status) {
+                alert("Por favor, preencha todos os campos obrigatórios (*)");
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const id_arquidiocese = urlParams.get('id');
+            const nomeUser = urlParams.get('nome') || '';
+            const cpfUser = urlParams.get('cpf') || '';
+
+            const data = {
+                id_arquidiocese: id_arquidiocese || null,
+                nome_arquidiocese: name,
+                id_pais: countryId,
+                id_estado: stateId,
+                id_regional: regionalId,
+                cidade: city,
+                arcebispo: bishop,
+                status: status
+            };
+
+            try {
+                const result = await postData('arquidioceses/save', data);
+                if (result.success) {
+                    alert("Arquidiocese salva com sucesso!");
+                    window.location.href = `arquidioceses.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}`;
+                } else {
+                    alert("Erro ao salvar: " + (result.error || "Erro desconhecido"));
+                }
+            } catch (error) {
+                console.error("Erro ao salvar arquidiocese:", error);
+                alert("Erro ao salvar: " + error.message);
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        async function loadArquidioceseData(id) {
+            try {
+                const arq = await fetchData(`arquidioceses/${id}`);
+                if (!arq) return;
+
+                // Preencher campos simples
+                document.getElementById('city-input').value = arq.cidade || '';
+                document.getElementById('name-input').value = arq.nome_arquidiocese || '';
+                document.getElementById('bishop-input').value = arq.arcebispo || '';
+                document.getElementById('status-select').value = arq.status || '';
+
+                // Selecionar País e carregar Estados
+                const countrySelect = document.getElementById('country-select');
+                countrySelect.value = arq.id_pais;
+                await loadStatesByCountry();
+
+                // Selecionar Estado e carregar Regionais
+                const stateSelect = document.getElementById('state-select');
+                stateSelect.value = arq.id_estado;
+                await loadRegionalsByState();
+
+                // Selecionar Regional
+                const regionalSelect = document.getElementById('regional-select');
+                regionalSelect.value = arq.id_regional;
+
+            } catch (error) {
+                console.error("Erro ao carregar dados da arquidiocese:", error);
+                alert("Erro ao carregar dados para edição.");
+            }
+        }
+
+        window.onload = async function() {
+            updateUserName();
+            await loadCountries();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (id) {
+                await loadArquidioceseData(id);
+            } else {
+                // Hide delete button if new record
+                const deleteBtn = document.getElementById('delete-btn');
+                if (deleteBtn) deleteBtn.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+
+</html>

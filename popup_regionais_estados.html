@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusão de Regional - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --bg-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--bg-white);
+            width: 100%;
+            max-width: 550px;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Close Button */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: #777;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-red);
+        }
+
+        /* Header Area */
+        .modal-header {
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: var(--primary-red);
+        }
+
+        /* Form Row: Nome da Regional */
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+
+
+        .form-input {
+            flex-grow: 1;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary-red);
+        }
+
+        .form-select {
+            padding: 8px 10px;
+            border: 1px solid var(--primary-red);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 200px;
+            background-color: white;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .fields-grid {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .flex-grow {
+            flex-grow: 1;
+        }
+
+        /* Estados Header & Search */
+        .states-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .states-title {
+            font-size: 0.95rem;
+            color: var(--text-gray);
+        }
+
+        .search-container {
+            width: 150px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #333;
+            outline: none;
+            font-style: italic;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .header-divider {
+            height: 2px;
+            background-color: var(--primary-red);
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        /* List Area */
+        .states-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+
+        /* Custom Scrollbar */
+        .states-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .states-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .states-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .states-list::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 5px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .list-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #777;
+            border-radius: 3px;
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        .list-item.selected .custom-checkbox {
+            background-color: #eee;
+            border-color: #555;
+        }
+
+        .list-item.selected .custom-checkbox::after {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 10px;
+            color: #333;
+        }
+
+        .item-text {
+            font-size: 1rem;
+            color: var(--text-gray);
+            font-weight: 400;
+        }
+
+        /* Footer Area */
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .footer-logo-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .save-btn {
+            background-color: #ae3326;
+            color: white;
+            border: none;
+            padding: 12px 45px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .save-btn:hover {
+            background-color: #8b1e1e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="modal-container">
+        <i class="fa-solid fa-xmark close-btn" onclick="window.history.back()"></i>
+
+        <div class="modal-header">
+            <h2 class="modal-title">Inclusão de Regional</h2>
+        </div>
+
+        <div class="fields-grid">
+            <div class="field-group">
+                <label class="field-label">País</label>
+                <select class="form-select" id="country-select" onchange="loadStatesByCountry()">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+            <div class="field-group flex-grow">
+                <label class="field-label">Nome da Regional</label>
+                <input type="text" class="form-input" id="regional-name-input">
+            </div>
+        </div>
+
+        <div class="states-header">
+            <div class="states-title">Estados</div>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="busca" id="search-input" onkeyup="filterList()">
+            </div>
+        </div>
+
+        <div class="header-divider"></div>
+
+        <div class="states-list" id="states-list">
+            <!-- Items loaded dynamically -->
+        </div>
+
+        <div class="modal-footer">
+            <div class="footer-logo">
+                <img src="./logo_circular.png" alt="Logo">
+                <div class="footer-logo-text">Adoção<br>Espiritual</div>
+            </div>
+            <button class="save-btn" onclick="saveSelection()">Salvar</button>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        async function loadCountries() {
+            const select = document.getElementById('country-select');
+            console.log("Iniciando carregamento de países...");
+            try {
+                const countries = await fetchData('pais');
+                console.log("Países recebidos:", countries);
+                select.innerHTML = '';
+                
+                if (!countries || countries.length === 0) {
+                    select.innerHTML = '<option value="">Nenhum país cadastrado</option>';
+                    console.warn("Nenhum país retornado pela API");
+                    return;
+                }
+
+                countries.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id_pais;
+                    option.textContent = p.nome_pais;
+                    if (p.nome_pais.toUpperCase() === 'BRASIL') option.selected = true;
+                    select.appendChild(option);
+                });
+
+                // Carrega estados do país selecionado inicialmente
+                loadStatesByCountry();
+            } catch (error) {
+                console.error("Erro ao carregar países:", error);
+                select.innerHTML = '<option value="">Erro na API</option>';
+                alert("Erro ao conectar com a API de países. Verifique se o servidor está rodando.");
+            }
+        }
+
+        async function loadStatesByCountry() {
+            const countryId = document.getElementById('country-select').value;
+            const statesList = document.getElementById('states-list');
+            
+            if (!countryId) {
+                statesList.innerHTML = '<div style="padding: 15px; color: #777;">Selecione um país.</div>';
+                return;
+            }
+
+            console.log("Buscando estados para o país ID:", countryId);
+            statesList.innerHTML = '<div style="padding: 15px; color: #777;">Carregando estados...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/estados/pais/${countryId}`);
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                const states = await response.json();
+                console.log("Estados recebidos:", states);
+                
+                statesList.innerHTML = '';
+                
+                if (!states || states.length === 0) {
+                    statesList.innerHTML = '<div style="padding: 15px; color: #777;">Nenhum estado cadastrado para este país.</div>';
+                    return;
+                }
+
+                states.forEach(est => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.setAttribute('data-id', est.id_estado);
+                    item.onclick = function() { toggleSelection(this); };
+                    
+                    item.innerHTML = `
+                        <div class="custom-checkbox"></div>
+                        <span class="item-text">${est.sigla_estado} - ${est.nome_estado}</span>
+                    `;
+                    statesList.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Erro ao carregar estados:", error);
+                statesList.innerHTML = '<div style="padding: 15px; color: #ae3326;">Erro ao carregar estados.</div>';
+            }
+        }
+
+        // Detectar se é edição pelo parâmetro ID na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const regionalId = urlParams.get('id');
+
+        async function loadRegionalForEdit() {
+            if (!regionalId) return;
+
+            console.log("Modo Edição. ID:", regionalId);
+            document.querySelector('.modal-title').textContent = "Alteração de Regional";
+
+            try {
+                // Buscar detalhes da regional
+                const data = await fetchData('regionais/detalhes');
+                const regionalRows = data.filter(r => r.id_regional == regionalId);
+                
+                if (regionalRows.length > 0) {
+                    // Nome
+                    document.getElementById('regional-name-input').value = regionalRows[0].nome_regional;
+                    
+                    // Estados (esperar os estados carregarem primeiro)
+                    const checkStatesInterval = setInterval(() => {
+                        const items = document.querySelectorAll('.list-item');
+                        if (items.length > 0) {
+                            clearInterval(checkStatesInterval);
+                            
+                            const stateNames = regionalRows.map(r => r.nome_estado);
+                            items.forEach(item => {
+                                const itemText = item.querySelector('.item-text').textContent;
+                                // O texto é "SIGLA - NOME", vamos comparar apenas o NOME
+                                const stateNameInItem = itemText.split(' - ')[1];
+                                if (stateNames.includes(stateNameInItem)) {
+                                    item.classList.add('selected');
+                                }
+                            });
+                        }
+                    }, 100);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados da regional:", error);
+            }
+        }
+
+        window.onload = async () => {
+            await loadCountries();
+            await loadRegionalForEdit();
+        };
+
+
+        function toggleSelection(element) {
+            element.classList.toggle('selected');
+        }
+
+        function filterList() {
+            const input = document.getElementById('search-input');
+            const filter = input.value.toLowerCase();
+            const list = document.getElementById('states-list');
+            const items = list.getElementsByClassName('list-item');
+
+            for (let i = 0; i < items.length; i++) {
+                const text = items[i].getElementsByClassName('item-text')[0].innerText.toLowerCase();
+                if (text.indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+
+        // Global error handler for debugging
+        window.onerror = function(msg, url, line, col, error) {
+            console.error("Erro Global:", msg, "no arquivo", url, "linha", line);
+            return false;
+        };
+
+        async function saveSelection() {
+            const countrySelect = document.getElementById('country-select');
+            const countryId = countrySelect.value;
+            const regionalName = document.getElementById('regional-name-input').value.trim();
+            const selectedElements = document.querySelectorAll('.list-item.selected');
+            
+            console.log("Tentando salvar regional:", { regionalName, countryId, statesCount: selectedElements.length });
+
+            // Validações (Críticas)
+            if (!countryId) {
+                alert("Crítica: Por favor, selecione um país.");
+                return;
+            }
+
+            if (!regionalName) {
+                alert("Crítica: Por favor, preencha o Nome da Regional.");
+                document.getElementById('regional-name-input').focus();
+                return;
+            }
+
+            if (selectedElements.length === 0) {
+                alert("Crítica: Por favor, selecione ao menos um estado para esta regional.");
+                return;
+            }
+
+            const stateIds = Array.from(selectedElements).map(item => parseInt(item.getAttribute('data-id')));
+            console.log("IDs dos estados selecionados:", stateIds);
+
+            try {
+                // Desabilitar botão para evitar cliques duplos
+                const saveBtn = document.querySelector('.save-btn');
+                saveBtn.disabled = true;
+                saveBtn.textContent = "Salvando...";
+
+                console.log("Chamando postData('regionais/save')...");
+                const result = await postData('regionais/save', {
+                    id: regionalId || null,
+                    nome: regionalName,
+                    states: stateIds,
+                    id_pais: countryId
+                });
+
+                console.log("Resultado recebido do servidor:", result);
+
+                if (result.success) {
+                    alert("Regional \"" + regionalName + "\" salva com sucesso!");
+                    
+                    // Retornar para a lista preservando parâmetros de usuário
+                    const nome = urlParams.get('nome') || '';
+                    const cpf = urlParams.get('cpf') || '';
+                    window.location.href = `lista_regionais.html?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`;
+                }
+            } catch (error) {
+                console.error("Capturado no Catch de saveSelection:", error);
+                alert("Erro ao salvar: " + error.message);
+            } finally {
+                const saveBtn = document.querySelector('.save-btn');
+                saveBtn.disabled = false;
+                saveBtn.textContent = "Salvar";
+            }
+        }
+    </script>
+</body>
+
+</html>

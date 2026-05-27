@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento de Colaboradores - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --btn-accent: #b25e5e; /* Terracota */
+            --orange-banner: #f39c12;
+            --text-dark: #333;
+            --text-gray: #777;
+            --border-color: #ddd;
+            --modal-bg: #fdfaf5; /* Off-white / Cream */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--modal-bg);
+            width: 100%;
+            max-width: 550px;
+            border-radius: 12px;
+            padding: 30px 25px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* Watermark */
+        .modal-container::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 80%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.03;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-title {
+            font-size: 1.35rem;
+            color: var(--primary-red);
+            font-weight: 700;
+            line-height: 1.3;
+            text-align: center;
+        }
+
+        .modal-body {
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px 15px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 4;
+        }
+
+        .form-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #555;
+            background: white;
+            outline: none;
+        }
+
+        .mandatory-notice {
+            color: #8b1e1e;
+            font-style: italic;
+            font-size: 0.85rem;
+            margin-bottom: 25px;
+            text-align: center;
+            background-color: #fdf2f2;
+            border: 1px solid #f8b4b4;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #555;
+            background: white;
+            outline: none;
+            appearance: none;
+            padding-right: 30px;
+        }
+
+        .select-wrapper::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.8rem;
+        }
+
+        .modal-footer {
+            text-align: center;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cancel-btn {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+            padding: 10px 45px;
+            border-radius: 30px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cancel-btn:hover {
+            background-color: #fdf2f2;
+        }
+
+        .save-btn {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 10px 55px;
+            border-radius: 30px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            font-style: italic;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.2);
+        }
+
+        .save-btn:hover {
+            opacity: 0.9;
+        }
+
+        .bottom-branding {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .branding-logo {
+            width: 32px;
+            height: 32px;
+            opacity: 0.8;
+        }
+
+        .branding-text {
+            font-size: 0.8rem;
+            color: #333;
+            font-weight: 600;
+            line-height: 1.1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-container">
+        <i class="fa-solid fa-xmark close-btn" onclick="goBack()"></i>
+
+        <header class="modal-header">
+            <h1 class="modal-title" id="training-title">
+                &lt;título&gt;
+            </h1>
+        </header>
+
+        <main class="modal-body">
+            <p class="mandatory-notice">Os campos assinalados com asterisco (*) são de preenchimento obrigatório.</p>
+            <form id="training-form">
+                <div class="form-grid">
+                    <!-- Date Inputs -->
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Data <span>*</span></label>
+                        <input type="text" class="input-field" id="input-date" placeholder="00/00/0000" maxlength="10" oninput="maskDate(this)" required>
+                    </div>
+
+                    <!-- Time Inputs -->
+                    <div class="form-group">
+                        <label class="form-label">Horário início <span>*</span></label>
+                        <input type="text" class="input-field" id="input-time-start" placeholder="00:00" maxlength="5" oninput="maskTime(this)" onblur="completeTime(this)" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Horário Fim <span>*</span></label>
+                        <input type="text" class="input-field" id="input-time-end" placeholder="00:00" maxlength="5" oninput="maskTime(this)" onblur="completeTime(this)" required>
+                    </div>
+
+                    <!-- Instructor Selection -->
+                    <div class="form-group full-width">
+                        <label class="form-label">Instrutor <span>*</span></label>
+                        <div class="select-wrapper">
+                            <select class="select-field" id="select-instructor" required>
+                                <option value=""></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Pauta Input -->
+                    <div class="form-group full-width">
+                        <label class="form-label">Pauta <span>*</span></label>
+                        <input type="text" class="input-field" id="input-pauta" placeholder="" maxlength="100" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: center; gap: 15px;">
+                    <button type="button" class="cancel-btn" onclick="goBack()">Cancelar</button>
+                    <button type="submit" class="save-btn">Salvar</button>
+                </div>
+            </form>
+        </main>
+
+        <footer class="bottom-branding">
+            <img src="./logo_circular.png" class="branding-logo" alt="Logo">
+            <div class="branding-text">
+                Adoção<br>Espiritual
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const API_URL = window.location.protocol === 'file:'
+            ? `http://${window.location.hostname || 'localhost'}:3000/api`
+            : '/api';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadTrainingTitle();
+            await loadInstructors();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const agendaId = urlParams.get('agenda_id');
+            if (agendaId) {
+                await loadAgendaData(agendaId);
+            }
+        });
+
+        async function loadAgendaData(agendaId) {
+            try {
+                const response = await fetch(`${API_URL}/treinamento_instrutores/${agendaId}`);
+                if (!response.ok) {
+                    alert('Erro ao carregar dados do instrutor.');
+                    return;
+                }
+                const agenda = await response.json();
+                
+                document.getElementById('input-date').value = formatDateBr(agenda.data);
+                document.getElementById('input-time-start').value = agenda.hora_inicio.substring(0, 5);
+                document.getElementById('input-time-end').value = agenda.hora_fim.substring(0, 5);
+                document.getElementById('select-instructor').value = agenda.id_colaborador;
+                document.getElementById('input-pauta').value = agenda.pauta || '';
+            } catch (err) {
+                console.error('Erro ao buscar dados da agenda:', err);
+                alert('Erro de conexão ao buscar dados da agenda.');
+            }
+        }
+
+        function formatDateBr(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('T')[0].split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function loadTrainingTitle() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const titleParam = urlParams.get('training_title');
+
+            if (titleParam) {
+                document.getElementById('training-title').innerText = titleParam;
+            } else if (id) {
+                fetch(`${API_URL}/treinamentos/${id}`)
+                    .then(res => res.json())
+                    .then(t => {
+                        document.getElementById('training-title').innerText = t.titulo || '';
+                    })
+                    .catch(err => console.error('Erro ao buscar título do treinamento:', err));
+            }
+        }
+
+        async function loadInstructors() {
+            try {
+                const response = await fetch(`${API_URL}/colaboradores`);
+                if (!response.ok) throw new Error('Failed to fetch collaborators');
+                const colaboradores = await response.json();
+                
+                const selectField = document.getElementById('select-instructor');
+                selectField.innerHTML = '<option value=""></option>';
+                
+                // Filter active collaborators (status = 'Ativo')
+                const activeColabs = colaboradores.filter(c => c.status && c.status.toLowerCase() === 'ativo');
+                
+                activeColabs.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id_colaborador;
+                    option.textContent = c.nome_colaborador;
+                    selectField.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar instrutores:', err);
+            }
+        }
+
+        function goBack() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id') || '';
+            const mode = urlParams.get('mode') || '';
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `registro_treinamentos.html?id=${id}&mode=${mode}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&tab=tab-datas`;
+        }
+
+        function maskDate(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 8);
+            if (value.length > 4) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2, 4) + '/' + value.substring(4);
+            } else if (value.length > 2) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2);
+            } else {
+                input.value = value;
+            }
+        }
+
+        function maskTime(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 4);
+            if (value.length > 2) {
+                input.value = value.substring(0, 2) + ':' + value.substring(2);
+            } else {
+                input.value = value;
+            }
+        }
+
+        function formatTime(val) {
+            const digits = val.replace(/\D/g, '');
+            if (!digits) return null;
+            
+            let hh = '';
+            let mm = '';
+            
+            if (digits.length === 1) {
+                hh = '0' + digits;
+                mm = '00';
+            } else if (digits.length === 2) {
+                hh = digits;
+                mm = '00';
+            } else if (digits.length === 3) {
+                const firstTwo = parseInt(digits.substring(0, 2), 10);
+                if (firstTwo <= 23) {
+                    hh = digits.substring(0, 2);
+                    mm = digits.substring(2) + '0';
+                } else {
+                    hh = '0' + digits.substring(0, 1);
+                    mm = digits.substring(1);
+                }
+            } else if (digits.length >= 4) {
+                hh = digits.substring(0, 2);
+                mm = digits.substring(2, 4);
+            }
+            
+            const h = parseInt(hh, 10);
+            const m = parseInt(mm, 10);
+            
+            if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}`;
+            }
+            
+            return null;
+        }
+
+        function completeTime(input) {
+            const val = input.value.trim();
+            if (!val) return;
+            const formatted = formatTime(val);
+            if (formatted) {
+                input.value = formatted;
+            }
+        }
+
+        document.getElementById('training-form').onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const dateVal = document.getElementById('input-date').value.trim();
+            let startVal = document.getElementById('input-time-start').value.trim();
+            let endVal = document.getElementById('input-time-end').value.trim();
+
+            const formattedStart = formatTime(startVal);
+            if (startVal && !formattedStart) {
+                alert('Por favor, insira um horário de início válido (ex: 14:00 ou 14).');
+                return;
+            }
+            if (formattedStart) {
+                startVal = formattedStart;
+                document.getElementById('input-time-start').value = formattedStart;
+            }
+
+            const formattedEnd = formatTime(endVal);
+            if (endVal && !formattedEnd) {
+                alert('Por favor, insira um horário de fim válido (ex: 15:00 ou 15).');
+                return;
+            }
+            if (formattedEnd) {
+                endVal = formattedEnd;
+                document.getElementById('input-time-end').value = formattedEnd;
+            }
+            const instructorVal = document.getElementById('select-instructor').value;
+            const pautaVal = document.getElementById('input-pauta').value.trim();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const trainingId = urlParams.get('id');
+            
+            if (!trainingId) {
+                alert('Erro: ID do treinamento não encontrado na URL.');
+                return;
+            }
+            if (!dateVal) {
+                alert('A data é obrigatória.');
+                return;
+            }
+            if (!startVal) {
+                alert('O horário de início é obrigatório.');
+                return;
+            }
+            if (startVal === '00:00') {
+                alert('O horário de início não pode ser 00:00.');
+                return;
+            }
+            if (!endVal) {
+                alert('O horário de fim é obrigatório.');
+                return;
+            }
+            if (endVal === '00:00') {
+                alert('O horário de fim não pode ser 00:00.');
+                return;
+            }
+            if (!instructorVal) {
+                alert('O instrutor é obrigatório.');
+                return;
+            }
+            if (!pautaVal) {
+                alert('A pauta é obrigatória.');
+                return;
+            }
+
+            const agendaId = urlParams.get('agenda_id');
+            const payload = {
+                id_treinamento: parseInt(trainingId),
+                data: dateVal,
+                hora_inicio: startVal,
+                hora_fim: endVal,
+                pauta: pautaVal,
+                id_colaborador: parseInt(instructorVal)
+            };
+
+            if (agendaId) {
+                payload.id_agenda_treinamento = parseInt(agendaId);
+            }
+
+            try {
+                const saveBtn = document.querySelector('.save-btn');
+                saveBtn.disabled = true;
+                saveBtn.innerText = 'Salvando...';
+
+                const response = await fetch(`${API_URL}/treinamento_instrutores/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                let result;
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { success: false, error: text || 'Erro de formato na resposta do servidor.' };
+                }
+
+                if (response.ok && result.success) {
+                    alert('Dados salvos com sucesso!');
+                    goBack();
+                } else {
+                    alert('Erro ao salvar dados: ' + (result.error || 'Erro desconhecido.'));
+                    saveBtn.disabled = false;
+                    saveBtn.innerText = 'Salvar';
+                }
+            } catch (err) {
+                console.error('Erro ao salvar instrutor de treinamento:', err);
+                alert('Erro de conexão ao salvar os dados.');
+                const saveBtn = document.querySelector('.save-btn');
+                saveBtn.disabled = false;
+                saveBtn.innerText = 'Salvar';
+            }
+        };
+    </script>
+</body>
+</html>

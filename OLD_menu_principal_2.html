@@ -1,0 +1,681 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Principal V2 - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #eee;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --terracotta: #b25e5e;
+            /* Matching the red/terracotta theme */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border-bottom: 2px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title-text {
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.1;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 15px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .account-toggle.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .menu-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 15px;
+            table-layout: fixed;
+        }
+
+        .menu-table td {
+            background-color: white;
+            border-radius: 8px;
+            padding: 0;
+            height: 160px;
+            text-align: center;
+            vertical-align: middle;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .menu-table td:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .cell-image {
+            flex-grow: 1;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .cell-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .cell-footer {
+            background-color: #b25e5e;
+            padding: 8px;
+            width: 100%;
+        }
+
+        .cell-title {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-style: italic;
+            margin: 0;
+        }
+
+        .card-label {
+            padding: 5px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #b25e5e;
+            background-color: white;
+            width: 100%;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-height: 50px;
+            /* Altura fixa garantida */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">
+            <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+            <div class="header-title-text">Adoção<br>Espiritual</div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <a href="#" class="update-link"
+                            style="color: #333; font-size: 14px; text-decoration: underline;"><i><u>Atualizar
+                                    cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item" id="nav-home"><i class="fa-solid fa-house"></i>
+                    Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a>
+            </li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a>
+            </li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
+            </li>
+            <li><a href="arquidioceses.html" class="sidebar-item" id="nav-arquidioceses"><i
+                        class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item" id="nav-paroquias"><i
+                        class="fa-solid fa-house-chimney-window"></i> Paróquias e instituições pró-vida</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item" id="nav-colaboradores"><i
+                        class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item" id="nav-treinamentos"><i
+                        class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <div class="table-container">
+            <table class="menu-table">
+                <tr>
+                    <td onclick="navigation.goTo('arquidioceses.html')">
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_arquidiocese.png" alt="Arquidioceses"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Arquidioceses
+                            </div>
+                        </div>
+                    </td>
+                    <td onclick="navigation.goTo('paroquias.html')">
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_paroquia.png" alt="Paróquias"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Paróquias e instituições pró-vida
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_calendario.png" alt="Calendário"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Calendário de eventos
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_aniversario.png" alt="Aniversariantes"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Aniversariantes do mês
+                            </div>
+                        </div>
+                    </td>
+                    <td onclick="navigation.goTo('treinamentos.html')">
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_treinamento.png" alt="Treinamentos"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Treinamentos
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td onclick="navigation.goTo('colaboradores.html')">
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_colaboradores.png" alt="Colaboradores"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Colaboradores
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_fotos_atividades.png" alt="Registros"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Fotos e registros de atividades
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_fotos_acessos_colaboradores.png" alt="Acessos"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Acessos de colaboradores
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_paineis.png" alt="Painéis"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Painéis
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <img src="./menu_foto_regionais.png" alt="Regionais"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                            <div class="card-label">
+                                Regionais
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </main>
+
+    <script src="assets/js/header.js"></script>
+    <script>
+        const navigation = {
+            goTo: function (page) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const nome = urlParams.get('nome') || '';
+                const cpf = urlParams.get('cpf') || '';
+                window.location.href = `${page}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`;
+            }
+        };
+
+        
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function updateSidebarLinks() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+
+            const archLink = document.getElementById('nav-arquidioceses');
+            if (archLink) {
+                const currentHref = archLink.getAttribute('href').split('?')[0];
+                archLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+
+            const homeLink = document.getElementById('nav-home');
+            if (homeLink) {
+                const currentHref = homeLink.getAttribute('href').split('?')[0];
+                homeLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+
+            const paroquiaLink = document.getElementById('nav-paroquias');
+            if (paroquiaLink) {
+                const currentHref = paroquiaLink.getAttribute('href').split('?')[0];
+                paroquiaLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+
+            const colabLink = document.getElementById('nav-colaboradores');
+            if (colabLink) {
+                const currentHref = colabLink.getAttribute('href').split('?')[0];
+                colabLink.setAttribute('href', `${currentHref}?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`);
+            }
+        }
+
+        
+
+        
+
+        
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            toggleIcon.classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                toggleIcon.classList.remove('active');
+            }
+        }
+
+        
+    </script>
+</body>
+
+</html>

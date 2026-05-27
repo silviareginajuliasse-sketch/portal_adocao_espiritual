@@ -1,0 +1,456 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Regional - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #777;
+            --btn-accent: #b25e5e;
+            --btn-blue: #1652b4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Main Container */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        @media (min-width: 900px) {
+            .layout-split {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .instructions-sidebar {
+            flex: 0 0 380px;
+            font-size: 0.95rem;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .instructions-sidebar-title {
+            font-size: 1.1rem;
+            color: #444;
+            font-weight: 500;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            width: 100%;
+        }
+
+        .subtitle-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .subtitle-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .form-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .states-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fdfdfd;
+        }
+
+        .state-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 40px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+        }
+
+        .back-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed; top: 0; right: -300px; width: 300px; height: 100vh;
+            background-color: #fff; box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column;
+        }
+        .sidebar.active { right: 0; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); z-index: 1999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="account-container">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="layout-split">
+            <aside class="instructions-sidebar">
+                <h2 class="instructions-sidebar-title">Orientações</h2>
+                <p>Nesta página você pode cadastrar ou alterar uma Regional e vincular os estados que pertencem a ela.</p>
+            </aside>
+
+            <div class="main-content">
+                <div class="subtitle-with-icon">
+                    <i class="fa-solid fa-globe"></i>
+                    <span id="page-title">Registro de Regional</span>
+                </div>
+
+                <div class="form-card">
+                    <form id="regional-form">
+                        <div class="form-group">
+                            <label class="form-label">Nome da Regional</label>
+                            <input type="text" id="nome_regional" class="input-field" required placeholder="Ex: Regional Norte I">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Estados Vinculados</label>
+                            <div id="states-list" class="states-list">
+                                <!-- Dynamic states list -->
+                            </div>
+                        </div>
+
+                        <div class="footer-actions">
+                            <a href="lista_regionais.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+                            <button type="submit" class="submit-btn">SALVAR</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode') || 'new';
+        const id = urlParams.get('id');
+
+        async function loadStates() {
+            const states = await fetchData('estados');
+            const container = document.getElementById('states-list');
+            container.innerHTML = states.map(s => `
+                <label class="state-item">
+                    <input type="checkbox" name="states" value="${s.id_estado}">
+                    ${s.nome_estado}
+                </label>
+            `).join('');
+        }
+
+        async function loadRegionalData() {
+            if (mode === 'edit' && id) {
+                document.getElementById('page-title').innerText = 'Atualização de Regional';
+                const regionais = await fetchData('regionais/detalhes');
+                const regional = regionais.find(r => r.id_regional == id);
+                
+                if (regional) {
+                    document.getElementById('nome_regional').value = regional.nome_regional;
+                    // Note: regional.sigla_estado is flat in current API response.
+                    // To properly show selected states, we might need a better API call or a filter.
+                    // For now, let's assume we can fetch all details.
+                    
+                    // Filtrar detalhes para esta regional específica para obter todos os estados vinculados
+                    const allDetails = await fetchData('regionais/detalhes');
+                    const thisRegionalStateIds = allDetails
+                        .filter(r => r.id_regional == id && r.nome_estado)
+                        .map(r => {
+                            // Encontrar o ID do estado baseado no nome (ou sigla se tivéssemos)
+                            // Melhor ainda: vamos buscar os estados novamente para garantir o mapa
+                            return r;
+                        });
+                    
+                    // Como a rota /regionais/detalhes não retorna o ID do estado, 
+                    // vamos buscar a tabela regional_estado diretamente se possível,
+                    // ou comparar pelos nomes que já temos no loadStates.
+                    const checkboxes = document.querySelectorAll('input[name="states"]');
+                    const statesInThisRegional = allDetails.filter(r => r.id_regional == id).map(r => r.nome_estado);
+                    
+                    checkboxes.forEach(cb => {
+                        const labelText = cb.parentElement.innerText.trim();
+                        if (statesInThisRegional.includes(labelText)) {
+                            cb.checked = true;
+                        }
+                    });
+                }
+            }
+        }
+
+        document.getElementById('regional-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('nome_regional').value;
+            const selectedStates = Array.from(document.querySelectorAll('input[name="states"]:checked')).map(cb => parseInt(cb.value));
+            
+            try {
+                const result = await postData('regionais/save', {
+                    id: mode === 'edit' ? id : null,
+                    nome: nome,
+                    states: selectedStates
+                });
+
+                if (result.success) {
+                    alert('Dados salvos com sucesso!');
+                    window.location.href = 'lista_regionais.html';
+                } else {
+                    alert('Erro ao salvar dados: ' + (result.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                alert('Erro ao conectar com a API');
+            }
+        };
+
+        window.onload = async () => {
+            await loadStates();
+            await loadRegionalData();
+            
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            document.getElementById('user-display').innerText = nome;
+            document.getElementById('user-id').innerText = cpf;
+            document.getElementById('user-initials').innerText = nome.substring(0,2).toUpperCase();
+        };
+    </script>
+</body>
+</html>

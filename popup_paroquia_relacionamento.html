@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Relacionamento - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #777;
+            --border-light: #e2e2e2;
+            --bg-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--bg-white);
+            width: 100%;
+            max-width: 620px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            position: relative;
+            padding: 30px 35px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Close Button */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: #b0b0b0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-red);
+        }
+
+        /* Header Area */
+        .modal-title {
+            font-size: 1.65rem;
+            font-weight: 500;
+            color: var(--primary-red);
+            margin-bottom: 25px;
+            letter-spacing: -0.5px;
+        }
+
+        /* Form Row & Groups */
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .flex-60 {
+            flex: 3;
+        }
+
+        .flex-40 {
+            flex: 2;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        .form-label {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .form-label .required {
+            color: var(--primary-red);
+            margin-left: 2px;
+        }
+
+        /* Input Elements */
+        .input-field, .textarea-field, .select-field {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-dark);
+            background: white;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-field:focus, .textarea-field:focus, .select-field:focus {
+            border-color: var(--primary-red);
+        }
+
+        /* Date Input Specifics */
+        #input-data {
+            text-align: center;
+        }
+
+        #input-data::placeholder {
+            color: #b0b0b0;
+        }
+
+        /* Select Wrapper for Arrow */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-field {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding-right: 35px;
+        }
+
+        .select-wrapper::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.8rem;
+        }
+
+        /* Textarea Field */
+        .textarea-field {
+            height: 130px;
+            resize: none;
+        }
+
+        /* Footer Area */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .save-btn {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 12px 50px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.2);
+        }
+
+        .save-btn:hover {
+            background-color: #721616;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="modal-container">
+        <i class="fa-solid fa-xmark close-btn" onclick="goBack()"></i>
+
+        <h2 class="modal-title">Cadastro de relacionamento com a paróquia</h2>
+
+        <form id="relationship-form" onsubmit="saveRelationship(event)">
+            <div class="form-row">
+                <div class="form-group flex-60">
+                    <label class="form-label" for="select-canal">Canal <span class="required">*</span></label>
+                    <div class="select-wrapper">
+                        <select class="select-field" id="select-canal" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="Reunião presencial">Reunião presencial</option>
+                            <option value="Reunião remota">Reunião remota</option>
+                            <option value="E-mail">E-mail</option>
+                            <option value="Telefone">Telefone</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group flex-40">
+                    <label class="form-label" for="input-data">Data <span class="required">*</span></label>
+                    <input type="text" class="input-field" id="input-data" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" required>
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label" for="textarea-detalhes">Detalhes <span class="required">*</span></label>
+                <textarea class="textarea-field" id="textarea-detalhes" required></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="save-btn">Salvar</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        function maskDate(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length > 8) val = val.slice(0, 8);
+            
+            let formatted = '';
+            if (val.length > 0) {
+                formatted += val.substring(0, 2);
+            }
+            if (val.length > 2) {
+                formatted += '/' + val.substring(2, 4);
+            }
+            if (val.length > 4) {
+                formatted += '/' + val.substring(4, 8);
+            }
+            input.value = formatted;
+        }
+
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = `registro_paroquias.html${window.location.search}`;
+            }
+        }
+
+        async function saveRelationship(event) {
+            event.preventDefault();
+
+            const canal = document.getElementById('select-canal').value;
+            const dataInput = document.getElementById('input-data').value;
+            const detalhes = document.getElementById('textarea-detalhes').value.trim();
+
+            if (!canal || !dataInput || !detalhes) {
+                alert("Por favor, preencha todos os campos obrigatórios (*).");
+                return;
+            }
+
+            // Validate date format DD/MM/YYYY
+            const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20)\d\d$/;
+            if (!dateRegex.test(dataInput)) {
+                alert("Por favor, insira uma data válida no formato DD/MM/YYYY.");
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const id_paroquia = urlParams.get('id_paroquia');
+            const id_colaborador_atualiza = localStorage.getItem('user_id_colaborador');
+
+            if (!id_paroquia) {
+                alert("Erro: ID da paróquia ausente na URL.");
+                return;
+            }
+
+            if (!id_colaborador_atualiza) {
+                alert("Erro: ID do colaborador atualizador não encontrado. Efetue o login novamente.");
+                return;
+            }
+
+            const payload = {
+                id_paroquia: parseInt(id_paroquia),
+                data: dataInput,
+                canal: canal,
+                detalhes: detalhes,
+                id_colaborador_atualiza: parseInt(id_colaborador_atualiza)
+            };
+
+            try {
+                const response = await postData('paroquias/historico/save', payload);
+                if (response.success) {
+                    alert("Histórico de relacionamento cadastrado com sucesso!");
+                    goBack();
+                } else {
+                    alert("Erro ao salvar histórico: " + (response.error || "Erro desconhecido"));
+                }
+            } catch (error) {
+                console.error("Erro ao salvar histórico de relacionamento:", error);
+                alert("Erro de conexão ao salvar histórico de relacionamento.");
+            }
+        }
+    </script>
+</body>
+
+</html>

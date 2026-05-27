@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Principal - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-maroon: #7b0000;
+            --dark-maroon: #5a0000;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --card-bg: #fff;
+            --accent-orange: #f39c12;
+            --accent-green: #27ae60;
+            --accent-purple: #8e44ad;
+            --accent-pink: #e91e63;
+            --accent-red: #c0392b;
+            --accent-blue: #2980b9;
+            --accent-orange-dark: #d35400;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title-text {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.1;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-id {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #eee;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chevron-icon {
+            font-size: 10px;
+            color: #3498db;
+            background: #e1f0fa;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .chevron-icon.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+            text-align: left;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Main Content Split */
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 60px - 100px); /* Adjust for header/footer */
+        }
+
+        /* Left Panel - Founder Info */
+        .left-panel {
+            flex: 0 0 35%;
+            background-color: var(--primary-maroon);
+            background-image: 
+                radial-gradient(circle at center 180px, rgba(255, 255, 255, 0.1) 0%, transparent 70%),
+                linear-gradient(rgba(0,0,0,0.2) 0%, transparent 100%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path d="M20 0l20 20-20 20L0 20z" fill="rgba(0,0,0,0.05)"/></svg>');
+            background-size: 100% 100%, 100% 100%, 40px 40px;
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: "";
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background-image: url('./logo_circular.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.8;
+        }
+
+        .portrait-container {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .portrait-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .founder-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .founder-title {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .quote-divider {
+            width: 180px;
+            height: 4px;
+            background: radial-gradient(circle, #fff 0%, transparent 80%);
+            margin: -20px 0 30px 0;
+            opacity: 0.8;
+        }
+
+        .founder-quote {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-weight: 300;
+            max-width: 90%;
+            font-style: italic;
+        }
+
+        /* Right Panel - Menu Grid */
+        .right-panel {
+            flex: 1;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100%;
+        }
+
+        .menu-grid-container {
+            padding: 50px 40px;
+            display: flex;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .menu-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            height: 65px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            text-decoration: none;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-color: #ccc;
+        }
+
+        .card-icon-box {
+            width: 60px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #555;
+        }
+
+        .card-divider {
+            width: 3px;
+            height: 24px;
+            border-radius: 2px;
+        }
+
+        .card-text {
+            padding-left: 15px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            flex: 1;
+        }
+
+        /* Color Modifiers */
+        .divider-green { background-color: var(--accent-green); }
+        .divider-purple { background-color: var(--accent-purple); }
+        .divider-pink { background-color: var(--accent-pink); }
+        .divider-red { background-color: var(--accent-red); }
+        .divider-blue { background-color: var(--accent-blue); }
+        .divider-orange { background-color: var(--accent-orange); }
+
+        /* Footer Area */
+        .footer-container {
+            width: 100%;
+            position: relative;
+            background-color: white;
+        }
+
+        .wave-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .footer-bar {
+            background-color: #8b0000;
+            color: white;
+            padding: 15px 40px;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        /* Sidebar (for functionality parity) */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #8b0000;
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        @media (max-width: 1024px) {
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .left-panel {
+                flex: 0 0 40%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .left-panel {
+                flex: 0 0 auto;
+                padding: 30px;
+            }
+            .right-panel {
+                padding: 30px 20px;
+            }
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            .portrait-container {
+                width: 180px;
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-avatar" id="user-initials">
+                    <i class="fa-solid fa-user" style="color: #ccc; font-size: 20px;"></i>
+                </div>
+                <div class="chevron-icon" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*" onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="#" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Panel -->
+        <aside class="left-panel">
+            <div class="portrait-container">
+                <img src="./dom_tiago.png" id="dom-tiago-img" alt="Dom Tiago">
+            </div>
+            <h1 class="founder-name">Dom Tiago</h1>
+            <p class="founder-title">Fundador do Projeto Adoção Espiritual</p>
+            
+            <div class="quote-divider"></div>
+            
+            <p class="founder-quote">
+                "eu tenho um sonho: sermos 45 milhões de colaboradores que adotam espiritualmente os bebês em perigo de aborto."
+            </p>
+        </aside>
+
+        <!-- Right Panel -->
+        <main class="right-panel">
+            <div class="menu-grid-container">
+                <div class="menu-grid">
+                    <!-- Row 1 -->
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-cake-candles"></i></div>
+                        <div class="card-divider divider-green"></div>
+                        <div class="card-text">Aniversariantes</div>
+                    </a>
+                    <a href="arquidioceses.html" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-church"></i></div>
+                        <div class="card-divider divider-purple"></div>
+                        <div class="card-text">Arquidioceses</div>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-globe"></i></div>
+                        <div class="card-divider divider-pink"></div>
+                        <div class="card-text">Regionais</div>
+                    </a>
+
+                    <!-- Row 2 -->
+                    <a href="colaboradores.html" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-users"></i></div>
+                        <div class="card-divider divider-red"></div>
+                        <div class="card-text">Colaboradores</div>
+                    </a>
+                    <a href="paroquias.html" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-house-chimney-window"></i></div>
+                        <div class="card-divider divider-green"></div>
+                        <div class="card-text">Paróquias e Instituições Pró-Vida</div>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div class="card-divider divider-blue"></div>
+                        <div class="card-text">Estrutura Organizacional</div>
+                    </a>
+
+                    <!-- Row 3 -->
+                    <a href="treinamentos.html" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-chalkboard-user"></i></div>
+                        <div class="card-divider divider-blue"></div>
+                        <div class="card-text">Treinamentos</div>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-clipboard-list"></i></div>
+                        <div class="card-divider divider-orange"></div>
+                        <div class="card-text">Registro de Atividades</div>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-key"></i></div>
+                        <div class="card-divider divider-blue"></div>
+                        <div class="card-text">Senhas de Mídias</div>
+                    </a>
+
+                    <!-- Row 4 -->
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="card-divider divider-green"></div>
+                        <div class="card-text">Calendário de Atividades</div>
+                    </a>
+                    <a href="Banner_aniversario.html" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-image"></i></div>
+                        <div class="card-divider divider-pink"></div>
+                        <div class="card-text">Banner Aniversariantes</div>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-images"></i></div>
+                        <div class="card-divider divider-pink"></div>
+                        <div class="card-text">Carrousel Site Adoção</div>
+                    </a>
+
+                    <!-- Row 5 -->
+                    <a href="#" class="menu-card">
+                        <div class="card-icon-box"><i class="fa-solid fa-chart-line"></i></div>
+                        <div class="card-divider divider-green"></div>
+                        <div class="card-text">Dashboards</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Footer Area -->
+            <div class="footer-container">
+                <!-- SVG Wave effect -->
+                <svg class="wave-svg" viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#f39c12" fill-opacity="0.2" d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,165.3C960,181,1056,171,1152,149.3C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                    <path fill="#f39c12" fill-opacity="0.4" d="M0,128L48,138.7C96,149,192,171,288,160C384,149,480,107,576,106.7C672,107,768,149,864,181.3C960,213,1056,235,1152,218.7C1248,203,1344,149,1392,122.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                </svg>
+                <div class="footer-bar">
+                    O conteúdo deste site não deve ser divulgado para fins ....
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+        </ul>
+    </nav>
+
+    <script src="assets/js/header.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            toggleIcon.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                toggleIcon.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+
+</html>

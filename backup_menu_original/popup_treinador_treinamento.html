@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento de Colaboradores - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --btn-accent: #b25e5e; /* Terracota */
+            --orange-banner: #f39c12;
+            --text-dark: #333;
+            --text-gray: #777;
+            --border-color: #ddd;
+            --modal-bg: #fdfaf5; /* Off-white / Cream */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--modal-bg);
+            width: 100%;
+            max-width: 380px;
+            border-radius: 12px;
+            padding: 30px 25px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* Watermark */
+        .modal-container::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 80%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.03;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            color: #333;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .orange-banner {
+            background-color: #f19f4d; /* Specific orange from image */
+            color: #333;
+            padding: 5px 20px;
+            display: inline-block;
+            margin-top: 5px;
+            width: 100%;
+            font-weight: 500;
+            font-size: 1.25rem;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .modal-body {
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            color: #1652b4;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #555;
+            background: white;
+            outline: none;
+        }
+
+        .mandatory-notice {
+            color: var(--primary-red);
+            font-style: italic;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #555;
+            background: white;
+            outline: none;
+            appearance: none;
+        }
+
+        .select-wrapper::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.8rem;
+        }
+
+        .modal-footer {
+            text-align: center;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .save-btn {
+            background-color: var(--btn-accent);
+            color: white;
+            border: none;
+            padding: 12px 60px;
+            border-radius: 30px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-style: italic;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 10px rgba(178, 94, 94, 0.3);
+        }
+
+        .save-btn:hover {
+            background-color: #9c4d4d;
+        }
+
+        .bottom-branding {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .branding-logo {
+            width: 32px;
+            height: 32px;
+            opacity: 0.8;
+        }
+
+        .branding-text {
+            font-size: 0.8rem;
+            color: #333;
+            font-weight: 600;
+            line-height: 1.1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-container">
+        <i class="fa-solid fa-xmark close-btn" onclick="window.location.href='registro_treinamentos.html'"></i>
+
+        <header class="modal-header">
+            <h1 class="modal-title">
+                23. Treinamento de coloboradores Adoção
+                <div class="orange-banner">Espiritual</div>
+            </h1>
+        </header>
+
+        <main class="modal-body">
+            <p class="mandatory-notice">Os campos assinalados com asterisco (*) são de preenchimento obrigatório.</p>
+            <form id="training-form">
+                <div class="form-grid">
+                    <!-- Date Inputs -->
+                    <div class="form-group">
+                        <label class="form-label">Data início <span>*</span></label>
+                        <input type="text" class="input-field" placeholder="00/00/0000" maxlength="10" oninput="maskDate(this)" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Data fim <span>*</span></label>
+                        <input type="text" class="input-field" placeholder="00/00/0000" maxlength="10" oninput="maskDate(this)" required>
+                    </div>
+
+                    <!-- Time Inputs -->
+                    <div class="form-group">
+                        <label class="form-label">Horário início <span>*</span></label>
+                        <input type="text" class="input-field" placeholder="00:00" maxlength="5" oninput="maskTime(this)" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Horário Fim <span>*</span></label>
+                        <input type="text" class="input-field" placeholder="00:00" maxlength="5" oninput="maskTime(this)" required>
+                    </div>
+
+                    <!-- Instructor Selection -->
+                    <div class="form-group full-width">
+                        <label class="form-label">Instrutor <span>*</span></label>
+                        <div class="select-wrapper">
+                            <select class="select-field" required>
+                                <option value=""></option>
+                                <option value="1">Débora Meireles</option>
+                                <option value="2">Maria Cristina</option>
+                                <option value="3">Mari</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: center; gap: 15px;">
+                    <button type="button" class="save-btn" style="background-color: transparent; color: var(--btn-accent); border: 1px solid var(--btn-accent); padding: 12px 30px; box-shadow: none;" onclick="window.location.href='registro_treinamentos.html'">Cancelar</button>
+                    <button type="submit" class="save-btn" style="padding: 12px 40px;">Salvar</button>
+                </div>
+            </form>
+        </main>
+
+        <footer class="bottom-branding">
+            <img src="./logo_circular.png" class="branding-logo" alt="Logo">
+            <div class="branding-text">
+                Adoção<br>Espiritual
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function maskDate(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 8);
+            if (value.length > 4) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2, 4) + '/' + value.substring(4);
+            } else if (value.length > 2) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2);
+            } else {
+                input.value = value;
+            }
+        }
+
+        function maskTime(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 4);
+            if (value.length > 2) {
+                input.value = value.substring(0, 2) + ':' + value.substring(2);
+            } else {
+                input.value = value;
+            }
+        }
+
+        document.getElementById('training-form').onsubmit = function(e) {
+            e.preventDefault();
+            alert('Dados salvos com sucesso!');
+        };
+    </script>
+</body>
+</html>
