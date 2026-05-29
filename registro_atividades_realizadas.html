@@ -1077,6 +1077,24 @@
             line-height: 1.6;
         }
 
+        @media (min-width: 900px) {
+            .col-status {
+                flex: 0 0 130px !important;
+            }
+            .col-forma {
+                flex: 0 0 160px !important;
+            }
+            .col-data {
+                flex: 0 0 160px !important;
+            }
+            .col-estado {
+                flex: 0 0 250px !important;
+            }
+            .col-regional {
+                flex: 0 0 250px !important;
+            }
+        }
+
 </style>
 </head>
 
@@ -1231,23 +1249,34 @@
                         </button>
                         <button class="tab-btn" onclick="switchTab(event, 'tab-fotos')">
                             <i class="fa-solid fa-camera"></i> FOTOS
-                        </button>
-                    </div>
-
-                    <!-- Tab Content: Dados -->
+                                           <!-- Tab Content: Dados -->
                     <div id="tab-dados" class="tab-content active">
                         <form id="form-atividade">
-                            <!-- Metadata Row -->
+                            <!-- Row 1: Status, Forma, Data, Metadata -->
                             <div class="form-row" style="align-items: flex-start; margin-bottom: 15px;">
-                                <div class="form-group" style="flex: 1; min-width: 150px;">
+                                <div class="form-group col-status">
+                                    <label class="form-label">Status <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="select-status" required>
+                                            <option value="Ativo" selected>Ativo</option>
+                                            <option value="Inativo">Inativo</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group col-forma">
                                     <label class="form-label">Forma <span>*</span></label>
                                     <div class="input-wrapper">
-                                        <select class="select-field" required>
+                                        <select class="select-field" id="select-forma" required>
                                             <option value="Presencial" selected>Presencial</option>
                                             <option value="Online">Online</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
+                                </div>
+                                <div class="form-group col-data">
+                                    <label class="form-label">Data <span>*</span></label>
+                                    <input type="date" class="input-field" id="input-data" required>
                                 </div>
                                 <div class="metadata-container" id="metadata-container">
                                     <div class="metadata-group">
@@ -1265,17 +1294,17 @@
                                 </div>
                             </div>
 
-                            <!-- Row 2 -->
+                            <!-- Row 2: Descrição, Classificação, Recorrente -->
                             <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Data <span>*</span></label>
-                                    <input type="date" class="input-field" required>
+                                <div class="form-group col-descricao" style="flex: 2; min-width: 250px;">
+                                    <label class="form-label">Descrição da atividade <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-descricao" value="Solenidade da Anunciação" required>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group col-classificacao" style="flex: 1; min-width: 150px;">
                                     <label class="form-label">Classificação <span>*</span></label>
                                     <div class="input-wrapper">
-                                        <select class="select-field" required>
-                                            <option value="" disabled selected></option>
+                                        <select class="select-field" id="select-classificacao" required>
+                                            <option value="" disabled></option>
                                             <option value="Santa missa" selected>Santa missa</option>
                                             <option value="Palestra">Palestra</option>
                                             <option value="Reunião">Reunião</option>
@@ -1283,71 +1312,72 @@
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group col-recorrente" style="flex: 1; min-width: 150px;">
+                                    <label class="form-label">Recorrente <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="select-recorrente" required>
+                                            <option value="" disabled selected></option>
+                                            <option value="Não">Não</option>
+                                            <option value="Sim">Sim</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Estado, Regional, Arquidiocese -->
+                            <div class="form-row">
+                                <div class="form-group col-estado">
+                                    <label class="form-label">Estado <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="select-estado" required>
+                                            <option value="" disabled selected></option>
+                                            <option value="RJ" selected>RJ</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group col-regional">
                                     <label class="form-label">Regional <span>*</span></label>
                                     <div class="input-wrapper">
-                                        <select class="select-field" required>
-                                            <option value="" disabled selected></option>
+                                        <select class="select-field" id="select-regional" required>
+                                            <option value="" disabled></option>
                                             <option value="Leste 1" selected>Leste 1</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Status <span>*</span></label>
-                                    <div class="input-wrapper">
-                                        <select class="select-field" required>
-                                            <option value="Ativo" selected>Ativo</option>
-                                            <option value="Inativo">Inativo</option>
-                                        </select>
-                                        <i class="fa-solid fa-chevron-down select-icon"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Row 3 -->
-                            <div class="form-row">
-                                <div class="form-group" style="flex: 2;">
+                                <div class="form-group col-arquidiocese" style="flex: 2; min-width: 250px;">
                                     <label class="form-label">Arquidiocese <span>*</span></label>
                                     <div class="input-wrapper">
-                                        <select class="select-field" required>
-                                            <option value="" disabled selected></option>
-                                            <option value="Arquidiocese do Rio de Janeiro" selected>Arquidiocese do Rio
-                                                de Janeiro</option>
+                                        <select class="select-field" id="select-arquidiocese" required>
+                                            <option value="" disabled></option>
+                                            <option value="Arquidiocese do Rio de Janeiro" selected>Arquidiocese do Rio de Janeiro</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Coordenador Arquidiocesano</label>
-                                    <div class="coord-info">Meri</div>
-                                </div>
                             </div>
 
-                            <!-- Row 4 -->
-                            <div class="form-row">
-                                <div class="form-group" style="flex: 2;">
-                                    <label class="form-label">Paróquia <span>*</span></label>
-                                    <div class="input-wrapper">
-                                        <select class="select-field" required>
-                                            <option value="" disabled selected></option>
-                                            <option value="Nossa Senhora de Fátima" selected>Nossa Senhora de Fátima
-                                            </option>
-                                        </select>
-                                        <i class="fa-solid fa-chevron-down select-icon"></i>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Coordenador Paroquial</label>
-                                    <div class="coord-info">Reynaldo</div>
-                                </div>
-                            </div>
-
-                            <!-- Row 5 -->
+                            <!-- Row 4: Paróquia -->
                             <div class="form-row">
                                 <div class="form-group full-width">
-                                    <label class="form-label">Descrição da atividade <span>*</span></label>
-                                    <input type="text" class="input-field" value="Solenidade da Anunciação" required>
+                                    <label class="form-label">Paróquia <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="select-paroquia" required>
+                                            <option value="" disabled></option>
+                                            <option value="Nossa Senhora de Fátima" selected>Nossa Senhora de Fátima</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 5: Observação -->
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Observação</label>
+                                    <input type="text" class="input-field" id="input-observacao">
                                 </div>
                             </div>
 
