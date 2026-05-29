@@ -1087,11 +1087,29 @@
             .col-data {
                 flex: 0 0 160px !important;
             }
+            .col-descricao {
+                flex: 2 !important;
+                min-width: 250px !important;
+            }
+            .col-classificacao {
+                flex: 1 !important;
+                min-width: 150px !important;
+            }
+            .col-recorrente {
+                flex: 1 !important;
+                min-width: 150px !important;
+            }
             .col-estado {
-                flex: 0 0 250px !important;
+                flex: 1 !important;
+                min-width: 120px !important;
             }
             .col-regional {
-                flex: 0 0 250px !important;
+                flex: 1 !important;
+                min-width: 150px !important;
+            }
+            .col-arquidiocese {
+                flex: 2 !important;
+                min-width: 250px !important;
             }
         }
 
@@ -1249,7 +1267,10 @@
                         </button>
                         <button class="tab-btn" onclick="switchTab(event, 'tab-fotos')">
                             <i class="fa-solid fa-camera"></i> FOTOS
-                                           <!-- Tab Content: Dados -->
+                        </button>
+                    </div>
+
+                    <!-- Tab Content: Dados -->
                     <div id="tab-dados" class="tab-content active">
                         <form id="form-atividade">
                             <!-- Row 1: Status, Forma, Data, Metadata -->
@@ -1377,7 +1398,7 @@
                             <div class="form-row">
                                 <div class="form-group full-width">
                                     <label class="form-label">Observação</label>
-                                    <input type="text" class="input-field" id="input-observacao">
+                                    <textarea class="textarea-field" id="input-observacao" rows="3" style="min-height: 80px; resize: vertical;"></textarea>
                                 </div>
                             </div>
 
