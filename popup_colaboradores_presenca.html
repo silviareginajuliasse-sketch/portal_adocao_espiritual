@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Presença - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --bg-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--bg-white);
+            width: 100%;
+            max-width: 950px;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Close Button */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: #777;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-red);
+        }
+
+        /* Header Area */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: #777;
+        }
+
+        .search-container {
+            width: 220px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            font-style: italic;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .header-divider {
+            height: 2px;
+            background-color: var(--primary-red);
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        /* List Area */
+        .collaborators-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px 30px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+
+        /* Custom Scrollbar */
+        .collaborators-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .collaborators-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .collaborators-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .collaborators-list::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 5px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .list-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Presence Dropdown styling */
+        .presence-select {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            background: white;
+            margin-right: 15px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .presence-select:focus {
+            border-color: var(--primary-red);
+        }
+
+        .item-text {
+            font-size: 1.1rem;
+            color: #777;
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Footer Area */
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .footer-logo-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .save-btn {
+            background-color: #ae3326;
+            color: white;
+            border: none;
+            padding: 12px 45px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .save-btn:hover {
+            background-color: #8b1e1e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .modal-container {
+                padding: 15px;
+            }
+            .collaborators-list {
+                grid-template-columns: 1fr;
+                gap: 5px 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="modal-container">
+        <i class="fa-solid fa-xmark close-btn" onclick="goBack()"></i>
+
+        <div id="training-title-container" style="display: none; margin-bottom: 15px; border-bottom: 1px dashed var(--border-light); padding-bottom: 10px;">
+            <span style="font-size: 0.85rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Treinamento</span>
+            <h3 id="training-title-text" style="font-size: 1.25rem; color: #333; font-weight: 700; margin-top: 2px;"></h3>
+        </div>
+
+        <div class="modal-header">
+            <h2 class="modal-title">Presença</h2>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="busca" id="search-input" onkeyup="filterList()">
+            </div>
+        </div>
+
+        <div class="header-divider"></div>
+
+        <div class="collaborators-list" id="collaborators-list">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div class="modal-footer">
+            <div class="footer-logo">
+                <img src="./logo_circular.png" alt="Logo">
+                <div class="footer-logo-text">Adoção<br>Espiritual</div>
+            </div>
+            <button class="save-btn" onclick="savePresence()">Salvar</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.protocol === 'file:'
+            ? `http://${window.location.hostname || 'localhost'}:3000/api`
+            : '/api';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const titleParam = urlParams.get('training_title');
+            if (titleParam) {
+                document.getElementById('training-title-text').innerText = decodeURIComponent(titleParam);
+                document.getElementById('training-title-container').style.display = 'block';
+            }
+
+            await loadParticipants();
+        });
+
+        async function loadParticipants() {
+            const listContainer = document.getElementById('collaborators-list');
+            listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Carregando participantes...</div>';
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const trainingId = urlParams.get('id');
+
+            if (!trainingId) {
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e;">Erro: ID do treinamento não informado.</div>';
+                return;
+            }
+
+            try {
+                // Fetch participants of the training
+                const response = await fetch(`${API_URL}/treinamentos/${trainingId}/participantes`);
+                if (!response.ok) throw new Error('Erro ao carregar participantes');
+                const participants = await response.json();
+
+                listContainer.innerHTML = '';
+
+                if (participants.length === 0) {
+                    listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhum participante registrado neste treinamento.</div>';
+                    return;
+                }
+
+                // Sort participants by name
+                participants.sort((a, b) => (a.apelido_colaborador || '').localeCompare(b.apelido_colaborador || ''));
+
+                participants.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+
+                    const select = document.createElement('select');
+                    select.className = 'presence-select';
+                    select.setAttribute('data-id-participant', p.id);
+
+                    const optionDefault = document.createElement('option');
+                    optionDefault.value = '';
+                    optionDefault.textContent = '';
+                    optionDefault.disabled = true;
+                    if (!p.presenca) optionDefault.selected = true;
+
+                    const optionConcluido = document.createElement('option');
+                    optionConcluido.value = 'Concluído';
+                    optionConcluido.textContent = 'Concluído';
+                    if (p.presenca === 'Concluído') optionConcluido.selected = true;
+
+                    const optionNaoConcluido = document.createElement('option');
+                    optionNaoConcluido.value = 'Não concluído';
+                    optionNaoConcluido.textContent = 'Não concluído';
+                    if (p.presenca === 'Não concluído') optionNaoConcluido.selected = true;
+
+                    const optionNaoParticipou = document.createElement('option');
+                    optionNaoParticipou.value = 'Não participou';
+                    optionNaoParticipou.textContent = 'Não participou';
+                    if (p.presenca === 'Não participou') optionNaoParticipou.selected = true;
+
+                    select.appendChild(optionDefault);
+                    select.appendChild(optionConcluido);
+                    select.appendChild(optionNaoConcluido);
+                    select.appendChild(optionNaoParticipou);
+
+                    const span = document.createElement('span');
+                    span.className = 'item-text';
+                    
+                    const cidadeStr = p.cidade ? ` - ${p.cidade}` : '';
+                    span.textContent = `${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}`;
+                    span.title = span.textContent;
+
+                    item.appendChild(select);
+                    item.appendChild(span);
+                    listContainer.appendChild(item);
+                });
+            } catch (err) {
+                console.error(err);
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e;">Erro ao carregar lista de participantes.</div>';
+            }
+        }
+
+        function filterList() {
+            const input = document.getElementById('search-input');
+            const filter = input.value.toLowerCase();
+            const list = document.getElementById('collaborators-list');
+            const items = list.getElementsByClassName('list-item');
+
+            const terms = filter.split(',').map(term => term.trim()).filter(term => term.length > 0);
+
+            for (let i = 0; i < items.length; i++) {
+                const text = items[i].getElementsByClassName('item-text')[0].innerText.toLowerCase();
+                
+                if (terms.length === 0) {
+                    items[i].style.display = "";
+                    continue;
+                }
+
+                const matchesAny = terms.some(term => text.includes(term));
+                
+                if (matchesAny) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+
+        function goBack() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id') || '';
+            const mode = urlParams.get('mode') || '';
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            
+            window.location.href = `registro_treinamentos.html?id=${id}&mode=${mode}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&tab=tab-participantes`;
+        }
+
+        async function savePresence() {
+            const selects = document.querySelectorAll('.presence-select');
+            if (selects.length === 0) {
+                goBack();
+                return;
+            }
+
+            // Check if any participant presence is left unselected (blank)
+            const unselected = Array.from(selects).filter(select => select.value === '');
+            if (unselected.length > 0) {
+                alert("Por favor, selecione a situação de presença para todos os participantes listados.");
+                return;
+            }
+
+            try {
+                const saveBtn = document.querySelector('.save-btn');
+                saveBtn.disabled = true;
+                saveBtn.innerText = 'Salvando...';
+
+                // Call presence API for all of them
+                const promises = Array.from(selects).map(select => {
+                    const idParticipant = select.getAttribute('data-id-participant');
+                    const presenceVal = select.value;
+                    
+                    return fetch(`${API_URL}/treinamento_participantes/${idParticipant}/presenca`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ presenca: presenceVal })
+                    });
+                });
+
+                const responses = await Promise.all(promises);
+                for (const response of responses) {
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`Erro no servidor (status ${response.status}): ${errText}`);
+                    }
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error(result.error || 'Erro desconhecido ao salvar presença');
+                    }
+                }
+
+                alert("Presenças salvas com sucesso!");
+                goBack();
+            } catch (err) {
+                console.error('Erro ao salvar presença dos participantes:', err);
+                alert('Erro ao salvar presença: ' + err.message);
+                const saveBtn = document.querySelector('.save-btn');
+                saveBtn.disabled = false;
+                saveBtn.innerText = 'Salvar';
+            }
+        }
+    </script>
+</body>
+
+</html>

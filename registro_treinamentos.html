@@ -683,13 +683,13 @@
         /* Tabs Navigation Styles */
         .tabs-container {
             display: flex;
-            gap: 5px;
+            gap: 10px;
             margin-bottom: 25px;
             border-bottom: 1px solid #ddd;
         }
 
         .tab-btn {
-            padding: 12px 25px;
+            padding: 12px 16px;
             border: none;
             background: none;
             cursor: pointer;
@@ -701,6 +701,7 @@
             position: relative;
             transition: all 0.3s;
             border-radius: 8px 8px 0 0;
+            white-space: nowrap;
         }
 
         .tab-btn:hover {
@@ -1090,9 +1091,11 @@
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-datas" onclick="switchTab(event, 'tab-datas')">
                             <i class="fa-solid fa-calendar-day"></i> DATAS E INSTRUTORES
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #0056b3; transition: transform 0.2s;" onclick="event.stopPropagation(); openPopupTreinador()" title="Adicionar Instrutor/Data" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-participantes" onclick="switchTab(event, 'tab-participantes')">
                             <i class="fa-solid fa-users"></i> PARTICIPANTES
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #0056b3; transition: transform 0.2s;" onclick="event.stopPropagation(); openPopupColaboradores()" title="Adicionar Participantes" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                     </div>
 
@@ -1186,14 +1189,7 @@
 
                         <!-- Tab Content: Datas e Instrutores -->
                         <div id="tab-datas" class="tab-content">
-                            <div class="instructor-section" style="margin-top: 0;">
-                                <div class="section-title">
-                                    <img src="./arquidioceses-header-icon.png"
-                                        style="width: 22px; height: 22px; object-fit: contain; cursor: pointer;" alt="Icon"
-                                        onclick="openPopupTreinador()">
-                                    Instrutores e datas
-                                </div>
-
+                            <div class="instructor-section" style="margin-top: 20px;">
                                 <ul class="instructor-list" id="instructor-list">
                                 </ul>
                             </div>
@@ -1201,27 +1197,22 @@
 
                         <!-- Tab Content: Participantes -->
                         <div id="tab-participantes" class="tab-content">
-                            <div class="participants-header">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 10px; cursor: pointer;" onclick="openPopupColaboradores()">
-                                    <!-- Column 1 -->
-                                    <rect x="0" y="8" width="5" height="5" />
-                                    <rect x="0" y="15" width="5" height="5" />
-                                    <rect x="0" y="22" width="5" height="5" />
-                                    <!-- Column 2 -->
-                                    <rect x="7" y="15" width="5" height="5" />
-                                    <rect x="7" y="22" width="5" height="5" />
-                                    <!-- Column 3 -->
-                                    <rect x="14" y="22" width="5" height="5" />
-                                    <!-- Floating blocks -->
-                                    <rect x="9" y="4" width="5" height="5" />
-                                    <rect x="16" y="11" width="5" height="5" />
-                                    <rect x="20" y="1" width="5" height="5" />
-                                </svg>
-                                Participantes do treinamento
-                            </div>
-
-                            <div class="participants-grid" id="participants-list">
+                            <div class="participants-grid" id="participants-list" style="margin-top: 15px;">
                                 <!-- Dynamically populated -->
+                            </div>
+                            <div class="presence-btn-container" style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <div class="participants-legend" style="display: flex; align-items: center; gap: 15px; font-size: 0.85rem; font-weight: normal; color: #555;">
+                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1rem;"></i> Concluído
+                                    </span>
+                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid fa-circle-exclamation" style="color: #d35400; font-size: 1rem;"></i> Não concluído
+                                    </span>
+                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid fa-circle-xmark" style="color: #c0392b; font-size: 1rem;"></i> Não participou
+                                    </span>
+                                </div>
+                                <button type="button" class="btn-primary" id="btn-confirmar-presenca" onclick="openPopupPresenca()">Confirmação de presença</button>
                             </div>
                         </div>
                     </form>
@@ -1467,6 +1458,9 @@
         }
 
         function openPopupTreinador() {
+            if (document.getElementById('tab-btn-datas').hasAttribute('disabled')) {
+                return;
+            }
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id') || '';
             const mode = urlParams.get('mode') || '';
@@ -1477,6 +1471,9 @@
         }
 
         function openPopupColaboradores() {
+            if (document.getElementById('tab-btn-participantes').hasAttribute('disabled')) {
+                return;
+            }
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id') || '';
             const mode = urlParams.get('mode') || '';
@@ -1621,8 +1618,17 @@
 
                     const cidadeStr = p.cidade ? ` - ${p.cidade}` : '';
 
+                    let presenceHtml = '';
+                    if (p.presenca === 'Concluído') {
+                        presenceHtml = `<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.1rem; flex-shrink: 0; margin-right: 5px;" title="Concluído"></i>`;
+                    } else if (p.presenca === 'Não concluído') {
+                        presenceHtml = `<i class="fa-solid fa-circle-exclamation" style="color: #d35400; font-size: 1.1rem; flex-shrink: 0; margin-right: 5px;" title="Não concluído"></i>`;
+                    } else if (p.presenca === 'Não participou') {
+                        presenceHtml = `<i class="fa-solid fa-circle-xmark" style="color: #c0392b; font-size: 1.1rem; flex-shrink: 0; margin-right: 5px;" title="Não participou"></i>`;
+                    }
+
                     item.innerHTML = `
-                        <input type="checkbox" class="participant-checkbox" ${p.presenca ? 'checked' : ''} onchange="togglePresence(${p.id}, this.checked)" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                        ${presenceHtml}
                         <i class="fa-regular fa-trash-can participant-delete" style="cursor: pointer; font-size: 1rem; flex-shrink: 0; margin-left: 5px; margin-right: 5px;" onclick="deleteParticipant(${p.id})"></i>
                         <span class="participant-name" style="color: #333; font-weight: 500; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}">
                             ${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}
@@ -1676,9 +1682,19 @@
                     alert('Erro ao remover participante: ' + (result.error || 'Erro desconhecido.'));
                 }
             } catch (err) {
-                console.error('Erro ao remover participante:', err);
+                console.error('Erro ao remover participant:', err);
                 alert('Erro de conexão ao tentar remover o participante.');
             }
+        }
+
+        function openPopupPresenca() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id') || '';
+            const mode = urlParams.get('mode') || '';
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            const title = document.getElementById('input-titulo').value || '';
+            window.location.href = `popup_colaboradores_presenca.html?id=${id}&mode=${mode}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&training_title=${encodeURIComponent(title)}`;
         }
     </script>
 

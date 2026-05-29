@@ -8,12 +8,10 @@
     <style>
         :root {
             --primary-red: #8b1e1e;
-            --btn-accent: #b25e5e; /* Terracota */
-            --orange-banner: #f39c12;
             --text-dark: #333;
             --text-gray: #777;
             --border-color: #ddd;
-            --modal-bg: #fdfaf5; /* Off-white / Cream */
+            --bg-white: #ffffff;
         }
 
         * {
@@ -33,57 +31,50 @@
         }
 
         .modal-container {
-            background-color: var(--modal-bg);
+            background-color: var(--bg-white);
             width: 100%;
-            max-width: 550px;
-            border-radius: 12px;
-            padding: 30px 25px;
+            max-width: 700px;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
             position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        /* Watermark */
-        .modal-container::before {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            background-image: url('./logo_circular.png');
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: 80%;
-            transform: translate(-50%, -50%);
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.03;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
         }
 
         .close-btn {
             position: absolute;
-            top: 15px;
+            top: 10px;
             right: 15px;
-            font-size: 20px;
-            color: #999;
+            font-size: 1.5rem;
+            color: #777;
             cursor: pointer;
+            transition: color 0.2s;
             z-index: 10;
         }
 
+        .close-btn:hover {
+            color: var(--primary-red);
+        }
+
         .modal-header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
         }
 
         .modal-title {
-            font-size: 1.35rem;
-            color: var(--primary-red);
-            font-weight: 700;
-            line-height: 1.3;
-            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: #777;
+        }
+
+        .header-divider {
+            height: 2px;
+            background-color: var(--primary-red);
+            width: 100%;
+            margin-bottom: 20px;
         }
 
         .modal-body {
@@ -118,46 +109,40 @@
             color: var(--primary-red);
         }
 
-        .input-field {
+        .input-field,
+        .select-field {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            color: #555;
-            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #333;
             outline: none;
+            background: white;
+        }
+
+        .select-field {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding-right: 30px;
         }
 
         .mandatory-notice {
             color: #8b1e1e;
             font-style: italic;
             font-size: 0.85rem;
-            margin-bottom: 25px;
-            text-align: center;
+            margin-bottom: 20px;
+            text-align: left;
             background-color: #fdf2f2;
             border: 1px solid #f8b4b4;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 4px;
-            display: inline-block;
             width: 100%;
         }
 
         .select-wrapper {
             position: relative;
-        }
-
-        .select-field {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            color: #555;
-            background: white;
-            outline: none;
-            appearance: none;
-            padding-right: 30px;
         }
 
         .select-wrapper::after {
@@ -174,23 +159,41 @@
         }
 
         .modal-footer {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-top: 10px;
-            position: relative;
-            z-index: 1;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .footer-logo-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #000;
         }
 
         .cancel-btn {
             background-color: white;
             color: var(--primary-red);
             border: 1px solid var(--primary-red);
-            padding: 10px 45px;
+            padding: 12px 35px;
             border-radius: 30px;
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 1.3rem;
+            font-weight: 600;
             font-style: italic;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
         .cancel-btn:hover {
@@ -198,43 +201,23 @@
         }
 
         .save-btn {
-            background-color: var(--primary-red);
+            background-color: #ae3326;
             color: white;
             border: none;
-            padding: 10px 55px;
+            padding: 12px 45px;
             border-radius: 30px;
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 1.3rem;
+            font-weight: 600;
             font-style: italic;
             cursor: pointer;
-            transition: opacity 0.2s;
-            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.2);
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .save-btn:hover {
-            opacity: 0.9;
-        }
-
-        .bottom-branding {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 30px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .branding-logo {
-            width: 32px;
-            height: 32px;
-            opacity: 0.8;
-        }
-
-        .branding-text {
-            font-size: 0.8rem;
-            color: #333;
-            font-weight: 600;
-            line-height: 1.1;
+            background-color: #8b1e1e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
@@ -243,11 +226,16 @@
     <div class="modal-container">
         <i class="fa-solid fa-xmark close-btn" onclick="goBack()"></i>
 
-        <header class="modal-header">
-            <h1 class="modal-title" id="training-title">
-                &lt;título&gt;
-            </h1>
-        </header>
+        <div id="training-title-container" style="display: none; margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
+            <span style="font-size: 0.85rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Treinamento</span>
+            <h3 id="training-title-text" style="font-size: 1.25rem; color: #333; font-weight: 700; margin-top: 2px;"></h3>
+        </div>
+
+        <div class="modal-header">
+            <h2 class="modal-title">Datas e Instrutores</h2>
+        </div>
+
+        <div class="header-divider"></div>
 
         <main class="modal-body">
             <p class="mandatory-notice">Os campos assinalados com asterisco (*) são de preenchimento obrigatório.</p>
@@ -286,19 +274,18 @@
                     </div>
                 </div>
 
-                <div class="modal-footer" style="display: flex; justify-content: center; gap: 15px;">
-                    <button type="button" class="cancel-btn" onclick="goBack()">Cancelar</button>
-                    <button type="submit" class="save-btn">Salvar</button>
+                <div class="modal-footer">
+                    <div class="footer-logo">
+                        <img src="./logo_circular.png" alt="Logo">
+                        <div class="footer-logo-text">Adoção<br>Espiritual</div>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <button type="button" class="cancel-btn" onclick="goBack()">Cancelar</button>
+                        <button type="submit" class="save-btn">Salvar</button>
+                    </div>
                 </div>
             </form>
         </main>
-
-        <footer class="bottom-branding">
-            <img src="./logo_circular.png" class="branding-logo" alt="Logo">
-            <div class="branding-text">
-                Adoção<br>Espiritual
-            </div>
-        </footer>
     </div>
 
     <script>
@@ -350,14 +337,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id');
             const titleParam = urlParams.get('training_title');
+            const titleTextEl = document.getElementById('training-title-text');
+            const titleContainerEl = document.getElementById('training-title-container');
 
             if (titleParam) {
-                document.getElementById('training-title').innerText = titleParam;
+                titleTextEl.innerText = decodeURIComponent(titleParam);
+                titleContainerEl.style.display = 'block';
             } else if (id) {
                 fetch(`${API_URL}/treinamentos/${id}`)
                     .then(res => res.json())
                     .then(t => {
-                        document.getElementById('training-title').innerText = t.titulo || '';
+                        if (t.titulo) {
+                            titleTextEl.innerText = t.titulo;
+                            titleContainerEl.style.display = 'block';
+                        }
                     })
                     .catch(err => console.error('Erro ao buscar título do treinamento:', err));
             }

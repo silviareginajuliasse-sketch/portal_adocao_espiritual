@@ -37,6 +37,12 @@
                 el.innerText = userNomePerfil;
             });
         }
+        // Update "Minha Conta" -> "Atualizar cadastro" link dynamically using localStorage
+        const savedId = localStorage.getItem('user_id_colaborador') || id_colab;
+        const updateLinks = document.querySelectorAll('.update-link');
+        updateLinks.forEach(link => {
+            link.href = `registro_colaboradores.html?id=${savedId}&from=minha_conta`;
+        });
 
         // Generate Initials or Load Photo
         const userInitials = document.getElementById('user-initials');

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -431,6 +431,9 @@
             object-fit: cover;
             flex-shrink: 0;
             background-color: #dbe8f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Pagination & Footer Actions */
@@ -966,6 +969,54 @@
             }
         }
 
+        function getAvatarHtml(c) {
+            if (c.foto_colaborador && c.foto_colaborador.trim() !== '') {
+                const safeName = (c.nome_colaborador || '').replace(/'/g, "\\'");
+                return `<img class="list-avatar" src="${c.foto_colaborador}" alt="Foto" onerror="handleAvatarError(this, '${safeName}')">`;
+            } else {
+                return getInitialsAvatarHtml(c.nome_colaborador);
+            }
+        }
+
+        function getInitialsAvatarHtml(name) {
+            const initials = (name || '')
+                .split(' ')
+                .filter(n => n.length > 0)
+                .map(n => n[0])
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
+            
+            let hash = 0;
+            for (let i = 0; i < (name || '').length; i++) {
+                hash = (name.charCodeAt(i) * 31) + hash;
+            }
+            const colors = [
+                { bg: '#dbe8f9', text: '#557db5' }, // Blue
+                { bg: '#e8f5e9', text: '#2e7d32' }, // Green
+                { bg: '#fff3e0', text: '#ef6c00' }, // Orange
+                { bg: '#fce4ec', text: '#c2185b' }, // Pink
+                { bg: '#f3e5f5', text: '#7b1fa2' }, // Purple
+                { bg: '#e0f7fa', text: '#00838f' }  // Cyan/Teal
+            ];
+            const colorPair = colors[Math.abs(hash) % colors.length];
+            
+            if (initials) {
+                return `<div class="list-avatar" style="background-color: ${colorPair.bg}; color: ${colorPair.text}; font-weight: 700; font-size: 13px; text-transform: uppercase;">${initials}</div>`;
+            } else {
+                return `<div class="list-avatar" style="background-color: #dbe8f9; color: #557db5; font-size: 15px;"><i class="fa-solid fa-user"></i></div>`;
+            }
+        }
+
+        function handleAvatarError(img, name) {
+            const parent = img.parentNode;
+            if (parent) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = getInitialsAvatarHtml(name);
+                parent.replaceChild(tempDiv.firstChild, img);
+            }
+        }
+
         async function loadCollaborators() {
             try {
                 const res = await fetch(`${API_URL}/colaboradores?_=${new Date().getTime()}`);
@@ -1002,13 +1053,12 @@
                         label += ` - Tel: ${c.telefone}`;
                     }
 
-                    // Avatar foto ou inicial
-                    const avatarSrc = c.foto_colaborador || 'colaborador_default.png';
+                    const avatarHtml = getAvatarHtml(c);
                     
                     listItem.onclick = function() { window.location.href = 'registro_colaboradores.html?id=' + c.id_colaborador; };
                     listItem.innerHTML = `
                         <i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #e74c3c; margin-right: 15px;"></i>
-                        <img class="list-avatar" src="${avatarSrc}" alt="Foto" onerror="this.src='colaborador_default.png'; this.onerror=null;">
+                        ${avatarHtml}
                         <span class="collaborator-name" style="cursor: pointer; flex: 1;">
                             ${label}
                         </span>

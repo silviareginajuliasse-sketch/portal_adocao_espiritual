@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Funcional - Portal Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #2c3e50;
+            --text-light: #5a6c7d;
+            --bg-light: #f8f9fa;
+            --border-color: #e2e8f0;
+            --accent-orange: #d35400;
+            --accent-green: #2e7d32;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background-color: var(--bg-light);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px 60px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Header Document Cover */
+        .doc-header {
+            border-bottom: 3px solid var(--primary-red);
+            padding-bottom: 25px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .doc-title-container {
+            flex: 1;
+        }
+
+        .doc-category {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--primary-red);
+            margin-bottom: 5px;
+        }
+
+        .doc-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1.2;
+        }
+
+        .doc-logo {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            margin-left: 20px;
+        }
+
+        /* Section Headings */
+        h2 {
+            font-size: 1.45rem;
+            color: var(--primary-red);
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: #1a1a1a;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        ul {
+            margin-left: 25px;
+            margin-bottom: 20px;
+            color: var(--text-light);
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Alert/Callout Boxes */
+        .callout {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 0.95rem;
+            border-left: 4px solid;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .callout-info {
+            background-color: #ebf8ff;
+            border-color: #3182ce;
+            color: #2b6cb0;
+        }
+
+        .callout-warning {
+            background-color: #fffaf0;
+            border-color: #dd6b20;
+            color: #dd6b20;
+        }
+
+        .callout-success {
+            background-color: #f0fff4;
+            border-color: #38a169;
+            color: #276749;
+        }
+
+        .callout i {
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+        /* Visual Status Indicators */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-concluido {
+            background-color: #e0f2f1;
+            color: var(--accent-green);
+        }
+
+        .status-nao-concluido {
+            background-color: #fff3e0;
+            color: var(--accent-orange);
+        }
+
+        .status-nao-participou {
+            background-color: #ffebee;
+            color: #c0392b;
+        }
+
+        /* Printing Adjustments */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .no-print {
+                display: none;
+            }
+            /* Force page break before section 5 */
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        .print-btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .print-btn {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 6px rgba(139, 30, 30, 0.1);
+        }
+
+        .print-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Image Mockup Containers */
+        .img-container {
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .img-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .img-caption {
+            background-color: var(--bg-light);
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            border-top: 1px solid var(--border-color);
+            font-style: italic;
+        }
+
+        @media print {
+            .img-container {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Print Button for Browser View -->
+        <div class="print-btn-container no-print">
+            <button class="print-btn" onclick="window.print()">
+                <i class="fa-solid fa-file-pdf"></i> Salvar como PDF / Imprimir
+            </button>
+        </div>
+
+        <!-- Header -->
+        <header class="doc-header">
+            <div class="doc-title-container">
+                <div class="doc-category">Documentação do Sistema</div>
+                <h1 class="doc-title">Guia Funcional do Usuário</h1>
+            </div>
+            <img src="./logo_circular.png" alt="Logo" class="doc-logo" onerror="this.style.display='none'">
+        </header>
+
+        <!-- Intro -->
+        <section>
+            <p>Este guia orienta os usuários e coordenadores do portal <strong>Adoção Espiritual</strong> no uso correto das funcionalidades do sistema, garantindo um cadastro limpo, rastreabilidade e aproveitamento ideal de todas as ferramentas.</p>
+        </section>
+
+        <!-- Section 1 -->
+        <section>
+            <h2>1. Visão Geral do Sistema</h2>
+            <p>O Portal Adoção Espiritual é uma plataforma de gestão voltada para organizar e acompanhar o movimento nas suas instâncias territoriais e pastorais, divididas em:</p>
+            <ul>
+                <li><strong>Nacional e Regional:</strong> Acompanhamento estratégico e divisão de regionais por estados do país.</li>
+                <li><strong>Arquidioceses e Paróquias:</strong> Gestão das atividades pastorais locais, celebrações, missas e eventos pró-vida.</li>
+                <li><strong>Colaboradores e Lideranças:</strong> Registro dos voluntários, contatos e controle de capacitação.</li>
+            </ul>
+        </section>
+
+        <!-- Section 2 -->
+        <section>
+            <h2>2. Acesso e Identificação (Login)</h2>
+            <p>Para acessar as funcionalidades do portal, o usuário deve se identificar:</p>
+            <ul>
+                <li><strong>Credenciais:</strong> Informe o <strong>E-mail</strong>, <strong>Telefone</strong> ou o seu **ID de Colaborador**, acompanhado de sua senha cadastrada.</li>
+                <li><strong>Meu Perfil:</strong> No menu superior direito, ao clicar no seu nome, você pode visualizar as informações da sua conta e acessar a tela <em>Atualizar cadastro</em> para atualizar seus dados pessoais e carregar sua foto de perfil.</li>
+            </ul>
+        </section>
+
+        <!-- Section 3 -->
+        <section>
+            <h2>3. Estrutura Territorial e Administrativa</h2>
+            <h3>3.1. Regionais</h3>
+            <p>Apresenta a divisão regional do movimento no país e os estados pertencentes a cada regional. Apenas administradores com perfil de coordenação nacional podem incluir ou alterar regionais.</p>
+
+            <h3>3.2. Arquidioceses</h3>
+            <p>Cada arquidiocese é associada a uma Regional. Na tela de cadastro, é possível vincular um colaborador ativo para assumir a coordenação da arquidiocese correspondente.</p>
+
+            <h3>3.3. Paróquias</h3>
+            <p>Nível local onde as atividades do movimento de fato ocorrem. Cada paróquia é associada a uma arquidiocese. O sistema permite delegar a equipe de coordenação paroquial responsável pelas atividades.</p>
+        </section>
+
+        <!-- Section 4 -->
+        <section>
+            <h2>4. Gestão de Colaboradores</h2>
+            <p>Reúne os dados de todos os voluntários e membros ativos no movimento.</p>
+            <ul>
+                <li><strong>Informações Cadastrais:</strong> Contatos, endereço, paróquia à qual pertence, seus talentos e motivação para participar do movimento.</li>
+                <li><strong>Foto de Perfil:</strong> Possibilita carregar a foto do colaborador para melhor identificação visual nas listagens do sistema.</li>
+                <li><strong>Status:</strong> Colaboradores podem estar como <strong>Ativo</strong> ou <strong>Inativo</strong>. Apenas os ativos podem ser selecionados para novas coordenações ou treinamentos.</li>
+            </ul>
+        </section>
+
+        <!-- Section 5 -->
+        <section class="page-break">
+            <h2>5. Formação e Treinamentos</h2>
+            <p>A preparação adequada dos voluntários é garantida pelo módulo de treinamentos.</p>
+
+            <h3>5.1. Cadastro e Alteração</h3>
+            <p>O treinamento é cadastrado com título, forma (Presencial ou Online), local (obrigatório se presencial), qualificação pretendida (Colaborador Adoção Espiritual, Coordenador Paroquial ou Coordenador Regional) e status (Agendado, Em andamento, Concluído ou Cancelado).</p>
+
+            <h3>5.2. Datas e Instrutores</h3>
+            <p>Na aba <em>Datas e Instrutores</em>, é possível agendar os dias, horários de início/fim e a pauta de cada módulo, além de definir o instrutor do treinamento.</p>
+
+            <h3>5.3. Participantes e Confirmação de Presença</h3>
+            <p>Na aba <em>Participantes</em>, são vinculados os colaboradores inscritos para a formação.</p>
+            
+            <p><strong>Confirmação de Presença:</strong> Para gerenciar quem concluiu a formação, clique no botão <strong>Confirmação de presença</strong> no rodapé da listagem.</p>
+
+            <div class="img-container">
+                <img src="./mockup_registro_treinamento.png" alt="Tela de Registro de Treinamentos - Aba Participantes">
+                <div class="img-caption">Figura 1: Tela de Registro de Treinamento exibindo a aba Participantes e o botão "Confirmação de presença".</div>
+            </div>
+
+            <p>Na tela que se abrirá, você deve selecionar a presença de cada participante individualmente através das seguintes opções:</p>
+
+            <div style="margin: 15px 0 25px 25px; display: flex; flex-direction: column; gap: 10px;">
+                <div>
+                    <span class="status-badge status-concluido"><i class="fa-solid fa-circle-check"></i> Concluído</span>
+                    <span style="color: var(--text-light); margin-left: 10px;">O colaborador concluiu o treinamento com sucesso e está qualificado para assumir coordenações.</span>
+                </div>
+                <div>
+                    <span class="status-badge status-nao-concluido"><i class="fa-solid fa-circle-exclamation"></i> Não concluído</span>
+                    <span style="color: var(--text-light); margin-left: 10px;">O colaborador participou, mas não cumpriu todos os requisitos.</span>
+                </div>
+                <div>
+                    <span class="status-badge status-nao-participou"><i class="fa-solid fa-circle-xmark"></i> Não participou</span>
+                    <span style="color: var(--text-light); margin-left: 10px;">O colaborador estava inscrito mas não compareceu.</span>
+                </div>
+            </div>
+
+            <div class="callout callout-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    <strong>Atenção:</strong> Por questão de integridade e controle, todos os participantes listados devem ter seu status selecionado na tela de presença. O sistema não permitirá salvar se houver algum participante com campo em branco.
+                </div>
+            </div>
+
+            <div class="img-container">
+                <img src="./mockup_popup_presenca.png" alt="Popup de Confirmação de Presença">
+                <div class="img-caption">Figura 2: Popup "Presença" exibindo a listagem em duas colunas e o campo de seleção de status de presença.</div>
+            </div>
+        </section>
+
+        <!-- Section 6 -->
+        <section>
+            <h2>6. Registro de Atividades Realizadas</h2>
+            <p>Seção voltada a registrar e evidenciar as ações práticas promovidas pelas paróquias.</p>
+            <ul>
+                <li><strong>Dados da Atividade:</strong> Data, classificação (Santa Missa, Palestra, Reunião), descrição detalhada e local.</li>
+                <li><strong>Participantes:</strong> Lista de colaboradores que participaram ativamente do evento.</li>
+                <li><strong>Galeria de Fotos:</strong> Permite fazer upload de fotos do evento. O usuário pode definir uma <strong>Foto Principal</strong> que ilustrará os relatórios e painéis do sistema.</li>
+            </ul>
+        </section>
+
+        <!-- Section 7 -->
+        <section>
+            <h2>7. Boas Práticas e Regras de Segurança</h2>
+
+            <div class="callout callout-info">
+                <i class="fa-solid fa-lightbulb"></i>
+                <div>
+                    <strong>Dica de Busca:</strong> Utilize a barra de busca rápida ("busca") localizada acima das listagens para filtrar rapidamente por nome, cidade ou trecho de informação.
+                </div>
+            </div>
+
+            <div class="callout callout-warning">
+                <i class="fa-solid fa-circle-info"></i>
+                <div>
+                    <strong>Regras de Exclusão:</strong>
+                    <ul>
+                        <li>Um <strong>Treinamento</strong> não pode ser excluído se houver participantes vinculados a ele.</li>
+                        <li>Uma <strong>Atividade</strong> não pode ser excluída se houver registro de fotos ou participantes.</li>
+                        <li>Um <strong>Colaborador</strong> com histórico de atividades no sistema não deve ser excluído. Para desativá-lo, modifique seu status para <strong>Inativo</strong> para preservar o histórico do banco de dados.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+</body>
+</html>

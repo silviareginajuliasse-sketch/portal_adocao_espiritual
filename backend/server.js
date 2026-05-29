@@ -344,6 +344,66 @@ app.get('/api/colaboradores/:id', async (req, res) => {
     }
 });
 
+// Route to list trainings for a specific collaborator with dates
+app.get('/api/colaboradores/:id/treinamentos', async (req, res) => {
+    const { id } = req.params;
+    console.log(`[API] GET /api/colaboradores/${id}/treinamentos`);
+    try {
+        const query = `
+            SELECT tp.id AS id_participante, tp.presenca, t.id_treinamento, t.titulo, 
+                   MIN(ti.data) AS menor_data, 
+                   MAX(ti.data) AS maior_data
+            FROM treinamento_participantes tp
+            INNER JOIN treinamentos t ON tp.id_treinamento = t.id_treinamento
+            LEFT JOIN treinamento_instrutores ti ON t.id_treinamento = ti.id_treinamento
+            WHERE tp.id_colaborador = ?
+            GROUP BY tp.id, t.id_treinamento, t.titulo, tp.presenca
+            ORDER BY t.titulo ASC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/colaboradores/:id/treinamentos:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to list activities for a specific collaborator
+app.get('/api/colaboradores/:id/atividades', async (req, res) => {
+    const { id } = req.params;
+    console.log(`[API] GET /api/colaboradores/${id}/atividades`);
+    try {
+        const query = `
+            SELECT ar.id_atividade, ar.titulo, ar.data_atividade, p.nome_paroquia
+            FROM atividades_realizadas_participantes arp
+            INNER JOIN atividades_realizadas ar ON arp.id_atividade = ar.id_atividade
+            LEFT JOIN paroquias p ON ar.paroquia_id = p.id_paroquia
+            WHERE arp.id_colaborador = ?
+            ORDER BY ar.data_atividade DESC, ar.titulo ASC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/colaboradores/:id/atividades:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to delete a collaborator's activity participant association
+app.delete('/api/atividades_realizadas_participantes/:id_atividade/:id_colaborador', async (req, res) => {
+    const { id_atividade, id_colaborador } = req.params;
+    console.log(`[API] DELETE /api/atividades_realizadas_participantes/${id_atividade}/${id_colaborador}`);
+    try {
+        const query = 'DELETE FROM atividades_realizadas_participantes WHERE id_atividade = ? AND id_colaborador = ?';
+        await pool.query(query, [id_atividade, id_colaborador]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] DELETE /api/atividades_realizadas_participantes:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 // Route to list all trainings (defined before generic :table wildcard to avoid interception)
 app.get('/api/treinamentos', async (req, res) => {
     console.log('[API] GET /api/treinamentos');
@@ -1847,10 +1907,10 @@ app.get('/api/treinamentos/:id/participantes', async (req, res) => {
     const { id } = req.params;
     try {
         const query = `
-            SELECT tp.id, tp.treinamento_id, tp.colaborador_id, tp.presenca, c.apelido_colaborador, c.cidade
+            SELECT tp.id, tp.id_treinamento, tp.id_colaborador AS colaborador_id, tp.id_colaborador, tp.presenca, c.apelido_colaborador, c.cidade
             FROM treinamento_participantes tp
-            INNER JOIN colaboradores c ON tp.colaborador_id = c.id_colaborador
-            WHERE tp.treinamento_id = ?
+            INNER JOIN colaboradores c ON tp.id_colaborador = c.id_colaborador
+            WHERE tp.id_treinamento = ?
             ORDER BY c.apelido_colaborador ASC
         `;
         const [rows] = await pool.query(query, [id]);
@@ -1866,7 +1926,7 @@ app.post('/api/treinamento_participantes/:id/presenca', async (req, res) => {
     const { id } = req.params;
     const { presenca } = req.body;
     try {
-        await pool.query('UPDATE treinamento_participantes SET presenca = ? WHERE id = ?', [presenca ? 1 : 0, id]);
+        await pool.query('UPDATE treinamento_participantes SET presenca = ? WHERE id = ?', [presenca, id]);
         res.json({ success: true });
     } catch (err) {
         console.error('Erro ao atualizar presença:', err);
@@ -1889,7 +1949,7 @@ app.post('/api/treinamentos/:id/participantes', async (req, res) => {
     try {
         for (const colabId of colaboradores) {
             await pool.query(
-                'INSERT IGNORE INTO treinamento_participantes (treinamento_id, colaborador_id) VALUES (?, ?)',
+                'INSERT IGNORE INTO treinamento_participantes (id_treinamento, id_colaborador) VALUES (?, ?)',
                 [parseInt(id), parseInt(colabId)]
             );
         }
@@ -1919,11 +1979,11 @@ app.delete('/api/treinamentos/:id', async (req, res) => {
     console.log(`[API] DELETE /api/treinamentos/${id}`);
     try {
         // Validate if there are participants registered
-        const [linked] = await pool.query('SELECT id FROM treinamento_participantes WHERE training_id = ? OR training_id IS NULL AND 1=0 LIMIT 1'); // Let's check column name
+        const [linked] = await pool.query('SELECT id FROM treinamento_participantes WHERE id_treinamento = ? OR id_treinamento IS NULL AND 1=0 LIMIT 1'); // Let's check column name
         // Wait, the table definition in init.sql:
         // CONSTRAINT `treinamento_participantes_ibfk_1` FOREIGN KEY (`treinamento_id`) REFERENCES `treinamentos` (`id_treinamento`)
-        // So the column name is 'treinamento_id'. Let's write the query correctly:
-        const [linkedParticipants] = await pool.query('SELECT id FROM treinamento_participantes WHERE treinamento_id = ? LIMIT 1', [id]);
+        // So the column name is 'id_treinamento'. Let's write the query correctly:
+        const [linkedParticipants] = await pool.query('SELECT id FROM treinamento_participantes WHERE id_treinamento = ? LIMIT 1', [id]);
         if (linkedParticipants.length > 0) {
             return res.status(400).json({ error: 'Não é possível excluir: existem colaboradores vinculados a este treinamento.' });
         }
@@ -1959,17 +2019,37 @@ app.post('/api/colaboradores/save', async (req, res) => {
         obs_colaborador,
         id_colaborador_atualiza
     } = req.body;
-
-    // Convert DD/MM/YYYY to YYYY-MM-DD
+    // Convert DD/MM/YYYY to YYYY-MM-DD and validate calendar values
     let formattedDate = null;
     if (data_nascimento) {
+        let isValid = false;
         if (data_nascimento.includes('/')) {
             const parts = data_nascimento.split('/');
             if (parts.length === 3) {
-                formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10);
+                const year = parseInt(parts[2], 10);
+                
+                if (year >= 1900 && year <= 2100 && month >= 1 && month <= 12) {
+                    const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+                    const daysInMonth = [31, (isLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                    if (day >= 1 && day <= daysInMonth[month - 1]) {
+                        formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        isValid = true;
+                    }
+                }
             }
         } else {
-            formattedDate = data_nascimento;
+            // Check if it's already YYYY-MM-DD
+            const regex = /^\d{4}-\d{2}-\d{2}$/;
+            if (regex.test(data_nascimento)) {
+                formattedDate = data_nascimento;
+                isValid = true;
+            }
+        }
+
+        if (!isValid) {
+            return res.status(400).json({ success: false, error: 'Data de nascimento inválida.' });
         }
     }
 
