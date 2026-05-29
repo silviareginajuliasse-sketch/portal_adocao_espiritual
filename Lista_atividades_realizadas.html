@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -704,7 +704,7 @@
             <!-- Right Side: Content -->
             <div class="main-content">
                 <div class="search-row">
-                    <div class="subtitle-with-icon" onclick="window.location.href='registro_atividades_realizadas.html?mode=new'">
+                    <div class="subtitle-with-icon" onclick="goToRegistro('new')" style="cursor: pointer;">
                         <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
                         Lista de atividades
                     </div>
@@ -714,51 +714,12 @@
                 </div>
 
                 <div class="list-container" id="activities-list">
-                    <!-- Item 1 -->
-                    <div class="list-item" onclick="window.location.href='registro_atividades_realizadas.html?mode=edit'">
-                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
-                        <div class="activity-details">
-                            <span>18/04/2026 - Arquidiocese Rio de Janeiro - Paróquia São Pedro do Mar - </span>
-                            <span>Santa missa - 27 anos de ordenação de Dom Tiago</span>
-                        </div>
-                    </div>
-                    <!-- Item 2 -->
-                    <div class="list-item" onclick="window.location.href='registro_atividades_realizadas.html?mode=edit'">
-                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
-                        <div class="activity-details">
-                            <span>24/03/2026 - Arquidiocese do Rio de Janeiro - Paróquia Nossa Senhora de Fátima</span>
-                            <span>Evento - Apresentação da Adoção Espiritual para o EAC e grupo jovem</span>
-                        </div>
-                    </div>
-                    <!-- Item 3 -->
-                    <div class="list-item" onclick="window.location.href='registro_atividades_realizadas.html?mode=edit'">
-                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
-                        <div class="activity-details">
-                            <span>12/04/2026 - Arquidiocese do Rio de Janeiro - Paróquia São Pedro do Mar</span>
-                            <span>Terço - Festa da Misericórdia e Adoção Espiritual</span>
-                        </div>
-                    </div>
-                    <!-- Item 4 -->
-                    <div class="list-item" onclick="window.location.href='registro_atividades_realizadas.html?mode=edit'">
-                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
-                        <div class="activity-details">
-                            <span>14/04/2026 - Casa de Retiro Santa Maria Mãe de Deus</span>
-                            <span>Evento - 3o. Retiro da Adoção Espiritual</span>
-                        </div>
-                    </div>
-                    <!-- Item 5 -->
-                    <div class="list-item" onclick="window.location.href='registro_atividades_realizadas.html?mode=edit'">
-                        <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation()"></i>
-                        <div class="activity-details">
-                            <span>16/04/2026 - Arquidioceses do Rio de Janeiro - Online - Evento fixo</span>
-                            <span>Terço - Santo Terço pela vida e pela Adoção Espiritual</span>
-                        </div>
-                    </div>
+                    <div style="padding: 20px; text-align: center; color: #777;">Carregando atividades...</div>
                 </div>
 
                 <div class="list-footer">
                     <div class="export-group">
-                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel"></i>
+                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel" onclick="exportToExcel()"></i>
                         <div class="export-separator"></div>
                     </div>
 
@@ -775,6 +736,8 @@
 
     <script src="assets/js/header.js"></script>
     <script>
+        const API_URL = 'http://localhost:3000/api';
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('sidebar-overlay').classList.toggle('active');
@@ -802,6 +765,196 @@
                 item.style.display = text.includes(query) ? 'flex' : 'none';
             });
         }
+
+        function goToRegistro(mode, id) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            let url = `registro_atividades_realizadas.html?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&mode=${mode}`;
+            if (id) {
+                url += `&id=${id}`;
+            }
+            window.location.href = url;
+        }
+
+        async function loadAtividades() {
+            const listContainer = document.getElementById('activities-list');
+            try {
+                const response = await fetch(`${API_URL}/atividades/detalhes`);
+                if (!response.ok) throw new Error('Erro ao carregar atividades');
+                const data = await response.json();
+                
+                listContainer.innerHTML = '';
+                
+                if (data.length === 0) {
+                    listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhuma atividade encontrada.</div>';
+                    return;
+                }
+                
+                data.forEach(atividade => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.onclick = () => goToRegistro('edit', atividade.id_atividade);
+                    
+                    const trashIcon = document.createElement('i');
+                    trashIcon.className = 'fa-regular fa-trash-can trash-icon';
+                    trashIcon.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteAtividade(atividade.id_atividade, atividade.titulo);
+                    };
+                    
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.className = 'activity-details';
+                    detailsDiv.style.flexGrow = '1';
+                    
+                    const formatDate = (isoString) => {
+                        if (!isoString) return '';
+                        const date = new Date(isoString);
+                        if (isNaN(date.getTime())) return isoString;
+                        const day = String(date.getUTCDate()).padStart(2, '0');
+                        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                        const year = date.getUTCFullYear();
+                        return `${day}/${month}/${year}`;
+                    };
+                    
+                    const formattedDate = formatDate(atividade.data_atividade);
+                    const arqNome = atividade.nome_arquidiocese || 'Sem Arquidiocese';
+                    const parNome = atividade.nome_paroquia || 'Sem Paróquia';
+                    const titAtividade = atividade.titulo || 'Sem Título';
+                    
+                    const textSpan1 = document.createElement('span');
+                    textSpan1.textContent = `${formattedDate} - ${arqNome} - ${parNome} - `;
+                    
+                    const textSpan2 = document.createElement('span');
+                    textSpan2.style.fontWeight = 'bold';
+                    textSpan2.style.color = '#333';
+                    textSpan2.textContent = titAtividade;
+                    
+                    detailsDiv.appendChild(textSpan1);
+                    detailsDiv.appendChild(textSpan2);
+                    
+                    item.appendChild(trashIcon);
+                    item.appendChild(detailsDiv);
+                    listContainer.appendChild(item);
+                });
+            } catch (err) {
+                console.error(err);
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">Erro ao carregar atividades.</div>';
+            }
+        }
+
+        async function deleteAtividade(id, titulo) {
+            if (confirm(`Deseja realmente excluir a atividade "${titulo}"?`)) {
+                try {
+                    const response = await fetch(`${API_URL}/atividades_realizadas/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        alert('Atividade excluída com sucesso.');
+                        loadAtividades();
+                    } else {
+                        const error = await response.json();
+                        alert('Erro ao excluir: ' + (error.error || 'Erro desconhecido'));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Erro de conexão ao excluir atividade.');
+                }
+            }
+        }
+
+        function exportToExcel() {
+            const items = document.querySelectorAll('.list-item');
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const fileName = `atividades_${timestamp}.xls`;
+
+            // Estilos do Projeto
+            const headerBg = "#8b1e1e"; // Vermelho Primário
+            const headerTextColor = "#ffffff";
+
+            // Construção do conteúdo HTML que o Excel interpreta com estilos
+            let htmlContent = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <x:ExcelWorkbook>
+                            <x:ExcelWorksheets>
+                                <x:ExcelWorksheet>
+                                    <x:Name>Atividades Realizadas</x:Name>
+                                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                                </x:ExcelWorksheet>
+                            </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                    </xml>
+                    <![endif]-->
+                    <style>
+                        table { border-collapse: collapse; }
+                        .header-row td {
+                            background-color: ${headerBg} !important;
+                            color: ${headerTextColor} !important;
+                            font-weight: bold;
+                            height: 30px;
+                            text-align: left;
+                            border: 0.5pt solid #000;
+                            padding: 5px;
+                        }
+                        .data-row td {
+                            border: 0.5pt solid #ccc;
+                            padding: 5px;
+                            color: #333;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <table>
+                        <tr class="header-row">
+                            <td>Lista de Atividades Realizadas</td>
+                        </tr>
+            `;
+
+            let count = 0;
+            items.forEach(item => {
+                if (window.getComputedStyle(item).display !== 'none') {
+                    const text = item.querySelector('.activity-details').textContent.replace(/\s+/g, ' ').trim();
+                    htmlContent += `
+                        <tr class="data-row">
+                            <td>${text}</td>
+                        </tr>
+                    `;
+                    count++;
+                }
+            });
+
+            htmlContent += `
+                    </table>
+                </body>
+                </html>
+            `;
+
+            if (count === 0) {
+                alert("Não há dados para exportar com o filtro atual.");
+                return;
+            }
+
+            // Download do arquivo formatado
+            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.onload = () => {
+            if (window.updateUserName) {
+                window.updateUserName();
+            }
+            loadAtividades();
+        };
     </script>
 </body>
 

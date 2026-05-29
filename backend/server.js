@@ -688,6 +688,48 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
     }
 });
 
+// Specific route to get Atividades Realizadas with details (Parish and Archdiocese names)
+app.get('/api/atividades/detalhes', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                ar.id_atividade,
+                ar.data_atividade,
+                a.nome_arquidiocese,
+                p.nome_paroquia,
+                ar.titulo
+            FROM atividades_realizadas ar
+            LEFT JOIN paroquias p ON ar.id_paroquia = p.id_paroquia
+            LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
+            ORDER BY ar.data_atividade DESC
+        `;
+        const [rows] = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete an activity if no participants are present
+app.delete('/api/atividades_realizadas/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Check if there are participants registered
+        const [participants] = await pool.query(
+            'SELECT COUNT(*) as count FROM atividades_realizadas_participantes WHERE id_atividade = ?',
+            [id]
+        );
+        if (participants[0].count > 0) {
+            return res.status(400).json({ error: 'Não é possível excluir a atividade pois ela possui participantes vinculados.' });
+        }
+        
+        await pool.query('DELETE FROM atividades_realizadas WHERE id_atividade = ?', [id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao excluir atividade no banco de dados.' });
+    }
+});
+
 // Route to get a single paroquia by ID with relational info for edits
 app.get('/api/paroquias/:id', async (req, res) => {
     const { id } = req.params;
