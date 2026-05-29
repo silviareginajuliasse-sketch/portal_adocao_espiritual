@@ -1352,8 +1352,7 @@
                                     <label class="form-label">Estado <span>*</span></label>
                                     <div class="input-wrapper">
                                         <select class="select-field" id="select-estado" required>
-                                            <option value="" disabled selected></option>
-                                            <option value="RJ" selected>RJ</option>
+                                            <option value="" disabled selected>Selecione o estado</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
@@ -1362,8 +1361,7 @@
                                     <label class="form-label">Regional <span>*</span></label>
                                     <div class="input-wrapper">
                                         <select class="select-field" id="select-regional" required>
-                                            <option value="" disabled></option>
-                                            <option value="Leste 1" selected>Leste 1</option>
+                                            <option value="" disabled selected>Selecione a regional</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
@@ -1372,8 +1370,7 @@
                                     <label class="form-label">Arquidiocese <span>*</span></label>
                                     <div class="input-wrapper">
                                         <select class="select-field" id="select-arquidiocese" required>
-                                            <option value="" disabled></option>
-                                            <option value="Arquidiocese do Rio de Janeiro" selected>Arquidiocese do Rio de Janeiro</option>
+                                            <option value="" disabled selected>Selecione a arquidiocese</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
@@ -1386,8 +1383,7 @@
                                     <label class="form-label">Paróquia <span>*</span></label>
                                     <div class="input-wrapper">
                                         <select class="select-field" id="select-paroquia" required>
-                                            <option value="" disabled></option>
-                                            <option value="Nossa Senhora de Fátima" selected>Nossa Senhora de Fátima</option>
+                                            <option value="" disabled selected>Selecione a paróquia</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
@@ -1567,6 +1563,158 @@
 
     <script src="assets/js/header.js"></script>
     <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        async function loadEstados() {
+            try {
+                const response = await fetch(`${API_URL}/estados`);
+                const states = await response.json();
+                populateSelect('select-estado', states, 'id_estado', 'nome_estado', 'Selecione o estado');
+            } catch (err) {
+                console.error('Erro ao carregar estados:', err);
+            }
+        }
+
+        async function loadRegionais(estadoId) {
+            try {
+                const response = await fetch(`${API_URL}/regionais/estado/${estadoId}`);
+                const regionals = await response.json();
+                populateSelect('select-regional', regionals, 'id_regional', 'nome_regional', 'Selecione a regional');
+            } catch (err) {
+                console.error('Erro ao carregar regionais:', err);
+            }
+        }
+
+        async function loadArquidioceses(regionalId) {
+            try {
+                const response = await fetch(`${API_URL}/arquidioceses/regional/${regionalId}`);
+                const archdioceses = await response.json();
+                populateSelect('select-arquidiocese', archdioceses, 'id_arquidiocese', 'nome_arquidiocese', 'Selecione a arquidiocese');
+            } catch (err) {
+                console.error('Erro ao carregar arquidioceses:', err);
+            }
+        }
+
+        async function loadParoquias(arquidioceseId) {
+            try {
+                const response = await fetch(`${API_URL}/paroquias/arquidiocese/${arquidioceseId}`);
+                const parishes = await response.json();
+                populateSelect('select-paroquia', parishes, 'id_paroquia', 'nome_paroquia', 'Selecione a paróquia');
+            } catch (err) {
+                console.error('Erro ao carregar paróquias:', err);
+            }
+        }
+
+        function populateSelect(id, data, valueKey, textKey, defaultText) {
+            const select = document.getElementById(id);
+            if (!select) return;
+            select.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueKey];
+                option.text = item[textKey];
+                select.appendChild(option);
+            });
+        }
+
+        async function initializeInclusao() {
+            const userId = localStorage.getItem('user_id_colaborador');
+            if (!userId) {
+                await loadEstados();
+                return;
+            }
+
+            try {
+                const colabRes = await fetch(`${API_URL}/colaboradores/${userId}`);
+                if (!colabRes.ok) throw new Error('Falha ao carregar colaborador');
+                const colab = await colabRes.json();
+
+                await loadEstados();
+                if (colab.id_estado) {
+                    const selectEstado = document.getElementById('select-estado');
+                    selectEstado.value = colab.id_estado;
+                    
+                    await loadRegionais(colab.id_estado);
+                    
+                    if (colab.id_paroquia) {
+                        const parRes = await fetch(`${API_URL}/paroquias/${colab.id_paroquia}`);
+                        if (parRes.ok) {
+                            const parInfo = await parRes.json();
+                            
+                            if (parInfo.id_regional) {
+                                document.getElementById('select-regional').value = parInfo.id_regional;
+                                await loadArquidioceses(parInfo.id_regional);
+                                
+                                if (parInfo.id_arquidiocese) {
+                                    document.getElementById('select-arquidiocese').value = parInfo.id_arquidiocese;
+                                    await loadParoquias(parInfo.id_arquidiocese);
+                                    
+                                    if (parInfo.id_paroquia) {
+                                        document.getElementById('select-paroquia').value = parInfo.id_paroquia;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao inicializar inclusão:', err);
+                await loadEstados();
+            }
+        }
+
+        // Setup event listeners once DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectEstado = document.getElementById('select-estado');
+            const selectRegional = document.getElementById('select-regional');
+            const selectArquidiocese = document.getElementById('select-arquidiocese');
+
+            if (selectEstado) {
+                selectEstado.addEventListener('change', async (e) => {
+                    const estadoId = e.target.value;
+                    document.getElementById('select-regional').innerHTML = '<option value="" disabled selected>Selecione a regional</option>';
+                    document.getElementById('select-arquidiocese').innerHTML = '<option value="" disabled selected>Selecione a arquidiocese</option>';
+                    document.getElementById('select-paroquia').innerHTML = '<option value="" disabled selected>Selecione a paróquia</option>';
+                    if (estadoId) {
+                        await loadRegionais(estadoId);
+                    }
+                });
+            }
+
+            if (selectRegional) {
+                selectRegional.addEventListener('change', async (e) => {
+                    const regionalId = e.target.value;
+                    document.getElementById('select-arquidiocese').innerHTML = '<option value="" disabled selected>Selecione a arquidiocese</option>';
+                    document.getElementById('select-paroquia').innerHTML = '<option value="" disabled selected>Selecione a paróquia</option>';
+                    if (regionalId) {
+                        await loadArquidioceses(regionalId);
+                    }
+                });
+            }
+
+            if (selectArquidiocese) {
+                selectArquidiocese.addEventListener('change', async (e) => {
+                    const arquidioceseId = e.target.value;
+                    document.getElementById('select-paroquia').innerHTML = '<option value="" disabled selected>Selecione a paróquia</option>';
+                    if (arquidioceseId) {
+                        await loadParoquias(arquidioceseId);
+                    }
+                });
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const mode = urlParams.get('mode') || (id ? 'edit' : 'new');
+
+            if (mode === 'new') {
+                await initializeInclusao();
+            } else {
+                await loadEstados();
+            }
+        });
         
 
         function toggleSidebar() {

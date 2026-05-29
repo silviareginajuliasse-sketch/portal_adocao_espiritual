@@ -760,6 +760,17 @@ app.get('/api/paroquias/:id', async (req, res) => {
     }
 });
 
+// Route to get paróquias by arquidiocese
+app.get('/api/paroquias/arquidiocese/:id_arquidiocese', async (req, res) => {
+    const { id_arquidiocese } = req.params;
+    try {
+        const [rows] = await pool.query('SELECT * FROM paroquias WHERE id_arquidiocese = ? ORDER BY nome_paroquia', [id_arquidiocese]);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Route to get a single arquidiocese by ID
 app.get('/api/arquidioceses/:id', async (req, res) => {
     const { id } = req.params;
