@@ -1265,8 +1265,8 @@
                         <button class="tab-btn active" onclick="switchTab(event, 'tab-dados')">
                             <i class="fa-solid fa-clipboard-list"></i> DADOS DA ATIVIDADE
                         </button>
-                        <button class="tab-btn" onclick="switchTab(event, 'tab-participantes')">
-                            <i class="fa-solid fa-circle-user"></i> PARTICIPANTES
+                        <button class="tab-btn" id="btn-tab-participantes" onclick="switchTab(event, 'tab-participantes')">
+                            <i class="fa-solid fa-circle-user"></i> PARTICIPANTES<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #0056b3; transition: transform 0.2s;" onclick="event.stopPropagation(); openParticipantesModal()" title="Adicionar Participante" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                         <button class="tab-btn" onclick="switchTab(event, 'tab-fotos')">
                             <i class="fa-solid fa-camera"></i> FOTOS
@@ -1289,11 +1289,12 @@
                                     </div>
                                 </div>
                                 <div class="form-group col-forma">
-                                    <label class="form-label">Forma <span>*</span></label>
+                                    <label class="form-label">Formato <span>*</span></label>
                                     <div class="input-wrapper">
-                                        <select class="select-field" id="select-forma" required>
+                                        <select class="select-field" id="select-formato" required>
                                             <option value="Presencial" selected>Presencial</option>
-                                            <option value="Online">Online</option>
+                                            <option value="On-line">On-line</option>
+                                            <option value="Outro">Outro</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
@@ -1333,9 +1334,9 @@
                                     <div class="input-wrapper">
                                         <select class="select-field" id="select-classificacao" required>
                                             <option value="" disabled selected>Selecione a classificação</option>
-                                            <option value="Santa missa">Santa missa</option>
-                                            <option value="Palestra">Palestra</option>
-                                            <option value="Reunião">Reunião</option>
+                                            <option value="Missa">Missa</option>
+                                            <option value="Terço">Terço</option>
+                                            <option value="Evento">Evento</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
@@ -1412,7 +1413,7 @@
                                     <i class="fa-solid fa-chevron-left"></i>
                                 </button>
                                 <div class="action-btns-right">
-                                    <button type="button" class="btn-delete" onclick="handleDelete()">Excluir</button>
+                                    <button type="button" class="btn-delete" id="btn-delete" onclick="handleDelete()">Excluir</button>
                                     <button type="submit" class="btn-save">Salvar</button>
                                 </div>
                             </div>
@@ -1421,68 +1422,8 @@
 
                     <!-- Tab Content: Participantes -->
                     <div id="tab-participantes" class="tab-content">
-                        <div class="participants-header">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 10px; cursor: pointer;" onclick="window.location.href='popup_colaboradores.html'">
-                                <rect x="0" y="10" width="4" height="4" />
-                                <rect x="0" y="15" width="4" height="4" />
-                                <rect x="0" y="20" width="4" height="4" />
-                                <rect x="5" y="15" width="4" height="4" />
-                                <rect x="5" y="20" width="4" height="4" />
-                                <rect x="10" y="20" width="4" height="4" />
-                                <rect x="8" y="5" width="4" height="4" />
-                                <rect x="14" y="11" width="4" height="4" />
-                                <rect x="16" y="2" width="4" height="4" />
-                            </svg>
-                            Participantes da atividade
-                        </div>
-
-                        <div class="participants-grid">
-                            <!-- Débora -->
-                            <div class="participant-item">
-                                <div class="participant-avatar">
-                                    <img src="./menu_foto_colaboradores.png" alt="Débora">
-                                </div>
-                                <div class="participant-name">Débora</div>
-                                <i class="fa-regular fa-trash-can participant-delete"></i>
-                            </div>
-
-                            <!-- Maria Cristina -->
-                            <div class="participant-item">
-                                <div class="participant-avatar">
-                                    <img src="./menu_foto_aniversario.png" alt="Maria Cristina">
-                                </div>
-                                <div class="participant-name">Maria Cristina</div>
-                                <i class="fa-regular fa-trash-can participant-delete"></i>
-                            </div>
-
-                            <!-- Mari -->
-                            <div class="participant-item">
-                                <div class="participant-avatar">
-                                    <i class="fa-solid fa-user"></i>
-                                </div>
-                                <div class="participant-name">Mari</div>
-                                <i class="fa-regular fa-trash-can participant-delete"></i>
-                            </div>
-
-                            
-
-                            <!-- Mônica Barbosa -->
-                            <div class="participant-item">
-                                <div class="participant-avatar">
-                                    <i class="fa-solid fa-user"></i>
-                                </div>
-                                <div class="participant-name">Mônica Barbosa</div>
-                                <i class="fa-regular fa-trash-can participant-delete"></i>
-                            </div>
-
-                            <!-- João Procópio -->
-                            <div class="participant-item">
-                                <div class="participant-avatar">
-                                    <i class="fa-solid fa-user"></i>
-                                </div>
-                                <div class="participant-name">João Procópio</div>
-                                <i class="fa-regular fa-trash-can participant-delete"></i>
-                            </div>
+                        <div class="participants-grid" id="participants-list">
+                            <!-- Dynamically populated -->
                         </div>
                     </div>
 
@@ -1636,6 +1577,8 @@
                 if (!colabRes.ok) throw new Error('Falha ao carregar colaborador');
                 const colab = await colabRes.json();
 
+                document.getElementById('metadata-por').textContent = colab.apelido_colaborador || '--';
+
                 await loadEstados();
                 if (colab.id_estado) {
                     const selectEstado = document.getElementById('select-estado');
@@ -1710,16 +1653,191 @@
             }
         });
 
+        function formatDateTime(isoString) {
+            if (!isoString) return '--';
+            const date = new Date(isoString);
+            if (isNaN(date.getTime())) return '--';
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        async function loadAtividadeEdicao(id) {
+            try {
+                const response = await fetch(`${API_URL}/atividades_realizadas/${id}`);
+                if (!response.ok) throw new Error('Falha ao obter dados da atividade');
+                const activity = await response.json();
+
+                document.getElementById('select-status').value = activity.status || 'Ativo';
+                document.getElementById('select-formato').value = activity.formato || 'Presencial';
+                
+                const datePart = activity.data_atividade ? activity.data_atividade.split('T')[0] : '';
+                document.getElementById('input-data').value = datePart;
+
+                const timePart = activity.hora_atividade ? activity.hora_atividade.substring(0, 5) : '';
+                document.getElementById('input-hora').value = timePart;
+
+                document.getElementById('input-descricao').value = activity.titulo || '';
+
+                document.getElementById('select-classificacao').value = activity.tipo || '';
+
+                document.getElementById('select-recorrente').value = activity.recorrente || '';
+
+                if (activity.id_estado) {
+                    document.getElementById('select-estado').value = activity.id_estado;
+                    await loadRegionais(activity.id_estado);
+                    
+                    if (activity.id_regional) {
+                        document.getElementById('select-regional').value = activity.id_regional;
+                        await loadArquidioceses(activity.id_regional);
+                        
+                        if (activity.id_arquidiocese) {
+                            document.getElementById('select-arquidiocese').value = activity.id_arquidiocese;
+                            await loadParoquias(activity.id_arquidiocese);
+                            
+                            if (activity.id_paroquia) {
+                                document.getElementById('select-paroquia').value = activity.id_paroquia;
+                            }
+                        }
+                    }
+                }
+
+                document.getElementById('input-observacao').value = activity.observacoes || '';
+
+                document.getElementById('metadata-criado').textContent = formatDateTime(activity.criado_em);
+                document.getElementById('metadata-atualizado').textContent = formatDateTime(activity.atualizado_em);
+                
+                if (activity.id_colaborador_atualiza) {
+                    try {
+                        const colabRes = await fetch(`${API_URL}/colaboradores/${activity.id_colaborador_atualiza}`);
+                        if (colabRes.ok) {
+                            const colabData = await colabRes.json();
+                            document.getElementById('metadata-por').textContent = colabData.apelido_colaborador || '--';
+                        }
+                    } catch (colabErr) {
+                        console.error('Erro ao buscar colaborador do metadados:', colabErr);
+                        document.getElementById('metadata-por').textContent = '--';
+                    }
+                }
+
+                document.getElementById('page-title-text').textContent = 'Alteração de atividades realizadas';
+
+            } catch (err) {
+                console.error('Erro ao carregar dados da atividade para edição:', err);
+                alert('Erro ao carregar os dados da atividade.');
+            }
+        }
+
+        async function loadParticipantes() {
+            const listEl = document.getElementById('participants-list');
+            if (!listEl) return;
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (!id) {
+                listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; grid-column: span 3;">Salve a atividade para gerenciar participantes.</div>';
+                return;
+            }
+            
+            listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; grid-column: span 3;">Carregando participantes...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/atividades_realizadas/${id}/participantes`);
+                if (!response.ok) throw new Error('Erro ao buscar participantes');
+                const participants = await response.json();
+                
+                listEl.innerHTML = '';
+                
+                if (participants.length === 0) {
+                    listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; grid-column: span 3;">Nenhum participante associado a esta atividade.</div>';
+                    return;
+                }
+                
+                participants.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'participant-item';
+                    
+                    const cidadeStr = p.cidade ? ` - ${p.cidade}` : '';
+                    
+                    item.innerHTML = `
+                        <i class="fa-regular fa-trash-can participant-delete" style="cursor: pointer;" onclick="deleteParticipantAssociation(${p.id_colaborador})"></i>
+                        <div class="participant-avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="participant-name" style="color: #333;">
+                            ${p.id_colaborador} - ${p.apelido_colaborador || ''}${cidadeStr}
+                        </div>
+                    `;
+                    listEl.appendChild(item);
+                });
+            } catch (err) {
+                console.error(err);
+                listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e; grid-column: span 3;">Erro ao carregar participantes.</div>';
+            }
+        }
+
+        async function deleteParticipantAssociation(colaboradorId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (!id) return;
+            
+            if (confirm("Deseja realmente remover este participante da atividade?")) {
+                try {
+                    const response = await fetch(`${API_URL}/atividades_realizadas_participantes/${id}/${colaboradorId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        alert("Participante removido com sucesso!");
+                        await loadParticipantes();
+                    } else {
+                        const result = await response.json();
+                        alert("Erro ao remover participante: " + (result.error || 'Erro desconhecido.'));
+                    }
+                } catch (err) {
+                    console.error('Erro ao remover participante:', err);
+                    alert("Erro de conexão ao remover participante.");
+                }
+            }
+        }
+
+        function openParticipantesModal() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const mode = urlParams.get('mode') || (id ? 'edit' : 'new');
+            if (mode === 'new') {
+                alert("Por favor, salve a atividade primeiro antes de gerenciar os participantes.");
+                return;
+            }
+            window.location.href = `popup_colaboradores.html?id=${id}&from=atividades&mode=${mode}`;
+        }
+
         // Initialize on load
         window.addEventListener('load', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id');
             const mode = urlParams.get('mode') || (id ? 'edit' : 'new');
 
+            const btnDelete = document.getElementById('btn-delete');
             if (mode === 'new') {
+                if (btnDelete) btnDelete.style.display = 'none';
+                
+                // Disable other tabs if we are in 'new' mode
+                document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+                    if (index > 0) btn.disabled = true;
+                });
+                
                 await initializeInclusao();
             } else {
+                if (btnDelete) btnDelete.style.display = 'inline-block';
                 await loadEstados();
+                if (id) {
+                    await loadAtividadeEdicao(id);
+                    await loadParticipantes();
+                }
             }
         });
         
@@ -1762,16 +1880,95 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        function handleDelete() {
+        async function handleDelete() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (!id) return;
+
             if (confirm("Deseja realmente excluir esta atividade?")) {
-                alert("Atividade excluída com sucesso!");
-                window.location.href = 'Lista_atividades_realizadas.html';
+                try {
+                    const response = await fetch(`${API_URL}/atividades_realizadas/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        alert("Atividade excluída com sucesso!");
+                        window.location.href = 'Lista_atividades_realizadas.html';
+                    } else {
+                        const result = await response.json();
+                        alert("Erro ao excluir atividade: " + (result.error || 'Erro desconhecido'));
+                    }
+                } catch (err) {
+                    console.error('Erro ao excluir atividade:', err);
+                    alert("Erro ao excluir atividade: " + err.message);
+                }
             }
         }
 
-        document.getElementById('form-atividade').onsubmit = function (e) {
+        document.getElementById('form-atividade').onsubmit = async function (e) {
             e.preventDefault();
-            alert("Dados gravados com sucesso!");
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const mode = urlParams.get('mode') || (id ? 'edit' : 'new');
+            const id_atividade = mode === 'edit' && id ? parseInt(id, 10) : null;
+
+            const status = document.getElementById('select-status').value;
+            const formato = document.getElementById('select-formato').value;
+            const data_atividade = document.getElementById('input-data').value;
+            const hora_atividade = document.getElementById('input-hora').value;
+            const titulo = document.getElementById('input-descricao').value;
+            const classificacaoRaw = document.getElementById('select-classificacao').value;
+            const recorrente = document.getElementById('select-recorrente').value;
+            const id_estado = document.getElementById('select-estado').value;
+            const id_paroquia = document.getElementById('select-paroquia').value;
+            const observacoes = document.getElementById('input-observacao').value || null;
+
+            if (!status || !formato || !data_atividade || !hora_atividade || !titulo || !classificacaoRaw || !recorrente || !id_estado || !id_paroquia) {
+                alert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+            
+            const tipo = classificacaoRaw;
+
+            const savedId = localStorage.getItem('user_id_colaborador');
+            const id_colaborador_atualiza = savedId ? parseInt(savedId, 10) : 2;
+
+            const payload = {
+                id_atividade,
+                status,
+                titulo,
+                data_atividade,
+                hora_atividade,
+                formato,
+                id_estado: parseInt(id_estado, 10),
+                id_paroquia: id_paroquia ? parseInt(id_paroquia, 10) : null,
+                tipo,
+                recorrente,
+                observacoes,
+                id_colaborador_atualiza
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/atividades_realizadas/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert("Dados gravados com sucesso!");
+                    window.location.href = 'Lista_atividades_realizadas.html';
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido');
+                }
+            } catch (err) {
+                console.error('Erro ao salvar atividade:', err);
+                alert("Erro ao gravar dados: " + err.message);
+            }
         };
 
         function scrollPhotos(direction) {

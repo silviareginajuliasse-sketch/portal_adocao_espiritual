@@ -57,7 +57,7 @@ app.get('/api/menu', async (req, res) => {
     try {
         const query = 'SELECT id_menu, nome_menu, icone, pagina, ordem, status FROM menu WHERE status = "A" ORDER BY ordem ASC';
         const [rows] = await pool.query(query);
-        
+
         const menuItems = rows.map(item => {
             let iconeBase64 = null;
             if (item.icone) {
@@ -72,7 +72,7 @@ app.get('/api/menu', async (req, res) => {
                 status: item.status
             };
         });
-        
+
         res.json(menuItems);
     } catch (err) {
         console.error('Error fetching menu items:', err);
@@ -165,7 +165,7 @@ app.get('/api/colaboradores', async (req, res) => {
              ORDER BY c.nome_colaborador ASC
         `;
         const [rows] = await pool.query(query);
-        
+
         // Convert photo Buffer/Base64 to standard data URL for frontend display
         for (const colaborador of rows) {
             if (colaborador.foto_colaborador && colaborador.foto_colaborador.length > 0) {
@@ -174,7 +174,7 @@ app.get('/api/colaboradores', async (req, res) => {
                     const prefix = fotoBuffer.subarray(0, 11).toString('utf-8');
                     if (prefix === 'data:image/') {
                         // It is already a base64 Data URL string stored as bytes
-                        colaborador.foto_colaborador = fotoBuffer.toString('utf-8');
+                        colaborador.foto_colaborador = fotoBuffer.toString('utf-8').replace(/[\r\n\s]+/g, '');
                     } else {
                         // It is raw binary data, convert it to base64 Data URL
                         const base64 = fotoBuffer.toString('base64');
@@ -185,7 +185,9 @@ app.get('/api/colaboradores', async (req, res) => {
                 } else if (typeof fotoBuffer === 'string') {
                     if (!fotoBuffer.startsWith('data:image/')) {
                         // Raw base64 string, wrap it
-                        colaborador.foto_colaborador = `data:image/jpeg;base64,${fotoBuffer}`;
+                        colaborador.foto_colaborador = `data:image/jpeg;base64,${fotoBuffer.replace(/[\r\n\s]+/g, '')}`;
+                    } else {
+                        colaborador.foto_colaborador = fotoBuffer.replace(/[\r\n\s]+/g, '');
                     }
                 }
             } else {
@@ -321,7 +323,7 @@ app.get('/api/colaboradores/:id', async (req, res) => {
                 const prefix = fotoBuffer.subarray(0, 11).toString('utf-8');
                 if (prefix === 'data:image/') {
                     // It is already a base64 Data URL string stored as bytes
-                    colaborador.foto_colaborador = fotoBuffer.toString('utf-8');
+                    colaborador.foto_colaborador = fotoBuffer.toString('utf-8').replace(/[\r\n\s]+/g, '');
                 } else {
                     // It is raw binary data, convert it to base64 Data URL
                     const base64 = fotoBuffer.toString('base64');
@@ -332,7 +334,9 @@ app.get('/api/colaboradores/:id', async (req, res) => {
             } else if (typeof fotoBuffer === 'string') {
                 if (!fotoBuffer.startsWith('data:image/')) {
                     // Raw base64 string, wrap it
-                    colaborador.foto_colaborador = `data:image/jpeg;base64,${fotoBuffer}`;
+                    colaborador.foto_colaborador = `data:image/jpeg;base64,${fotoBuffer.replace(/[\r\n\s]+/g, '')}`;
+                } else {
+                    colaborador.foto_colaborador = fotoBuffer.replace(/[\r\n\s]+/g, '');
                 }
             }
         } else {
@@ -403,6 +407,57 @@ app.delete('/api/atividades_realizadas_participantes/:id_atividade/:id_colaborad
     }
 });
 
+// Route to get participants of a specific activity
+app.get('/api/atividades_realizadas/:id/participantes', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT arp.id_colaborador, c.apelido_colaborador, c.cidade
+            FROM atividades_realizadas_participantes arp
+            INNER JOIN colaboradores c ON arp.id_colaborador = c.id_colaborador
+            WHERE arp.id_atividade = ?
+            ORDER BY c.apelido_colaborador ASC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar participantes da atividade:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save participants of an activity (without duplicating)
+app.post('/api/atividades_realizadas/:id/participantes', async (req, res) => {
+    const { id } = req.params;
+    const { colaboradores } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ success: false, error: 'ID da atividade é obrigatório.' });
+    }
+    if (!colaboradores || !Array.isArray(colaboradores)) {
+        return res.status(400).json({ success: false, error: 'Lista de colaboradores é obrigatória.' });
+    }
+
+    try {
+        for (const colabId of colaboradores) {
+            const [exists] = await pool.query(
+                'SELECT 1 FROM atividades_realizadas_participantes WHERE id_atividade = ? AND id_colaborador = ?',
+                [parseInt(id), parseInt(colabId)]
+            );
+            if (exists.length === 0) {
+                await pool.query(
+                    'INSERT INTO atividades_realizadas_participantes (id_atividade, id_colaborador) VALUES (?, ?)',
+                    [parseInt(id), parseInt(colabId)]
+                );
+            }
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao salvar participantes da atividade:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 // Route to list all trainings (defined before generic :table wildcard to avoid interception)
 app.get('/api/treinamentos', async (req, res) => {
@@ -417,11 +472,115 @@ app.get('/api/treinamentos', async (req, res) => {
     }
 });
 
+// --- ROTAS PARA ESTRUTURA ORGANIZACIONAL (ESPECÍFICAS - ANTES DA ROTA GENÉRICA) ---
+
+// GET: List all areas
+app.get('/api/estrutura_organizacional', async (req, res) => {
+    try {
+        const query = `
+            SELECT eo.id_area, eo.nome_area, eo.status, eo.id_colaborador_lider, eo.subordinado_id_area,
+                   c.nome_colaborador AS nome_lider, c.apelido_colaborador AS apelido_lider,
+                   c.foto_colaborador AS foto_lider, c.status AS status_lider,
+                   eo_parent.nome_area AS nome_area_pai,
+                   eo.criado_em, eo.atualizado_em, eo.id_colaborador_atualiza
+            FROM estrutura_organizacional eo
+            LEFT JOIN colaboradores c ON eo.id_colaborador_lider = c.id_colaborador
+            LEFT JOIN estrutura_organizacional eo_parent ON eo.subordinado_id_area = eo_parent.id_area
+            ORDER BY eo.nome_area ASC
+        `;
+        const [rows] = await pool.query(query);
+
+        // Convert photo Buffer to base64 Data URL
+        for (const area of rows) {
+            if (area.foto_lider && area.foto_lider.length > 0) {
+                let fotoBuffer = area.foto_lider;
+                if (Buffer.isBuffer(fotoBuffer)) {
+                    const prefix = fotoBuffer.subarray(0, 11).toString('utf-8');
+                    if (prefix === 'data:image/') {
+                        area.foto_lider = fotoBuffer.toString('utf-8').replace(/[\r\n\s]+/g, '');
+                    } else {
+                        const base64 = fotoBuffer.toString('base64');
+                        const isPng = fotoBuffer.length >= 2 && fotoBuffer[0] === 0x89 && fotoBuffer[1] === 0x50;
+                        const mime = isPng ? 'image/png' : 'image/jpeg';
+                        area.foto_lider = `data:${mime};base64,${base64}`;
+                    }
+                } else if (typeof fotoBuffer === 'string') {
+                    if (!fotoBuffer.startsWith('data:image/')) {
+                        area.foto_lider = `data:image/jpeg;base64,${fotoBuffer.replace(/[\r\n\s]+/g, '')}`;
+                    } else {
+                        area.foto_lider = fotoBuffer.replace(/[\r\n\s]+/g, '');
+                    }
+                }
+            } else {
+                area.foto_lider = null;
+            }
+        }
+
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao obter estrutura organizacional:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET: Get specific area details
+app.get('/api/estrutura_organizacional/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT eo.id_area, eo.nome_area, eo.status, eo.id_colaborador_lider, eo.subordinado_id_area,
+                   c.nome_colaborador AS nome_lider, c.apelido_colaborador AS apelido_lider,
+                   c.foto_colaborador AS foto_lider,
+                   eo_parent.nome_area AS nome_area_pai,
+                   eo.criado_em, eo.atualizado_em, eo.id_colaborador_atualiza,
+                   col_up.apelido_colaborador AS nome_colaborador_atualiza
+            FROM estrutura_organizacional eo
+            LEFT JOIN colaboradores c ON eo.id_colaborador_lider = c.id_colaborador
+            LEFT JOIN estrutura_organizacional eo_parent ON eo.subordinado_id_area = eo_parent.id_area
+            LEFT JOIN colaboradores col_up ON eo.id_colaborador_atualiza = col_up.id_colaborador
+            WHERE eo.id_area = ?
+        `;
+        const [rows] = await pool.query(query, [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Área não encontrada' });
+        }
+
+        const area = rows[0];
+        if (area.foto_lider && area.foto_lider.length > 0) {
+            let fotoBuffer = area.foto_lider;
+            if (Buffer.isBuffer(fotoBuffer)) {
+                const prefix = fotoBuffer.subarray(0, 11).toString('utf-8');
+                if (prefix === 'data:image/') {
+                    area.foto_lider = fotoBuffer.toString('utf-8').replace(/[\r\n\s]+/g, '');
+                } else {
+                    const base64 = fotoBuffer.toString('base64');
+                    const isPng = fotoBuffer.length >= 2 && fotoBuffer[0] === 0x89 && fotoBuffer[1] === 0x50;
+                    const mime = isPng ? 'image/png' : 'image/jpeg';
+                    area.foto_lider = `data:${mime};base64,${base64}`;
+                }
+            } else if (typeof fotoBuffer === 'string') {
+                if (!fotoBuffer.startsWith('data:image/')) {
+                    area.foto_lider = `data:image/jpeg;base64,${fotoBuffer.replace(/[\r\n\s]+/g, '')}`;
+                } else {
+                    area.foto_lider = fotoBuffer.replace(/[\r\n\s]+/g, '');
+                }
+            }
+        } else {
+            area.foto_lider = null;
+        }
+
+        res.json(area);
+    } catch (err) {
+        console.error('Erro ao obter detalhe de estrutura organizacional:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Generic GET all for a table
 app.get('/api/:table', async (req, res) => {
     const { table } = req.params;
     const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'treinamento_instrutores'];
-    
+
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Tabela não permitida' });
     }
@@ -444,12 +603,12 @@ app.post('/api/regionais/save', async (req, res) => {
     console.log('POST /api/regionais/save - Body:', req.body);
     const { id, nome, states, id_pais, status, observacao, id_colaborador_atualiza } = req.body;
     const connection = await pool.getConnection();
-    
+
     try {
         await connection.beginTransaction();
 
         // --- VALIDAÇÕES (CRÍTICAS) ---
-        
+
         // 1. Verificar se o país foi preenchido
         if (!id_pais) {
             await connection.rollback();
@@ -464,7 +623,7 @@ app.post('/api/regionais/save', async (req, res) => {
 
         // 3. Verificar se o nome da regional já existe (se for nova ou se mudou o nome)
         const [existingName] = await connection.query(
-            'SELECT id_regional FROM regional WHERE nome_regional = ? AND id_regional != ?', 
+            'SELECT id_regional FROM regional WHERE nome_regional = ? AND id_regional != ?',
             [nome, id || 0]
         );
         if (existingName.length > 0) {
@@ -525,7 +684,7 @@ app.post('/api/regionais/save', async (req, res) => {
 app.post('/api/arquidioceses/save', async (req, res) => {
     console.log('POST /api/arquidioceses/save - Body:', req.body);
     const { id_arquidiocese, nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza, socialMedia } = req.body;
-    
+
     try {
         let savedId = id_arquidiocese;
         if (id_arquidiocese) {
@@ -603,21 +762,23 @@ app.get('/api/paroquias/tipos', async (req, res) => {
 // Specific route to save/update Paroquia
 app.post('/api/paroquias/save', async (req, res) => {
     console.log('POST /api/paroquias/save - Body:', req.body);
-    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, latitude, longitude, site, observacoes, socialMedia } = req.body;
-    
+    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, latitude, longitude, site, observacoes, socialMedia, id_colaborador_atualiza } = req.body;
+
     try {
         let savedId = id_paroquia;
+        const colabId = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza) : null;
+
         if (id_paroquia) {
             // Update
             await pool.query(
-                'UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, latitude = ?, longitude = ?, site = ?, observacoes = ? WHERE id_paroquia = ?',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, latitude, longitude, site || '', observacoes || null, id_paroquia]
+                'UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ? WHERE id_paroquia = ?',
+                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, latitude, longitude, site || '', observacoes || null, colabId, id_paroquia]
             );
         } else {
             // Insert
             const [result] = await pool.query(
-                'INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, latitude, longitude, site, observacoes, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, latitude, longitude, site || '', observacoes || null]
+                'INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?)',
+                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, latitude, longitude, site || '', observacoes || null, colabId]
             );
             savedId = result.insertId;
         }
@@ -669,6 +830,7 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
                 p.id_paroquia,
                 p.nome_paroquia,
                 p.cidade,
+                p.endereco,
                 p.status,
                 a.nome_arquidiocese,
                 r.nome_regional,
@@ -722,7 +884,7 @@ app.delete('/api/atividades_realizadas/:id', async (req, res) => {
         if (participants[0].count > 0) {
             return res.status(400).json({ error: 'Não é possível excluir a atividade pois ela possui participantes vinculados.' });
         }
-        
+
         await pool.query('DELETE FROM atividades_realizadas WHERE id_atividade = ?', [id]);
         res.json({ success: true });
     } catch (err) {
@@ -738,22 +900,24 @@ app.get('/api/paroquias/:id', async (req, res) => {
             SELECT 
                 p.*,
                 a.id_regional,
-                a.id_pais
+                a.id_pais,
+                c.apelido_colaborador
             FROM paroquias p
             LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
+            LEFT JOIN colaboradores c ON p.id_colaborador_atualiza = c.id_colaborador
             WHERE p.id_paroquia = ?
         `;
         const [rows] = await pool.query(query, [id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Paróquia não encontrada' });
         const paroquia = rows[0];
-        
+
         // Fetch midias
         const [midias] = await pool.query(
-            'SELECT id_rede_social, nome_midia_paroquia FROM paroquias_midia WHERE id_paroquia = ?', 
+            'SELECT id_rede_social, nome_midia_paroquia FROM paroquias_midia WHERE id_paroquia = ?',
             [id]
         );
         paroquia.midias = midias;
-        
+
         res.json(paroquia);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -768,6 +932,97 @@ app.get('/api/paroquias/arquidiocese/:id_arquidiocese', async (req, res) => {
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get a single Atividade Realizada by ID with relational info for edits
+app.get('/api/atividades_realizadas/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT 
+                ar.*,
+                p.id_arquidiocese,
+                a.id_regional
+            FROM atividades_realizadas ar
+            LEFT JOIN paroquias p ON ar.id_paroquia = p.id_paroquia
+            LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
+            WHERE ar.id_atividade = ?
+        `;
+        const [rows] = await pool.query(query, [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Atividade não encontrada' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Erro ao obter atividade realizada:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Specific route to save/update Atividade Realizada
+app.post('/api/atividades_realizadas/save', async (req, res) => {
+    const {
+        id_atividade,
+        status,
+        titulo,
+        data_atividade,
+        hora_atividade,
+        formato,
+        id_estado,
+        id_paroquia,
+        tipo,
+        recorrente,
+        observacoes,
+        id_colaborador_atualiza
+    } = req.body;
+
+    try {
+        if (id_atividade) {
+            // Update
+            await pool.query(
+                `UPDATE atividades_realizadas SET 
+                    status = ?, 
+                    titulo = ?, 
+                    data_atividade = ?, 
+                    hora_atividade = ?, 
+                    formato = ?, 
+                    id_estado = ?, 
+                    id_paroquia = ?, 
+                    tipo = ?, 
+                    recorrente = ?, 
+                    observacoes = ?, 
+                    id_colaborador_atualiza = ?, 
+                    atualizado_em = NOW() 
+                 WHERE id_atividade = ?`,
+                [status, titulo, data_atividade, hora_atividade, formato, id_estado, id_paroquia, tipo, recorrente, observacoes || null, id_colaborador_atualiza, id_atividade]
+            );
+            res.json({ success: true, id: id_atividade });
+        } else {
+            // Insert
+            const [result] = await pool.query(
+                `INSERT INTO atividades_realizadas (
+                    status, 
+                    titulo, 
+                    data_atividade, 
+                    hora_atividade, 
+                    formato, 
+                    id_estado, 
+                    id_paroquia, 
+                    tipo, 
+                    recorrente, 
+                    observacoes, 
+                    id_colaborador_atualiza, 
+                    criado_em,
+                    atualizado_em
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL)`,
+                [status, titulo, data_atividade, hora_atividade, formato, id_estado, id_paroquia, tipo, recorrente, observacoes || null, id_colaborador_atualiza]
+            );
+            res.status(201).json({ success: true, id: result.insertId });
+        }
+    } catch (err) {
+        console.error('Erro ao salvar atividade realizada:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -1116,7 +1371,7 @@ app.get('/api/paroquias/:id/historico', async (req, res) => {
     const { id } = req.params;
     try {
         const query = `
-            SELECT phr.data, phr.canal, phr.detalhes, c.apelido_colaborador
+            SELECT phr.id_paroquia, phr.data, phr.canal, phr.detalhes, phr.data_inclusao, c.apelido_colaborador
             FROM paroquias_historico_relacionamento phr
             LEFT JOIN colaboradores c ON phr.id_colaborador_atualiza = c.id_colaborador
             WHERE phr.id_paroquia = ?
@@ -1130,14 +1385,36 @@ app.get('/api/paroquias/:id/historico', async (req, res) => {
     }
 });
 
-// Route to save relationship history for a specific parish
+// Route to get single relationship history detail by parish and timestamp
+app.get('/api/paroquias/historico/detail', async (req, res) => {
+    const { id_paroquia, data_inclusao } = req.query;
+    if (!id_paroquia || !data_inclusao) {
+        return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
+    }
+    try {
+        const query = `
+            SELECT phr.data, phr.canal, phr.detalhes, phr.data_inclusao, phr.id_paroquia
+            FROM paroquias_historico_relacionamento phr
+            WHERE phr.id_paroquia = ? AND phr.data_inclusao = ?
+        `;
+        const parsedDate = new Date(data_inclusao);
+        const [rows] = await pool.query(query, [parseInt(id_paroquia), isNaN(parsedDate.getTime()) ? data_inclusao : parsedDate]);
+        if (rows.length === 0) return res.status(404).json({ error: 'Registro não encontrado' });
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Erro ao obter detalhes do histórico:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save/update relationship history for a specific parish
 app.post('/api/paroquias/historico/save', async (req, res) => {
-    const { id_paroquia, data, canal, detalhes, id_colaborador_atualiza } = req.body;
-    
+    const { id_paroquia, data, canal, detalhes, id_colaborador_atualiza, data_inclusao } = req.body;
+
     if (!id_paroquia || !data || !canal || !detalhes || !id_colaborador_atualiza) {
         return res.status(400).json({ success: false, error: 'Campos obrigatórios ausentes.' });
     }
-    
+
     try {
         // Convert DD/MM/YYYY to YYYY-MM-DD
         const dateParts = data.split('/');
@@ -1146,19 +1423,52 @@ app.post('/api/paroquias/historico/save', async (req, res) => {
         }
         const mysqlDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
 
-        const query = `
-            INSERT INTO paroquias_historico_relacionamento 
-            (id_paroquia, data, canal, detalhes, id_colaborador_atualiza, data_inclusao)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `;
-        
-        await pool.query(query, [parseInt(id_paroquia), mysqlDate, canal, detalhes, parseInt(id_colaborador_atualiza)]);
-        res.json({ success: true });
+        if (data_inclusao) {
+            // Update
+            const query = `
+                UPDATE paroquias_historico_relacionamento 
+                SET data = ?, canal = ?, detalhes = ?, id_colaborador_atualiza = ?
+                WHERE id_paroquia = ? AND data_inclusao = ?
+            `;
+            const parsedDate = new Date(data_inclusao);
+            await pool.query(query, [mysqlDate, canal, detalhes, parseInt(id_colaborador_atualiza), parseInt(id_paroquia), isNaN(parsedDate.getTime()) ? data_inclusao : parsedDate]);
+            res.json({ success: true });
+        } else {
+            // Insert
+            const query = `
+                INSERT INTO paroquias_historico_relacionamento 
+                (id_paroquia, data, canal, detalhes, id_colaborador_atualiza, data_inclusao)
+                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            `;
+            await pool.query(query, [parseInt(id_paroquia), mysqlDate, canal, detalhes, parseInt(id_colaborador_atualiza)]);
+            res.json({ success: true });
+        }
     } catch (err) {
         console.error('Erro ao salvar histórico de relacionamento:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+// Route to delete a relationship history record
+app.delete('/api/paroquias/historico/delete', async (req, res) => {
+    const { id_paroquia, data_inclusao } = req.query;
+    if (!id_paroquia || !data_inclusao) {
+        return res.status(400).json({ success: false, error: 'Campos obrigatórios ausentes.' });
+    }
+    try {
+        const query = `
+            DELETE FROM paroquias_historico_relacionamento 
+            WHERE id_paroquia = ? AND data_inclusao = ?
+        `;
+        const parsedDate = new Date(data_inclusao);
+        await pool.query(query, [parseInt(id_paroquia), isNaN(parsedDate.getTime()) ? data_inclusao : parsedDate]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir histórico de relacionamento:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 
 // --- Parish Coordinator Routes ---
@@ -1191,7 +1501,7 @@ app.post('/api/paroquia_coordenadores/save', async (req, res) => {
     try {
         // Delete existing links for this parish
         await pool.query('DELETE FROM paroquia_coordenadores WHERE id_paroquia = ?', [id_paroquia]);
-        
+
         // Insert new ones
         if (coordenadores && coordenadores.length > 0) {
             for (const id_colab of coordenadores) {
@@ -1464,7 +1774,7 @@ app.get('/api/divisao_arquidiocesana/:id', getDivisaoById);
 
 const saveDivisao = async (req, res) => {
     const { id_subdivisao, nome_subdivisao, id_arquidiocese, status, id_colaborador_atualiza } = req.body;
-    
+
     if (!nome_subdivisao || !id_arquidiocese) {
         return res.status(400).json({ success: false, error: 'Campos obrigatórios ausentes' });
     }
@@ -1537,11 +1847,97 @@ app.delete('/api/subdivisao_arquidiocesana/:id', deleteDivisao);
 app.delete('/api/subdivisoes_arquidiocesanas/:id', deleteDivisao);
 app.delete('/api/divisao_arquidiocesana/:id', deleteDivisao);
 
+// --- ROTAS PARA ESTRUTURA ORGANIZACIONAL ---
+
+// POST: Save/Update area
+app.post('/api/estrutura_organizacional/save', async (req, res) => {
+    console.log('POST /api/estrutura_organizacional/save - Body:', req.body);
+    const { id, nome_area, id_colaborador_lider, subordinado_id_area, status, id_colaborador_atualiza } = req.body;
+
+    try {
+        // Validation
+        if (!nome_area || nome_area.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, preencha o Nome da Área.' });
+        }
+        if (!id_colaborador_lider) {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o Líder.' });
+        }
+        if (!status) {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o Status.' });
+        }
+
+        // Check duplicate name
+        const [existingName] = await pool.query(
+            'SELECT id_area FROM estrutura_organizacional WHERE nome_area = ? AND id_area != ?',
+            [nome_area.trim(), id || 0]
+        );
+        if (existingName.length > 0) {
+            return res.status(400).json({ success: false, error: `Crítica: Já existe uma área cadastrada com o nome "${nome_area}".` });
+        }
+
+        let savedId = id;
+        const subId = subordinado_id_area ? parseInt(subordinado_id_area) : null;
+        const lidId = parseInt(id_colaborador_lider);
+        const colabUp = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza) : null;
+
+        if (id) {
+            // Update
+            await pool.query(
+                `UPDATE estrutura_organizacional 
+                 SET nome_area = ?, id_colaborador_lider = ?, subordinado_id_area = ?, status = ?, id_colaborador_atualiza = ?, atualizado_em = NOW()
+                 WHERE id_area = ?`,
+                [nome_area.trim(), lidId, subId, status, colabUp, id]
+            );
+        } else {
+            // Insert
+            const [maxRow] = await pool.query('SELECT COALESCE(MAX(id_area), 0) + 1 AS nextId FROM estrutura_organizacional');
+            const nextId = maxRow[0].nextId;
+
+            await pool.query(
+                `INSERT INTO estrutura_organizacional (
+                    id_area, nome_area, id_colaborador_lider, subordinado_id_area, status, criado_em, atualizado_em, id_colaborador_atualiza
+                ) VALUES (?, ?, ?, ?, ?, NOW(), NULL, ?)`,
+                [nextId, nome_area.trim(), lidId, subId, status, colabUp]
+            );
+            savedId = nextId;
+        }
+
+        res.json({ success: true, id: savedId });
+    } catch (err) {
+        console.error('Erro ao salvar área de estrutura organizacional:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// DELETE: Delete area
+app.delete('/api/estrutura_organizacional/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Check if there are other areas subordinated to this one
+        const [subordinated] = await pool.query(
+            'SELECT id_area FROM estrutura_organizacional WHERE subordinado_id_area = ?',
+            [id]
+        );
+        if (subordinated.length > 0) {
+            return res.status(400).json({ success: false, error: 'Crítica: Não é possível excluir esta área pois existem outras áreas subordinadas a ela.' });
+        }
+
+        const [result] = await pool.query('DELETE FROM estrutura_organizacional WHERE id_area = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, error: 'Área não encontrada' });
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir área de estrutura organizacional:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Specific route to delete Regional
 app.delete('/api/regionais/:id', async (req, res) => {
     const { id } = req.params;
     const connection = await pool.getConnection();
-    
+
     try {
         await connection.beginTransaction();
 
@@ -1564,51 +1960,51 @@ app.delete('/api/regionais/:id', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { colaborador, senha } = req.body;
     console.log(`[API] POST /api/login - Colaborador: ${colaborador}`);
-    
+
     if (!colaborador) {
         return res.status(400).json({ success: false, error: 'Colaborador não encontrado!' });
     }
-    
+
     try {
         const cleanedColab = colaborador.trim();
         const digitsOnly = cleanedColab.replace(/\D/g, '');
-        
+
         let query = `
             SELECT c.*, c.perfil AS nome_perfil, c.perfil AS id_perfil
             FROM colaboradores c
             WHERE c.email = ? OR c.telefone = ?
         `;
         let params = [cleanedColab, cleanedColab];
-        
+
         if (digitsOnly.length > 0) {
             query += ` OR REPLACE(REPLACE(REPLACE(REPLACE(c.telefone, '(', ''), ')', ''), ' ', ''), '-', '') = ?`;
             params.push(digitsOnly);
         }
-        
+
         const isNumeric = /^\d+$/.test(cleanedColab);
         if (isNumeric) {
             const parsedId = parseInt(cleanedColab, 10);
             query += ` OR c.id_colaborador = ?`;
             params.push(parsedId);
         }
-        
+
         const [rows] = await pool.query(query, params);
-        
+
         if (rows.length === 0) {
             return res.status(404).json({ success: false, error: 'Colaborador não encontrado!' });
         }
-        
+
         const user = rows[0];
-        
+
         if (!user.senha) {
             return res.status(401).json({ success: false, error: 'Senha inválida!' });
         }
-        
+
         const passwordMatch = await bcrypt.compare(senha || '', user.senha);
         if (!passwordMatch) {
             return res.status(401).json({ success: false, error: 'Senha inválida!' });
         }
-        
+
         // Increment access count and update last access timestamp
         try {
             await pool.query(
@@ -1618,7 +2014,7 @@ app.post('/api/login', async (req, res) => {
         } catch (dbErr) {
             console.error('[API ERROR] Failed to increment access count for collaborator:', dbErr);
         }
-        
+
         let fotoDataUrl = null;
         if (user.foto_colaborador && user.foto_colaborador.length > 0) {
             let fotoBuffer = user.foto_colaborador;
@@ -1664,7 +2060,7 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/:table', async (req, res) => {
     const { table } = req.params;
     const data = req.body;
-    
+
     try {
         const [result] = await pool.query(`INSERT INTO ?? SET ?`, [table, data]);
         res.status(201).json({ id: result.insertId, ...data });
@@ -1737,7 +2133,7 @@ app.post('/api/treinamentos/save', async (req, res) => {
                 id_colaborador_atualiza = ?, 
                 atualizado_em = NOW() 
                 WHERE id_treinamento = ?`;
-            
+
             await pool.query(query, [
                 forma_treinamento,
                 titulo,
@@ -1763,7 +2159,7 @@ app.post('/api/treinamentos/save', async (req, res) => {
                 criado_em, 
                 atualizado_em
             ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NULL)`;
-            
+
             const [result] = await pool.query(query, [
                 forma_treinamento,
                 titulo,
@@ -1911,7 +2307,7 @@ app.get('/api/treinamentos/:id/instrutores', async (req, res) => {
             ORDER BY ti.data ASC, ti.hora_inicio ASC
         `;
         const [rows] = await pool.query(query, [id]);
-        
+
         // Convert photo Buffer/Base64 to standard data URL for frontend display
         for (const row of rows) {
             if (row.foto_colaborador && row.foto_colaborador.length > 0) {
@@ -1935,7 +2331,7 @@ app.get('/api/treinamentos/:id/instrutores', async (req, res) => {
                 row.foto_colaborador = null;
             }
         }
-        
+
         res.json(rows);
     } catch (err) {
         console.error('Erro ao buscar instrutores do treinamento:', err);
@@ -1991,14 +2387,14 @@ app.post('/api/treinamento_participantes/:id/presenca', async (req, res) => {
 app.post('/api/treinamentos/:id/participantes', async (req, res) => {
     const { id } = req.params;
     const { colaboradores } = req.body;
-    
+
     if (!id) {
         return res.status(400).json({ success: false, error: 'ID do treinamento é obrigatório.' });
     }
     if (!colaboradores || !Array.isArray(colaboradores)) {
         return res.status(400).json({ success: false, error: 'Lista de colaboradores é obrigatória.' });
     }
-    
+
     try {
         for (const colabId of colaboradores) {
             await pool.query(
@@ -2082,7 +2478,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
                 const day = parseInt(parts[0], 10);
                 const month = parseInt(parts[1], 10);
                 const year = parseInt(parts[2], 10);
-                
+
                 if (year >= 1900 && year <= 2100 && month >= 1 && month <= 12) {
                     const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
                     const daysInMonth = [31, (isLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -2126,7 +2522,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
                 motivou_AE = ?,
                 obs_colaborador = ?,
                 id_colaborador_atualiza = ?`;
-            
+
             const params = [
                 nome_colaborador,
                 apelido_colaborador,

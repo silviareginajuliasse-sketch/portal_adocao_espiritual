@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusão de Estrutura Organizacional - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #eee;
+            --light-blue: #f0f7ff;
+            --btn-blue: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100vh;
+            height: 100vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -480px;
+            width: 480px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 24px;
+            padding: 24px 20px;
+            list-style: none;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-decoration: none;
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        .sidebar-item:hover {
+            color: var(--primary-red);
+        }
+
+        .sidebar-item i {
+            font-size: 1.4rem;
+            width: 28px;
+            text-align: center;
+            color: #888;
+            transition: color 0.2s;
+        }
+
+        .sidebar-item:hover i {
+            color: var(--primary-red);
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100vw;
+                right: -100vw;
+            }
+            .sidebar-list {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        /* Main Container Layout */
+        .main-container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        /* Card styles matching mockup design */
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            margin-top: 10px;
+        }
+
+        .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f1f1;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: baseline;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .page-title {
+            color: var(--primary-red);
+            font-family: Georgia, serif;
+            font-size: 1.6rem;
+            font-weight: 400;
+        }
+
+        .mandatory-notice {
+            color: #b25e5e;
+            font-style: italic;
+            font-size: 0.82rem;
+        }
+
+        .help-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--btn-blue);
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: 600;
+            gap: 3px;
+        }
+
+        .help-circle {
+            width: 26px;
+            height: 26px;
+            border: 1.5px solid var(--btn-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Form Columns Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 800px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        .form-left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .form-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            align-items: flex-start;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-grow: 1;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            background-color: white;
+            transition: border-color 0.2s;
+            height: 38px;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-red);
+        }
+
+        /* Select styling */
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 15px;
+            padding-right: 35px;
+        }
+
+        /* Metadata Box styling */
+        .meta-container {
+            display: flex;
+            gap: 35px;
+            padding: 5px 0 15px 0;
+            width: 100%;
+        }
+
+        .meta-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .meta-label {
+            font-size: 0.82rem;
+            color: #999;
+        }
+
+        .meta-value {
+            font-size: 0.9rem;
+            color: #444;
+            font-weight: 500;
+        }
+
+        /* Upload styling */
+        .upload-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            width: 200px;
+        }
+
+        .upload-box {
+            border: 1.5px dashed #b25e5e;
+            border-radius: 8px;
+            background: #faf5f5;
+            width: 110px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .upload-box:hover {
+            background: #f8eeee;
+        }
+
+        .upload-box i {
+            font-size: 1.6rem;
+            color: var(--primary-red);
+        }
+
+        .upload-box span {
+            font-size: 0.72rem;
+            color: #b25e5e;
+            font-weight: 500;
+        }
+
+        .upload-label {
+            font-size: 0.8rem;
+            color: #777;
+            text-align: center;
+        }
+
+        /* Footer buttons styling */
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+            padding-top: 20px;
+        }
+
+        .back-circle-btn {
+            width: 42px;
+            height: 42px;
+            background-color: var(--primary-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+            box-shadow: 0 3px 8px rgba(139, 30, 30, 0.2);
+        }
+
+        .back-circle-btn:hover {
+            opacity: 0.9;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-action {
+            padding: 8px 32px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-style: italic;
+            border-radius: 20px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            height: 38px;
+        }
+
+        .btn-delete {
+            background-color: white;
+            color: var(--primary-red);
+            border: 2px solid var(--primary-red);
+        }
+
+        .btn-delete:hover {
+            background-color: #faf5f5;
+        }
+
+        .btn-save {
+            background-color: var(--primary-red);
+            color: white;
+        }
+
+        .btn-save:hover {
+            background-color: #721818;
+        }
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-display-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <script src="assets/js/header.js"></script>
+    <script src="assets/js/api.js"></script>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> <span>Início</span></a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> <span>Aniversariantes do mês</span></a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> <span>Banner aniversariantes</span></a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> <span>Calendário de atividades</span></a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item"><i class="fa-solid fa-globe"></i> <span>Regionais</span></a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> <span>(Arqui)Dioceses</span></a></li>
+            <li><a href="lista_estrutura_organizacional.html" class="sidebar-item"><i class="fa-solid fa-diagram-project"></i> <span>Divisão Arquidiocesana</span></a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> <span>Paróquias e Comunidades</span></a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> <span>Colaboradores</span></a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> <span>Cadastro de treinamentos</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <!-- Header Row -->
+            <div class="title-row">
+                <div class="title-left">
+                    <h1 class="page-title">Inclusão de Estrutura Organizacional</h1>
+                    <span class="mandatory-notice">Os campos assinalados com asterisco (*) são de preenchimento obrigatório.</span>
+                </div>
+                <div class="help-container" onclick="alert('Ajuda: Preencha os dados e clique em salvar.')">
+                    <div class="help-circle">?</div>
+                    <span>Ajuda</span>
+                </div>
+            </div>
+
+            <!-- Form Columns -->
+            <div class="form-grid">
+                <!-- Left Column -->
+                <div class="form-left-col">
+                    <!-- Status & Lider -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 0 0 180px;">
+                            <label class="form-label">Status <span>*</span></label>
+                            <select id="select-status" class="form-control">
+                                <option value="Ativo">Ativo</option>
+                                <option value="Inativo">Inativo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Lider <span>*</span> 
+                                <i class="fa-solid fa-magnifying-glass" style="margin-left: 5px; cursor: pointer; font-size: 0.8rem;" onclick="openLiderPopup()"></i>
+                            </label>
+                            <input type="text" id="input-lider" class="form-control" readonly placeholder="" style="cursor: default;" />
+                        </div>
+                    </div>
+
+                    <!-- Nome da área -->
+                    <div class="form-group">
+                        <label class="form-label">Nome da área <span>*</span></label>
+                        <input type="text" id="input-nome-area" class="form-control" placeholder="" />
+                    </div>
+
+                    <!-- Subordinado a -->
+                    <div class="form-group">
+                        <label class="form-label">Subordinado a</label>
+                        <select id="select-subordinado" class="form-control">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-right-col">
+                    <!-- Metadata Box -->
+                    <div class="meta-container">
+                        <div class="meta-group">
+                            <span class="meta-label">Incluído em</span>
+                            <span class="meta-value" id="metadata-criado"></span>
+                        </div>
+                        <div class="meta-group">
+                            <span class="meta-label">Atualizado em</span>
+                            <span class="meta-value" id="metadata-atualizado"></span>
+                        </div>
+                        <div class="meta-group">
+                            <span class="meta-label">Por</span>
+                            <span class="meta-value" id="metadata-por">SILVIA JULIASSE</span>
+                        </div>
+                    </div>
+
+                    <!-- Upload Box -->
+                    <div class="upload-wrapper">
+                        <div class="upload-box" onclick="document.getElementById('hidden-doc-input').click()">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                            <span id="upload-status-text">Fazer upload</span>
+                        </div>
+                        <span class="upload-label" id="upload-filename-label">Atribuições da área:</span>
+                        <input type="file" id="hidden-doc-input" style="display: none;" accept=".pdf" onchange="handleDocUpload(event)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="footer-row">
+                <button class="back-circle-btn" onclick="goBack()" title="Voltar para a lista">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="actions-group">
+                    <button class="btn-action btn-delete" id="btn-delete" onclick="deleteArea()">Excluir</button>
+                    <button class="btn-action btn-save" onclick="saveArea()">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Lider selection overlay modal iframe -->
+    <div id="lider-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 10000; border: none;">
+        <iframe id="lider-modal-iframe" style="width: 100%; height: 100%; border: none; background: transparent;" src="about:blank"></iframe>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode') || 'new';
+        const id = urlParams.get('id');
+
+        let uploadedFileName = null;
+        let uploadedFileBase64 = null;
+
+        function handleDocUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('Por favor, selecione apenas arquivos no formato PDF.');
+                event.target.value = '';
+                return;
+            }
+
+            uploadedFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const base64Data = e.target.result.split(',')[1];
+                uploadedFileBase64 = base64Data;
+                
+                document.getElementById('upload-filename-label').textContent = `Atribuições da área: ${file.name} (Aguardando salvar)`;
+                document.getElementById('upload-status-text').textContent = 'Alterar arquivo';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        window.onload = async function () {
+            // Update Por in metadata dynamically
+            const savedName = localStorage.getItem('user_nome');
+            if (savedName) {
+                const metaPor = document.getElementById('metadata-por');
+                if (metaPor) metaPor.textContent = savedName;
+            }
+
+            // Load options for Subordinado a select from database
+            await loadSubordinadoOptions();
+
+            // Handle edit mode
+            if (mode === 'edit' && id) {
+                document.querySelector('.page-title').textContent = 'Atualização de Estrutura Organizacional';
+                document.getElementById('btn-delete').style.display = 'inline-block';
+                await loadAreaData();
+            } else {
+                // In inclusion mode, hide delete button
+                document.getElementById('btn-delete').style.display = 'none';
+            }
+        };
+
+        async function loadSubordinadoOptions() {
+            try {
+                let areas = [];
+                try {
+                    const response = await fetchData('estrutura_organizacional');
+                    if (Array.isArray(response)) {
+                        areas = response;
+                    } else {
+                        console.warn('API de estrutura_organizacional não retornou uma array:', response);
+                    }
+                } catch (err) {
+                    console.warn('Erro ao carregar áreas da API, usando dados mockados.', err);
+                }
+
+                if (!areas || areas.length === 0) {
+                    // Fallback mock data to ensure dropdown works in offline/static mockup tests
+                    areas = [
+                        { id_area: 1, nome_area: 'Coordenação Nacional', apelido_lider: 'Silvia Juliasse', status: 'Ativo' },
+                        { id_area: 2, nome_area: 'Paróquia São José', apelido_lider: 'Moacyr Caparroz', status: 'Ativo' },
+                        { id_area: 3, nome_area: 'Diretoria Executiva', apelido_lider: 'Ana Paula', status: 'Ativo' }
+                    ];
+                }
+
+                const select = document.getElementById('select-subordinado');
+                select.innerHTML = '<option value=""></option>';
+                areas.forEach(area => {
+                    // Exclude current area in edit mode to prevent self-subordination
+                    if (mode === 'edit' && id && area.id_area == id) return;
+                    
+                    const opt = document.createElement('option');
+                    opt.value = area.id_area;
+                    const leaderText = area.apelido_lider ? ` - ${area.apelido_lider}` : '';
+                    opt.textContent = `${area.nome_area}${leaderText}`;
+                    select.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar áreas subordinadas:', err);
+            }
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '--';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        async function loadAreaData() {
+            try {
+                const area = await fetchData(`estrutura_organizacional/${id}`);
+                if (area) {
+                    document.getElementById('select-status').value = area.status;
+                    document.getElementById('input-nome-area').value = area.nome_area;
+                    
+                    const inputLider = document.getElementById('input-lider');
+                    inputLider.value = area.nome_lider || '';
+                    inputLider.setAttribute('data-id', area.id_colaborador_lider);
+
+                    document.getElementById('select-subordinado').value = area.subordinado_id_area || '';
+                    
+                    // Metadata
+                    document.getElementById('metadata-criado').textContent = formatDateTime(area.criado_em);
+                    document.getElementById('metadata-atualizado').textContent = formatDateTime(area.atualizado_em);
+                    document.getElementById('metadata-por').textContent = area.nome_colaborador_atualiza || 'SILVIA JULIASSE';
+
+                    // Atribuições file name
+                    if (area.nome_arquivo_atribuicoes) {
+                        uploadedFileName = area.nome_arquivo_atribuicoes;
+                        document.getElementById('upload-filename-label').innerHTML = `Atribuições da área: ${area.nome_arquivo_atribuicoes} <a href="${API_URL}/estrutura_organizacional/${id}/documento" target="_blank" style="margin-left: 8px; color: var(--btn-blue); text-decoration: underline; font-weight: 600;"><i class="fa-solid fa-file-pdf"></i> Visualizar</a>`;
+                        document.getElementById('upload-status-text').textContent = 'Alterar arquivo';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao carregar dados da área:', err);
+                alert('Erro ao carregar os dados cadastrais da área.');
+            }
+        }
+
+        async function saveArea() {
+            const nomeArea = document.getElementById('input-nome-area').value.trim();
+            const inputLider = document.getElementById('input-lider');
+            const liderId = inputLider ? inputLider.getAttribute('data-id') : null;
+            const subordinadoId = document.getElementById('select-subordinado').value;
+            const status = document.getElementById('select-status').value;
+            const userId = localStorage.getItem('user_id_colaborador') || null;
+
+            // Client-side validation
+            if (!status) {
+                alert('Por favor, selecione o Status.');
+                return;
+            }
+            if (!liderId) {
+                alert('Por favor, selecione o Líder.');
+                return;
+            }
+            if (!nomeArea) {
+                alert('Por favor, preencha o Nome da Área.');
+                return;
+            }
+
+            const payload = {
+                id: mode === 'edit' ? parseInt(id) : null,
+                nome_area: nomeArea,
+                id_colaborador_lider: parseInt(liderId),
+                subordinado_id_area: subordinadoId ? parseInt(subordinadoId) : null,
+                status: status,
+                id_colaborador_atualiza: userId ? parseInt(userId) : null,
+                nome_arquivo_atribuicoes: uploadedFileName,
+                arquivo_atribuicoes_base64: uploadedFileBase64
+            };
+
+            try {
+                const response = await postData('estrutura_organizacional/save', payload);
+                if (response.success) {
+                    alert('Dados salvos com sucesso!');
+                    goBack();
+                } else {
+                    alert('Erro ao salvar: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                alert('Erro ao conectar com a API para salvar.');
+            }
+        }
+
+        async function deleteArea() {
+            if (!id) return;
+            try {
+                // Verificar se existem áreas subordinadas
+                const areas = await fetchData('estrutura_organizacional');
+                const temSubordinadas = areas.some(area => area.subordinado_id_area == id);
+
+                if (temSubordinadas) {
+                    alert('Não é possível excluir porque existem áreas subordinadas!');
+                    return;
+                }
+
+                if (confirm('Deseja realmente excluir esta área?')) {
+                    const response = await deleteData(`estrutura_organizacional/${id}`);
+                    if (response.success) {
+                        alert('Área excluída com sucesso!');
+                        goBack();
+                    } else {
+                        alert('Erro ao excluir: ' + (response.error || 'Erro desconhecido'));
+                    }
+                }
+            } catch (err) {
+                alert('Erro ao conectar com a API para excluir.');
+            }
+        }
+
+        function goBack() {
+            const nomeParam = urlParams.get('nome') || '';
+            const cpfParam = urlParams.get('cpf') || '';
+            window.location.href = `lista_estrutura_organizacional.html?nome=${encodeURIComponent(nomeParam)}&cpf=${encodeURIComponent(cpfParam)}`;
+        }
+
+
+        // Toggle Sidebar Menu
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Toggle Account Dropdown Menu
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            dropdown.classList.toggle('show');
+            toggleIcon.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                toggleIcon.classList.remove('active');
+            }
+        }
+
+        // Lider selection modal controllers
+        function openLiderPopup() {
+            const iframe = document.getElementById('lider-modal-iframe');
+            const overlay = document.getElementById('lider-modal-overlay');
+            iframe.src = 'popup_colaboradores_ae.html?select_lider=true';
+            overlay.style.display = 'block';
+        }
+
+        // Close modal
+        function closeLiderPopup() {
+            const iframe = document.getElementById('lider-modal-iframe');
+            const overlay = document.getElementById('lider-modal-overlay');
+            iframe.src = 'about:blank';
+            overlay.style.display = 'none';
+        }
+
+        // Listen for postMessages from the popup iframe
+        window.addEventListener('message', function (event) {
+            if (event.data && event.data.action) {
+                if (event.data.action === 'close') {
+                    closeLiderPopup();
+                } else if (event.data.action === 'selectLider') {
+                    const inputLider = document.getElementById('input-lider');
+                    if (inputLider) {
+                        inputLider.value = event.data.nome_colaborador;
+                        inputLider.setAttribute('data-id', event.data.id_colaborador);
+                    }
+                    closeLiderPopup();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

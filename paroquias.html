@@ -882,8 +882,8 @@
             const items = document.querySelectorAll('.list-item');
 
             items.forEach(item => {
-                const name = item.querySelector('.archdiocese-name').textContent.toLowerCase();
-                if (name.includes(query)) {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(query)) {
                     item.style.display = 'flex';
                 } else {
                     item.style.display = 'none';
@@ -1030,11 +1030,12 @@
                     extraSpan.style.color = '#666';
                     extraSpan.style.marginTop = '4px';
                     
+                    const endereco = paroquia.endereco || 'Não informado';
                     const cidade = paroquia.cidade || 'Não informada';
                     const estado = paroquia.sigla_estado || 'N/A';
                     const arquidiocese = paroquia.nome_arquidiocese || 'N/A';
                     
-                    extraSpan.textContent = `Cidade: ${cidade} - ${estado} | Arquidiocese: ${arquidiocese}`;
+                    extraSpan.textContent = `Endereço: ${endereco} | Cidade: ${cidade} - ${estado} | Arquidiocese: ${arquidiocese}`;
                     
                     detailsDiv.appendChild(nameSpan);
                     detailsDiv.appendChild(extraSpan);

@@ -725,6 +725,40 @@
             text-decoration: underline;
         }
 
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            margin-left: 10px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .status-badge.status-inativo {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .status-badge.status-analise {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+
 </style>
 </head>
 
@@ -945,7 +979,7 @@
             const query = document.getElementById('search-input').value.toLowerCase();
             const items = document.querySelectorAll('.list-item');
             items.forEach(item => {
-                const text = item.querySelector('.collaborator-name').textContent.toLowerCase();
+                const text = item.textContent.toLowerCase();
                 item.style.display = text.includes(query) ? 'flex' : 'none';
             });
         }
@@ -1055,6 +1089,14 @@
 
                     const avatarHtml = getAvatarHtml(c);
                     
+                    let statusHtml = '';
+                    const normStatus = (c.status || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (normStatus === 'inativo') {
+                        statusHtml = `<span class="status-badge status-inativo">Inativo</span>`;
+                    } else if (normStatus === 'em analise') {
+                        statusHtml = `<span class="status-badge status-analise">Em análise</span>`;
+                    }
+
                     listItem.onclick = function() { window.location.href = 'registro_colaboradores.html?id=' + c.id_colaborador; };
                     listItem.innerHTML = `
                         <i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #e74c3c; margin-right: 15px;"></i>
@@ -1062,6 +1104,7 @@
                         <span class="collaborator-name" style="cursor: pointer; flex: 1;">
                             ${label}
                         </span>
+                        ${statusHtml}
                     `;
                     listContainer.appendChild(listItem);
                 });

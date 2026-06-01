@@ -206,7 +206,7 @@
 <body>
 
     <div class="modal-container">
-        <a href="javascript:void(0)" class="close-btn" onclick="window.history.back()">X</a>
+        <a href="javascript:void(0)" class="close-btn" onclick="closePopup()">X</a>
 
         <div class="modal-header">
             <h2 class="modal-title">Colaboradores Adoção Espiritual *</h2>
@@ -228,18 +228,43 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const id_paroquia = urlParams.get('id_paroquia');
+        const selectLider = urlParams.get('select_lider') === 'true';
         
         let allCollaborators = [];
         let selectedColabIds = new Set();
 
+        function closePopup() {
+            if (window.self !== window.top) {
+                window.parent.postMessage({ action: 'close' }, '*');
+            } else {
+                window.history.back();
+            }
+        }
+
         function toggleSelection(element) {
             const colabId = parseInt(element.getAttribute('data-id'));
-            if (element.classList.contains('selected')) {
-                element.classList.remove('selected');
-                selectedColabIds.delete(colabId);
+            if (selectLider) {
+                // Radio-like behavior for single selection
+                const previouslySelected = document.querySelector('.list-item.selected');
+                if (previouslySelected && previouslySelected !== element) {
+                    previouslySelected.classList.remove('selected');
+                }
+                selectedColabIds.clear();
+                if (element.classList.contains('selected')) {
+                    element.classList.remove('selected');
+                } else {
+                    element.classList.add('selected');
+                    selectedColabIds.add(colabId);
+                }
             } else {
-                element.classList.add('selected');
-                selectedColabIds.add(colabId);
+                // Original multiselect behavior
+                if (element.classList.contains('selected')) {
+                    element.classList.remove('selected');
+                    selectedColabIds.delete(colabId);
+                } else {
+                    element.classList.add('selected');
+                    selectedColabIds.add(colabId);
+                }
             }
         }
 
@@ -260,21 +285,40 @@
         }
 
         async function loadData() {
-            if (!id_paroquia) {
+            if (!id_paroquia && !selectLider) {
                 alert("Erro: ID da paróquia ausente na URL.");
                 return;
             }
 
             try {
-                // Fetch already linked coordinators for the parish
-                const linkedCoordinators = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
-                linkedCoordinators.forEach(c => {
-                    selectedColabIds.add(c.id_colaborador);
-                });
+                if (!selectLider) {
+                    // Fetch already linked coordinators for the parish
+                    const linkedCoordinators = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
+                    linkedCoordinators.forEach(c => {
+                        selectedColabIds.add(c.id_colaborador);
+                    });
+                }
 
                 // Fetch all collaborators and filter to active ones (status === 'ativo' or 'Ativo')
-                const collaborators = await fetchData('colaboradores');
-                // The status column case-insensitive compare, filtering active ones
+                let collaborators = [];
+                try {
+                    collaborators = await fetchData('colaboradores');
+                } catch (err) {
+                    console.warn("Could not fetch collaborators from database, using mock data.", err);
+                }
+
+                if (!collaborators || collaborators.length === 0) {
+                    // Provide fallback mock data for testing offline/static layout
+                    collaborators = [
+                        { id_colaborador: 1, nome_colaborador: "Silvia Regina Juliasse", status: "Ativo", nome_paroquia: "Paróquia São José" },
+                        { id_colaborador: 2, nome_colaborador: "Moacyr Caparroz", status: "Ativo", nome_paroquia: "Paróquia Nossa Senhora da Paz" },
+                        { id_colaborador: 3, nome_colaborador: "Ana Paula Silva", status: "Ativo", nome_paroquia: "Paróquia São Pedro" },
+                        { id_colaborador: 4, nome_colaborador: "Carlos Eduardo Oliveira", status: "Ativo", nome_paroquia: "Catedral Metropolitana" },
+                        { id_colaborador: 5, nome_colaborador: "Maria de Fátima Souza", status: "Ativo", nome_paroquia: "Paróquia Santo Antônio" }
+                    ];
+                }
+
+                // Filter active ones
                 allCollaborators = collaborators.filter(c => c.status && c.status.toLowerCase() === 'ativo');
 
                 const listContainer = document.getElementById('collaborators-list');
@@ -306,6 +350,28 @@
         }
 
         async function saveSelection() {
+            if (selectLider) {
+                const selectedItem = document.querySelector('.list-item.selected');
+                if (!selectedItem) {
+                    alert("Por favor, selecione um colaborador.");
+                    return;
+                }
+                const colabId = parseInt(selectedItem.getAttribute('data-id'));
+                const colabName = selectedItem.querySelector('.item-text').innerText.split(' - ')[0]; // strip parish suffix
+
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        action: 'selectLider',
+                        id_colaborador: colabId,
+                        nome_colaborador: colabName
+                    }, '*');
+                } else {
+                    localStorage.setItem('temp_selected_lider', JSON.stringify({ id_colaborador: colabId, nome_colaborador: colabName }));
+                    window.history.back();
+                }
+                return;
+            }
+
             if (!id_paroquia) return;
 
             const selectedArray = Array.from(selectedColabIds);

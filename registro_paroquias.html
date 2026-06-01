@@ -695,6 +695,7 @@
 
         .form-group.full-width {
             grid-column: span 1 !important;
+            width: 100% !important;
         }
 
         .input-field,
@@ -1267,7 +1268,7 @@
                             <i class="fa-solid fa-users" style="color: #f1c40f;"></i> COORDENADORES
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-obs" onclick="switchTab(event, 'tab-obs')">
-                            <i class="fa-solid fa-clock-rotate-left" style="color: #9b59b6;"></i> OBS. E HISTÓRICO DE RELACIONAMENTO
+                            <i class="fa-solid fa-clock-rotate-left" style="color: #9b59b6;"></i> HISTÓRICO DE RELACIONAMENTO
                         </button>
                     </div>
 
@@ -1414,6 +1415,14 @@
                                     </table>
                                 </div>
                             </div>
+
+                            <!-- Row 6: Observações -->
+                            <div class="form-row" style="margin-top: 20px; margin-bottom: 0px; width: 100%;">
+                                <div class="form-group full-width" style="width: 100%;">
+                                    <label class="form-label" for="textarea-observacoes">Observações</label>
+                                    <textarea class="textarea-field" id="textarea-observacoes" placeholder="Digite observações sobre a paróquia ou comunidade..."></textarea>
+                                </div>
+                            </div>
                         </div> <!-- End of tab-identificacao -->
 
                         <!-- Tab Content: LIDERANÇA -->
@@ -1454,13 +1463,8 @@
                             </div>
                         </div>
 
-                        <!-- Tab Content: OBS. E HISTÓRICO DE RELACIONAMENTO -->
+                        <!-- Tab Content: HISTÓRICO DE RELACIONAMENTO -->
                         <div id="tab-obs" class="tab-content">
-                            <div class="form-group full-width" style="margin-bottom: 30px;">
-                                <label class="form-label" for="textarea-observacoes">Observações gerais</label>
-                                <textarea class="textarea-field" id="textarea-observacoes" placeholder="Digite observações sobre a paróquia ou comunidade..."></textarea>
-                            </div>
-
                             <div class="lideranca-header-row" style="margin-top: 25px;">
                                 <div class="lideranca-title-with-icon" onclick="openAddHistorico()" style="cursor: pointer;" title="Adicionar Histórico">
                                     <img src="./arquidioceses-header-icon.png" class="lideranca-title-icon" alt="Icon">
@@ -1472,6 +1476,7 @@
                                 <table class="lideranca-table">
                                     <thead>
                                         <tr>
+                                            <th style="width: 50px;"></th>
                                             <th>Data</th>
                                             <th>Canal</th>
                                             <th>Detalhes / Resumo</th>
@@ -1485,7 +1490,7 @@
                             </div>
                         </div>
 
-                        <div class="footer-actions" style="margin-top: 35px;">
+                        <div class="footer-actions" style="margin-top: 15px;">
                             <button type="button" class="back-btn" onclick="goBack()">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </button>
@@ -1677,7 +1682,8 @@
                 longitude: longitude ? parseFloat(longitude.replace(',', '.')) : null,
                 site: site || '',
                 observacoes,
-                socialMedia
+                socialMedia,
+                id_colaborador_atualiza: localStorage.getItem('user_id_colaborador') || null
             };
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -1818,6 +1824,7 @@
 
                 document.getElementById('metadata-criado').innerText = formatDate(paroquia.criado_em);
                 document.getElementById('metadata-atualizado').innerText = formatDate(paroquia.atualizado_em);
+                document.getElementById('metadata-por').innerText = (paroquia.apelido_colaborador || '--').toUpperCase();
 
                 // Populate basic fields
                 document.getElementById('select-status').value = paroquia.status === 'inativo' ? 'Inativo' : 'Ativo';
@@ -2304,7 +2311,7 @@
             if (list.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; color: #777; padding: 25px; font-style: italic; font-size: 0.95rem;">
+                        <td colspan="5" style="text-align: center; color: #777; padding: 25px; font-style: italic; font-size: 0.95rem;">
                             Nenhum histórico de relacionamento registrado para esta Paróquia/Comunidade.
                         </td>
                     </tr>
@@ -2314,6 +2321,15 @@
 
             list.forEach(item => {
                 const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.onclick = () => {
+                    saveParentFormState();
+                    localStorage.setItem('temp_paroquia_active_tab', 'tab-obs');
+                    const nomeUser = urlParams.get('nome') || '';
+                    const cpfUser = urlParams.get('cpf') || '';
+                    const parId = id ? `&id_paroquia=${id}` : '';
+                    window.location.href = `popup_paroquia_relacionamento.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}${parId}&data_inclusao=${encodeURIComponent(item.data_inclusao)}`;
+                };
                 
                 // Format date to DD/MM/YYYY
                 const formatDate = (isoString) => {
@@ -2327,6 +2343,9 @@
                 };
 
                 tr.innerHTML = `
+                    <td class="col-delete" onclick="event.stopPropagation(); deleteHistorico(${item.id_paroquia || id}, '${item.data_inclusao}')">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </td>
                     <td style="white-space: nowrap;">${formatDate(item.data)}</td>
                     <td>${item.canal || '--'}</td>
                     <td>${item.detalhes || '--'}</td>
@@ -2334,6 +2353,27 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        async function deleteHistorico(id_paroquia, data_inclusao) {
+            if (confirm("Deseja realmente excluir este histórico de relacionamento?")) {
+                try {
+                    const response = await fetch(`${API_URL}/paroquias/historico/delete?id_paroquia=${id_paroquia}&data_inclusao=${encodeURIComponent(data_inclusao)}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const res = await response.json();
+                    if (res.success) {
+                        alert("Histórico de relacionamento excluído com sucesso!");
+                        fetchHistorico(id_paroquia);
+                    } else {
+                        alert("Erro ao excluir histórico: " + (res.error || "Erro desconhecido"));
+                    }
+                } catch (err) {
+                    console.error("Erro ao excluir histórico:", err);
+                    alert("Erro ao excluir histórico de relacionamento.");
+                }
+            }
         }
 
         // On Load Logic
@@ -2447,7 +2487,7 @@
         }
 
         function goBack() {
-            window.history.back();
+            window.location.href = `paroquias.html${window.location.search}`;
         }
 
         function switchTab(event, tabId) {

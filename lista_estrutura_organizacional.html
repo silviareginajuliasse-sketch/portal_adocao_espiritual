@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estrutura Organizacional - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #eee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100vh;
+            height: 100vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        /* Main Content Layout */
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Search & Subtitle Row */
+        .search-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        .subtitle-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-style: normal;
+            font-size: 1.5rem;
+            font-family: Georgia, serif;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .subtitle-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 5px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-style: italic;
+            color: #888;
+            outline: none;
+            width: 160px;
+        }
+
+        @media (min-width: 768px) {
+            .search-input {
+                width: 250px;
+            }
+        }
+
+        /* List Area */
+        .list-container {
+            border-top: 2px solid var(--primary-red);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            padding: 15px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            gap: 15px;
+            transition: background-color 0.2s;
+            border-radius: 6px;
+            margin: 4px 0;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .list-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background-color: #dbe8f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            margin-left: 10px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .status-badge.status-inativo {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        /* Tree Hierarchy Layout & Connectors */
+        .tree-node {
+            position: relative;
+        }
+
+        .children-container {
+            padding-left: 40px;
+            position: relative;
+        }
+
+        /* Horizontal branch line for each child */
+        .children-container > .tree-node::before {
+            content: "";
+            position: absolute;
+            top: 26px; /* Centers vertically with the 36px avatar */
+            left: -20px; /* Starts at the vertical line position */
+            width: 32px; /* Reaches from -20px to +12px where the avatar starts */
+            height: 2px;
+            background: linear-gradient(to right, #557db5, #799fcb);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.3);
+            opacity: 0.9;
+        }
+
+        /* Vertical line segment */
+        .children-container > .tree-node::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -20px;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, #799fcb, #557db5);
+            box-shadow: 1px 0 3px rgba(0, 0, 0, 0.12), inset 0.5px 0 0.5px rgba(255, 255, 255, 0.3);
+            opacity: 0.9;
+        }
+
+        /* First child vertical line goes up to parent center */
+        .children-container > .tree-node:first-child::after {
+            top: -26px;
+            height: calc(100% + 26px);
+        }
+
+        /* Last child vertical line stops at its own horizontal line */
+        .children-container > .tree-node:last-child::after {
+            height: 26px;
+        }
+
+        /* Only child (both first and last child) starts at parent center and stops at its own horizontal line */
+        .children-container > .tree-node:first-child:last-child::after {
+            top: -26px;
+            height: 52px;
+        }
+
+        .trash-icon {
+            color: #555;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .trash-icon:hover {
+            color: var(--primary-red);
+        }
+
+        .item-text {
+            color: #777;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            flex-grow: 1;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -480px;
+            width: 480px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 24px;
+            padding: 24px 20px;
+            list-style: none;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-decoration: none;
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        .sidebar-item:hover {
+            color: var(--primary-red);
+        }
+
+        .sidebar-item i {
+            font-size: 1.4rem;
+            width: 28px;
+            text-align: center;
+            color: #888;
+            transition: color 0.2s;
+        }
+
+        .sidebar-item:hover i {
+            color: var(--primary-red);
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100vw;
+                right: -100vw;
+            }
+            .sidebar-list {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <script src="assets/js/header.js"></script>
+    <script src="assets/js/api.js"></script>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> <span>Início</span></a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> <span>Aniversariantes do mês</span></a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> <span>Banner aniversariantes</span></a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> <span>Calendário de atividades</span></a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item"><i class="fa-solid fa-globe"></i> <span>Regionais</span></a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> <span>(Arqui)Dioceses</span></a></li>
+            <li><a href="lista_estrutura_organizacional.html" class="sidebar-item"><i class="fa-solid fa-diagram-project"></i> <span>Divisão Arquidiocesana</span></a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> <span>Paróquias e Comunidades</span></a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> <span>Colaboradores</span></a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> <span>Cadastro de treinamentos</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <!-- Search Header -->
+        <div class="search-row">
+            <div class="subtitle-with-icon" onclick="openNewArea()" style="cursor: pointer;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#8b1e1e" class="subtitle-icon">
+                    <rect x="0" y="10" width="4" height="4" />
+                    <rect x="0" y="15" width="4" height="4" />
+                    <rect x="0" y="20" width="4" height="4" />
+                    <rect x="5" y="15" width="4" height="4" />
+                    <rect x="5" y="20" width="4" height="4" />
+                    <rect x="10" y="20" width="4" height="4" />
+                    <rect x="8" y="5" width="4" height="4" />
+                    <rect x="14" y="11" width="4" height="4" />
+                    <rect x="16" y="2" width="4" height="4" />
+                </svg>
+                <span>Estrutura <span style="color: var(--primary-red);">Organizacional</span></span>
+            </div>
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="busca" oninput="filterList()">
+            </div>
+        </div>
+
+        <!-- The List -->
+        <div class="list-container" id="list-container">
+            <!-- Dynamically populated -->
+        </div>
+
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Check for dynamic user credentials in localStorage to maintain visual integration, else keep default mock data
+        window.onload = async function () {
+            // Load actual database records
+            await loadAreas();
+        };
+
+        async function loadAreas() {
+            try {
+                const list = await fetchData('estrutura_organizacional');
+                const listContainer = document.getElementById('list-container');
+                listContainer.innerHTML = '';
+                
+                if (!list || list.length === 0) {
+                    listContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhuma área cadastrada no sistema.</div>';
+                    return;
+                }
+
+                // Build tree from flat list
+                const roots = buildTree(list);
+
+                // Render tree root container
+                const treeHtml = renderTree(roots, true);
+                listContainer.appendChild(treeHtml);
+            } catch (err) {
+                console.error('Erro ao carregar áreas:', err);
+            }
+        }
+
+        function buildTree(list) {
+            const map = {};
+            const roots = [];
+
+            // Initialize map
+            list.forEach(item => {
+                map[item.id_area] = {
+                    ...item,
+                    children: []
+                };
+            });
+
+            // Build relationships
+            list.forEach(item => {
+                const mapped = map[item.id_area];
+                if (item.subordinado_id_area && map[item.subordinado_id_area]) {
+                    map[item.subordinado_id_area].children.push(mapped);
+                } else {
+                    roots.push(mapped);
+                }
+            });
+
+            return roots;
+        }
+
+        function renderTree(nodes, isRoot = false) {
+            const container = document.createElement('div');
+            if (isRoot) {
+                container.className = 'tree-root-container';
+            } else {
+                container.className = 'children-container';
+            }
+
+            nodes.forEach(node => {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'tree-node';
+
+                // Display name and leader. Show status only if equal to 'Inativo' as a styled badge.
+                const areaHtml = `<span style="color: #557db5; font-weight: 600;">${node.nome_area}</span>`;
+                const leaderHtml = `<span style="color: #777;"> (Líder: ${node.nome_lider || 'Sem líder'})</span>`;
+                const normStatus = (node.status || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const normStatusLider = (node.status_lider || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const isInactive = normStatus === 'inativo' || normStatusLider === 'inativo';
+                const statusHtml = isInactive ? `<span class="status-badge status-inativo">Inativo</span>` : '';
+                
+                nodeDiv.innerHTML = `
+                    <div class="list-item" onclick="editArea(${node.id_area})">
+                        ${getLeaderAvatarHtml(node)}
+                        <span class="item-text" style="cursor: pointer; flex-grow: 1;">${areaHtml}${leaderHtml} ${statusHtml}</span>
+                    </div>
+                `;
+
+                if (node.children && node.children.length > 0) {
+                    const childrenHtml = renderTree(node.children, false);
+                    nodeDiv.appendChild(childrenHtml);
+                }
+
+                container.appendChild(nodeDiv);
+            });
+
+            return container;
+        }
+
+        function getLeaderAvatarHtml(node) {
+            if (node.foto_lider && node.foto_lider.trim() !== '') {
+                const cleanFoto = node.foto_lider.replace(/[\r\n\s]+/g, '');
+                const safeName = (node.nome_lider || '').replace(/'/g, "\\'");
+                return `<img class="list-avatar" src="${cleanFoto}" alt="Foto" onerror="handleAvatarError(this, '${safeName}')">`;
+            } else {
+                return getInitialsAvatarHtml(node.nome_lider);
+            }
+        }
+
+        function getInitialsAvatarHtml(name) {
+            const initials = (name || '')
+                .split(' ')
+                .filter(n => n.length > 0)
+                .map(n => n[0])
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
+            
+            let hash = 0;
+            for (let i = 0; i < (name || '').length; i++) {
+                hash = (name.charCodeAt(i) * 31) + hash;
+            }
+            const colors = [
+                { bg: '#dbe8f9', text: '#557db5' }, // Blue
+                { bg: '#e8f5e9', text: '#2e7d32' }, // Green
+                { bg: '#fff3e0', text: '#ef6c00' }, // Orange
+                { bg: '#fce4ec', text: '#c2185b' }, // Pink
+                { bg: '#f3e5f5', text: '#7b1fa2' }, // Purple
+                { bg: '#e0f7fa', text: '#00838f' }  // Cyan/Teal
+            ];
+            const colorPair = colors[Math.abs(hash) % colors.length];
+            
+            if (initials) {
+                return `<div class="list-avatar" style="background-color: ${colorPair.bg}; color: ${colorPair.text}; font-weight: 700; font-size: 13px; text-transform: uppercase;">${initials}</div>`;
+            } else {
+                return `<div class="list-avatar" style="background-color: #dbe8f9; color: #557db5; font-size: 15px;"><i class="fa-solid fa-user"></i></div>`;
+            }
+        }
+
+        function handleAvatarError(img, name) {
+            const parent = img.parentNode;
+            if (parent) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = getInitialsAvatarHtml(name);
+                parent.replaceChild(tempDiv.firstChild, img);
+            }
+        }
+
+        function openNewArea() {
+            const nomeParam = urlParams.get('nome') || '';
+            const cpfParam = urlParams.get('cpf') || '';
+            window.location.href = `registro_estrutura_organizacional.html?mode=new&nome=${encodeURIComponent(nomeParam)}&cpf=${encodeURIComponent(cpfParam)}`;
+        }
+
+        function editArea(id) {
+            const nomeParam = urlParams.get('nome') || '';
+            const cpfParam = urlParams.get('cpf') || '';
+            window.location.href = `registro_estrutura_organizacional.html?mode=edit&id=${id}&nome=${encodeURIComponent(nomeParam)}&cpf=${encodeURIComponent(cpfParam)}`;
+        }
+
+        async function deleteArea(id, name, event) {
+            if (event) event.stopPropagation();
+            if (confirm(`Deseja realmente excluir a área "${name}"?`)) {
+                try {
+                    const response = await deleteData(`estrutura_organizacional/${id}`);
+                    if (response.success) {
+                        alert('Área excluída com sucesso!');
+                        await loadAreas();
+                    } else {
+                        alert('Erro ao excluir: ' + (response.error || 'Erro desconhecido'));
+                    }
+                } catch (err) {
+                    alert('Erro ao processar exclusão no banco.');
+                }
+            }
+        }
+
+
+        // Toggle Sidebar Menu
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Toggle Account Dropdown Menu
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            dropdown.classList.toggle('show');
+            toggleIcon.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                toggleIcon.classList.remove('active');
+            }
+        }
+
+        // Local search filter
+        function filterList() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const rootNodes = document.querySelectorAll('.tree-root-container > .tree-node');
+
+            rootNodes.forEach(node => {
+                filterTreeNode(node, query);
+            });
+        }
+
+        function filterTreeNode(node, query) {
+            const listItem = node.querySelector(':scope > .list-item');
+            const itemText = listItem.querySelector('.item-text').textContent.toLowerCase();
+            const matchesSelf = itemText.includes(query);
+
+            let matchesChild = false;
+            const childContainer = node.querySelector(':scope > .children-container');
+            if (childContainer) {
+                const childNodes = childContainer.querySelectorAll(':scope > .tree-node');
+                childNodes.forEach(childNode => {
+                    const childMatches = filterTreeNode(childNode, query);
+                    if (childMatches) matchesChild = true;
+                });
+            }
+
+            const shouldShow = matchesSelf || matchesChild;
+            if (shouldShow) {
+                node.style.display = 'block';
+                listItem.style.display = 'flex';
+                if (childContainer) {
+                    childContainer.style.display = 'block';
+                }
+            } else {
+                node.style.display = 'none';
+            }
+
+            return shouldShow;
+        }
+    </script>
+</body>
+
+</html>

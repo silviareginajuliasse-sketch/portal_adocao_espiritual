@@ -374,9 +374,11 @@
             }
             
             const urlParams = new URLSearchParams(window.location.search);
-            const trainingId = urlParams.get('id');
-            if (!trainingId) {
-                alert("Erro: ID do treinamento não encontrado na URL.");
+            const id = urlParams.get('id');
+            const fromAtividades = urlParams.get('from') === 'atividades';
+            
+            if (!id) {
+                alert(fromAtividades ? "Erro: ID da atividade não encontrado na URL." : "Erro: ID do treinamento não encontrado na URL.");
                 return;
             }
 
@@ -387,7 +389,11 @@
                 saveBtn.disabled = true;
                 saveBtn.innerText = 'Salvando...';
 
-                const response = await fetch(`${API_URL}/treinamentos/${trainingId}/participantes`, {
+                const endpoint = fromAtividades
+                    ? `${API_URL}/atividades_realizadas/${id}/participantes`
+                    : `${API_URL}/treinamentos/${id}/participantes`;
+
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
