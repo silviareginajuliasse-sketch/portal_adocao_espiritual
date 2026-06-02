@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerencial Estrutura Organizacional - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-maroon: #7b0000;
+            --dark-maroon: #5a0000;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --bg-light: #fff;
+            --primary-red: #8b1e1e;
+            --bg-gray: #fafafa;
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --tree-line-color: #557db5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.02;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title-text {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.1;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-id {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chevron-icon {
+            font-size: 10px;
+            color: #3498db;
+            background: #e1f0fa;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .chevron-icon.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Sidebar Navigation Menu (3 bars) */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #8b0000;
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Main Split Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 53px); /* Subtract Header height */
+        }
+
+        /* Sidebar Gerencial (Esquerda) */
+        .sidebar-gerencial {
+            width: 120px;
+            flex-shrink: 0;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding-top: 10px;
+        }
+
+        .gerencial-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            border-bottom: 1px solid #f5f5f5;
+            text-align: center;
+            border-left: 4px solid transparent;
+        }
+
+        .gerencial-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .gerencial-item.active {
+            background-color: #fcf8f8;
+            border-left: 4px solid var(--primary-red);
+            padding-left: 6px;
+        }
+
+        .gerencial-item.active .gerencial-label {
+            color: var(--primary-red);
+            font-weight: 700;
+        }
+
+        .gerencial-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .gerencial-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #666;
+            text-transform: capitalize;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+
+        /* Content Area (Direita) */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-gray);
+            overflow: auto;
+        }
+
+        /* Page header inside content area */
+        .page-title-bar {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-light);
+            padding: 15px 30px;
+        }
+
+        .page-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title i {
+            color: var(--primary-red);
+        }
+
+        .page-subtitle {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        /* Tree Diagram Layout & Connections */
+        .tree-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            overflow-x: auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .tree-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tree-wrapper ul {
+            display: flex;
+            flex-direction: row;
+            padding-top: 24px;
+            position: relative;
+            list-style-type: none;
+            margin: 0;
+        }
+
+        .tree-wrapper li {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding: 24px 12px 0 12px;
+            list-style-type: none;
+        }
+
+        /* Horizontal connection line between siblings */
+        .tree-wrapper li::before, 
+        .tree-wrapper li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-top: 2px solid var(--tree-line-color);
+            width: 50%;
+            height: 24px;
+            z-index: 1;
+        }
+
+        .tree-wrapper li::after {
+            right: auto;
+            left: 50%;
+            border-left: 2px solid var(--tree-line-color);
+        }
+
+        /* Remove connector line for single child */
+        .tree-wrapper li:only-child::after, 
+        .tree-wrapper li:only-child::before {
+            display: none;
+        }
+
+        .tree-wrapper li:only-child {
+            padding-top: 0;
+        }
+
+        /* Adjust lines for first and last elements */
+        .tree-wrapper li:first-child::before, 
+        .tree-wrapper li:last-child::after {
+            border: 0 none;
+        }
+
+        .tree-wrapper li:last-child::before {
+            border-right: 2px solid var(--tree-line-color);
+            border-radius: 0 8px 0 0;
+        }
+
+        .tree-wrapper li:first-child::after {
+            border-radius: 8px 0 0 0;
+        }
+
+        /* Vertical line from parent to child list */
+        .tree-wrapper ul::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: 2px solid var(--tree-line-color);
+            width: 0;
+            height: 24px;
+            z-index: 1;
+        }
+
+        /* Remove line above roots */
+        .tree-wrapper > ul::before {
+            display: none;
+        }
+
+        .tree-wrapper > ul > li::before,
+        .tree-wrapper > ul > li::after {
+            display: none;
+        }
+
+        .tree-wrapper > ul > li {
+            padding-top: 0;
+        }
+
+        /* Card Styles matching user request */
+        .org-card {
+            background: #ffffff;
+            border: 2px solid #2b8c2b; /* Vibrant green border */
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 250px;
+            max-width: 300px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            text-align: left;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .org-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: #1e601e;
+        }
+
+        .org-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background-color: #dbe8f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .org-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .org-avatar-initials {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .org-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .org-area-name {
+            color: #3b629b; /* Elegant bold blue */
+            font-weight: 600;
+            font-size: 13.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .org-leader-name {
+            color: #777777; /* Grey leader name */
+            font-size: 12.5px;
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .org-doc-btn {
+            color: var(--primary-red);
+            font-size: 1.25rem;
+            margin-left: auto;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-decoration: none;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .org-doc-btn:hover {
+            color: #ff0000;
+            background-color: #fcebeb;
+            transform: scale(1.1);
+        }
+
+        /* Status badge */
+        .status-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .status-badge.inativo {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        /* Loading / Fallback state */
+        .tree-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 20px;
+            color: #718096;
+            width: 100%;
+        }
+
+        .tree-loading i {
+            font-size: 2.5rem;
+            color: var(--primary-red);
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-avatar" id="user-initials">
+                    <i class="fa-solid fa-user" style="color: #ccc; font-size: 20px;"></i>
+                </div>
+                <div class="chevron-icon" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">Seu perfil é <strong>Coordenador Nacional</strong></div>
+                        <div class="decorative-divider"><span></span><span></span><span></span></div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu (Menu 3 barras) -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Split Container -->
+    <div class="main-container">
+        <!-- Sidebar Gerencial (Esquerda) -->
+        <aside class="sidebar-gerencial" id="menu-gerencial-container">
+            <div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Carregando menu...</div>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            <!-- Header title bar -->
+            <section class="page-title-bar">
+                <h1 class="page-title">
+                    <i class="fa-solid fa-diagram-project"></i> Organograma da Estrutura Organizacional
+                </h1>
+                <p class="page-subtitle">Visualização hierárquica e gerencial das áreas de atuação da Adoção Espiritual</p>
+            </section>
+
+            <!-- Tree chart area -->
+            <div class="tree-container" id="tree-container">
+                <div class="tree-loading">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <p>Carregando estrutura organizacional...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/header.js"></script>
+    <script>
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        // Load left dynamic sidebar gerencial
+        async function loadMenuGerencial() {
+            const container = document.getElementById('menu-gerencial-container');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`${API_URL}/menu_gerencial`);
+                if (!response.ok) throw new Error('Erro ao buscar dados do menu gerencial');
+                const menuItems = await response.json();
+
+                if (menuItems.length === 0) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Nenhum menu gerencial ativo.</div>';
+                    return;
+                }
+
+                // Retrieve user parameters for URL redirection persistence
+                const nome = localStorage.getItem('user_nome') || '';
+                const id_colab = localStorage.getItem('user_id_colaborador') || '2';
+                const userParams = `&nome=${encodeURIComponent(nome)}&id_colaborador=${encodeURIComponent(id_colab)}&cpf=${encodeURIComponent(id_colab)}`;
+
+                container.innerHTML = menuItems.map(item => {
+                    let href = item.pagina;
+                    if (href && href !== '#') {
+                        href += href.includes('?') ? userParams : `?${userParams.substring(1)}`;
+                    } else {
+                        href = '#';
+                    }
+
+                    // Check if current page matches item.pagina
+                    const isCurrent = window.location.pathname.includes(item.pagina);
+                    const activeClass = isCurrent ? 'active' : '';
+
+                    return `
+                        <a href="${href}" class="gerencial-item ${activeClass}">
+                            ${item.imagem ? `<img class="gerencial-icon" src="${item.imagem}" alt="${item.nome_menu}" />` : ''}
+                            <span class="gerencial-label">${item.nome_menu}</span>
+                        </a>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: red; font-size: 11px;">Erro ao carregar menu.</div>';
+            }
+        }
+
+        // Fetch data and build tree
+        async function loadStructureTree() {
+            const container = document.getElementById('tree-container');
+            try {
+                const response = await fetch(`${API_URL}/estrutura_organizacional`);
+                if (!response.ok) throw new Error('Erro ao carregar dados da estrutura organizacional');
+                const list = await response.json();
+
+                if (!list || list.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #777; padding: 40px;">Nenhuma área cadastrada no sistema.</div>';
+                    return;
+                }
+
+                // Build tree
+                const roots = buildTree(list);
+
+                // Render tree
+                container.innerHTML = '';
+                const treeWrapper = document.createElement('div');
+                treeWrapper.className = 'tree-wrapper';
+                
+                const rootUl = renderTreeNodes(roots);
+                treeWrapper.appendChild(rootUl);
+                container.appendChild(treeWrapper);
+            } catch (err) {
+                console.error('Erro ao montar organograma:', err);
+                container.innerHTML = `<div style="text-align: center; color: #b91c1c; padding: 40px;"><i class="fa-solid fa-circle-exclamation" style="font-size: 2.5rem; margin-bottom: 10px;"></i><p>Erro ao processar organograma: ${err.message}</p></div>`;
+            }
+        }
+
+        function buildTree(list) {
+            const map = {};
+            const roots = [];
+
+            // Initialize mapping
+            list.forEach(item => {
+                map[item.id_area] = {
+                    ...item,
+                    children: []
+                };
+            });
+
+            // Build parent-child relationships
+            list.forEach(item => {
+                const mapped = map[item.id_area];
+                if (item.subordinado_id_area && map[item.subordinado_id_area]) {
+                    map[item.subordinado_id_area].children.push(mapped);
+                } else {
+                    roots.push(mapped);
+                }
+            });
+
+            return roots;
+        }
+
+        function renderTreeNodes(nodes) {
+            const ul = document.createElement('ul');
+            
+            nodes.forEach(node => {
+                const li = document.createElement('li');
+                
+                // Get leader initials pair color
+                const initialsInfo = getInitialsAndColors(node.apelido_lider || node.nome_lider);
+                
+                // Leader name fallback
+                const leaderName = node.apelido_lider || node.nome_lider || 'Sem líder';
+                
+                // Status mapping
+                const normStatusArea = (node.status || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const normStatusLider = (node.status_lider || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const isInactive = normStatusArea === 'inativo' || normStatusLider === 'inativo';
+                const statusBadge = isInactive ? '<span class="status-badge inativo">Inativo</span>' : '';
+
+                // Photo URL parsing
+                let avatarHtml = '';
+                if (node.foto_lider && node.foto_lider.trim() !== '') {
+                    const cleanFoto = node.foto_lider.replace(/[\r\n\s]+/g, '');
+                    const safeName = (leaderName).replace(/'/g, "\\'");
+                    avatarHtml = `<img src="${cleanFoto}" alt="Foto" onerror="handleAvatarError(this, '${safeName}')" />`;
+                } else {
+                    avatarHtml = `<span class="org-avatar-initials" style="color: ${initialsInfo.text}">${initialsInfo.initials || '<i class=\"fa-solid fa-user\"></i>'}</span>`;
+                }
+
+                // Document button
+                let docBtnHtml = '';
+                if (node.nome_arquivo_atribuicoes) {
+                    docBtnHtml = `
+                        <a href="${API_URL}/estrutura_organizacional/${node.id_area}/documento" 
+                           target="_blank" 
+                           class="org-doc-btn" 
+                           title="Visualizar atribuições (${node.nome_arquivo_atribuicoes})" 
+                           onclick="event.stopPropagation();">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </a>
+                    `;
+                }
+
+                // Render card
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'org-card';
+                cardDiv.onclick = () => editArea(node.id_area);
+                cardDiv.innerHTML = `
+                    ${statusBadge}
+                    <div class="org-avatar" style="${!node.foto_lider ? `background-color: ${initialsInfo.bg}` : ''}">
+                        ${avatarHtml}
+                    </div>
+                    <div class="org-info">
+                        <span class="org-area-name" title="${node.nome_area}">${node.nome_area}</span>
+                        <span class="org-leader-name" title="${leaderName}">${leaderName}</span>
+                    </div>
+                    ${docBtnHtml}
+                `;
+
+                li.appendChild(cardDiv);
+
+                // Recurse children
+                if (node.children && node.children.length > 0) {
+                    const childUl = renderTreeNodes(node.children);
+                    li.appendChild(childUl);
+                }
+
+                ul.appendChild(li);
+            });
+
+            return ul;
+        }
+
+        function getInitialsAndColors(name) {
+            if (!name || name.trim() === '') {
+                return { initials: '', bg: '#edf2f7', text: '#718096' };
+            }
+
+            const initials = name
+                .split(' ')
+                .filter(n => n.length > 0)
+                .map(n => n[0])
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
+
+            // Dynamic background assignment based on name string hashing
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = (name.charCodeAt(i) * 31) + hash;
+            }
+
+            const colors = [
+                { bg: '#dbe8f9', text: '#557db5' }, // Pastel Blue
+                { bg: '#e8f5e9', text: '#2e7d32' }, // Pastel Green
+                { bg: '#fff3e0', text: '#ef6c00' }, // Pastel Orange
+                { bg: '#fce4ec', text: '#c2185b' }, // Pastel Pink
+                { bg: '#f3e5f5', text: '#7b1fa2' }, // Pastel Purple
+                { bg: '#e0f7fa', text: '#00838f' }  // Pastel Cyan/Teal
+            ];
+
+            const colorPair = colors[Math.abs(hash) % colors.length];
+            return { initials, bg: colorPair.bg, text: colorPair.text };
+        }
+
+        function handleAvatarError(img, name) {
+            const parent = img.parentNode;
+            if (parent) {
+                const info = getInitialsAndColors(name);
+                parent.style.backgroundColor = info.bg;
+                
+                const initialsSpan = document.createElement('span');
+                initialsSpan.className = 'org-avatar-initials';
+                initialsSpan.style.color = info.text;
+                initialsSpan.innerText = info.initials || '?';
+                
+                parent.replaceChild(initialsSpan, img);
+            }
+        }
+
+        function editArea(id) {
+            const nomeParam = new URLSearchParams(window.location.search).get('nome') || '';
+            const cpfParam = new URLSearchParams(window.location.search).get('cpf') || '';
+            window.location.href = `registro_estrutura_organizacional.html?mode=edit&id=${id}&nome=${encodeURIComponent(nomeParam)}&cpf=${encodeURIComponent(cpfParam)}`;
+        }
+
+        // Initialize elements
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMenuGerencial();
+            loadStructureTree();
+        });
+    </script>
+</body>
+
+</html>

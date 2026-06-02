@@ -11,8 +11,8 @@ const dbConfig = {
 async function checkDb() {
     try {
         const pool = mysql.createPool(dbConfig);
-        const [columns] = await pool.query('SHOW COLUMNS FROM paroquias');
-        console.log('Columns:', columns.map(c => c.Field));
+        const [rows] = await pool.query('SELECT id_colaborador, nome_colaborador, apelido_colaborador FROM colaboradores');
+        console.log('Collaborators:', rows);
         process.exit(0);
     } catch (e) {
         console.error(e);
@@ -20,3 +20,5 @@ async function checkDb() {
     }
 }
 checkDb();
+
+

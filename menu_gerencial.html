@@ -542,6 +542,22 @@
                 const id_colab = localStorage.getItem('user_id_colaborador') || '2';
                 const userParams = `&nome=${encodeURIComponent(nome)}&id_colaborador=${encodeURIComponent(id_colab)}&cpf=${encodeURIComponent(id_colab)}`;
 
+                // Redirect immediately to the first menu option to default focus and load the view
+                if (menuItems.length > 0) {
+                    const firstItem = menuItems[0];
+                    let redirectUrl = firstItem.pagina;
+                    if (redirectUrl && redirectUrl !== '#') {
+                        const currentSearch = window.location.search;
+                        if (currentSearch && currentSearch.trim() !== '') {
+                            redirectUrl += currentSearch;
+                        } else {
+                            redirectUrl += redirectUrl.includes('?') ? userParams : `?${userParams.substring(1)}`;
+                        }
+                        window.location.replace(redirectUrl);
+                        return;
+                    }
+                }
+
                 container.innerHTML = menuItems.map(item => {
                     let href = item.pagina;
                     if (href && href !== '#') {

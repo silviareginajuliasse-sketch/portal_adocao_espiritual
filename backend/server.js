@@ -553,7 +553,8 @@ app.get('/api/estrutura_organizacional', async (req, res) => {
                    c.nome_colaborador AS nome_lider, c.apelido_colaborador AS apelido_lider,
                    c.foto_colaborador AS foto_lider, c.status AS status_lider,
                    eo_parent.nome_area AS nome_area_pai,
-                   eo.criado_em, eo.atualizado_em, eo.id_colaborador_atualiza
+                   eo.criado_em, eo.atualizado_em, eo.id_colaborador_atualiza,
+                   eo.nome_arquivo_atribuicoes
             FROM estrutura_organizacional eo
             LEFT JOIN colaboradores c ON eo.id_colaborador_lider = c.id_colaborador
             LEFT JOIN estrutura_organizacional eo_parent ON eo.subordinado_id_area = eo_parent.id_area
@@ -604,7 +605,8 @@ app.get('/api/estrutura_organizacional/:id', async (req, res) => {
                    c.foto_colaborador AS foto_lider,
                    eo_parent.nome_area AS nome_area_pai,
                    eo.criado_em, eo.atualizado_em, eo.id_colaborador_atualiza,
-                   col_up.apelido_colaborador AS nome_colaborador_atualiza
+                   col_up.apelido_colaborador AS nome_colaborador_atualiza,
+                   eo.nome_arquivo_atribuicoes
             FROM estrutura_organizacional eo
             LEFT JOIN colaboradores c ON eo.id_colaborador_lider = c.id_colaborador
             LEFT JOIN estrutura_organizacional eo_parent ON eo.subordinado_id_area = eo_parent.id_area
@@ -644,6 +646,28 @@ app.get('/api/estrutura_organizacional/:id', async (req, res) => {
     } catch (err) {
         console.error('Erro ao obter detalhe de estrutura organizacional:', err);
         res.status(500).json({ error: err.message });
+    }
+});
+
+// GET: Get PDF document for a specific area
+app.get('/api/estrutura_organizacional/:id/documento', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [rows] = await pool.query(
+            'SELECT nome_arquivo_atribuicoes, arquivo_atribuicoes FROM estrutura_organizacional WHERE id_area = ?',
+            [id]
+        );
+        if (rows.length === 0 || !rows[0].arquivo_atribuicoes) {
+            return res.status(404).send('Documento não encontrado');
+        }
+        
+        const doc = rows[0];
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${doc.nome_arquivo_atribuicoes || 'documento.pdf'}"`);
+        res.send(doc.arquivo_atribuicoes);
+    } catch (err) {
+        console.error('Erro ao buscar documento:', err);
+        res.status(500).send('Erro interno do servidor');
     }
 });
 // Route to get a specific banner aniversariantes
@@ -2048,8 +2072,8 @@ app.delete('/api/divisao_arquidiocesana/:id', deleteDivisao);
 
 // POST: Save/Update area
 app.post('/api/estrutura_organizacional/save', async (req, res) => {
-    console.log('POST /api/estrutura_organizacional/save - Body:', req.body);
-    const { id, nome_area, id_colaborador_lider, subordinado_id_area, status, id_colaborador_atualiza } = req.body;
+    console.log('POST /api/estrutura_organizacional/save - Body keys:', Object.keys(req.body));
+    const { id, nome_area, id_colaborador_lider, subordinado_id_area, status, id_colaborador_atualiza, nome_arquivo_atribuicoes, arquivo_atribuicoes_base64 } = req.body;
 
     try {
         // Validation
@@ -2079,22 +2103,38 @@ app.post('/api/estrutura_organizacional/save', async (req, res) => {
 
         if (id) {
             // Update
+            let queryParams = [nome_area.trim(), lidId, subId, status, colabUp];
+            let fileUpdateSql = "";
+            
+            if (arquivo_atribuicoes_base64) {
+                const fileBuffer = Buffer.from(arquivo_atribuicoes_base64, 'base64');
+                fileUpdateSql = ", nome_arquivo_atribuicoes = ?, arquivo_atribuicoes = ?";
+                queryParams.push(nome_arquivo_atribuicoes, fileBuffer);
+            } else if (nome_arquivo_atribuicoes === null || nome_arquivo_atribuicoes === '') {
+                fileUpdateSql = ", nome_arquivo_atribuicoes = NULL, arquivo_atribuicoes = NULL";
+            }
+            
+            queryParams.push(id);
+
             await pool.query(
                 `UPDATE estrutura_organizacional 
-                 SET nome_area = ?, id_colaborador_lider = ?, subordinado_id_area = ?, status = ?, id_colaborador_atualiza = ?, atualizado_em = NOW()
+                 SET nome_area = ?, id_colaborador_lider = ?, subordinado_id_area = ?, status = ?, id_colaborador_atualiza = ?, atualizado_em = NOW() ${fileUpdateSql}
                  WHERE id_area = ?`,
-                [nome_area.trim(), lidId, subId, status, colabUp, id]
+                queryParams
             );
         } else {
             // Insert
             const [maxRow] = await pool.query('SELECT COALESCE(MAX(id_area), 0) + 1 AS nextId FROM estrutura_organizacional');
             const nextId = maxRow[0].nextId;
 
+            const fileBuffer = arquivo_atribuicoes_base64 ? Buffer.from(arquivo_atribuicoes_base64, 'base64') : null;
+            const fileName = nome_arquivo_atribuicoes || null;
+
             await pool.query(
                 `INSERT INTO estrutura_organizacional (
-                    id_area, nome_area, id_colaborador_lider, subordinado_id_area, status, criado_em, atualizado_em, id_colaborador_atualiza
-                ) VALUES (?, ?, ?, ?, ?, NOW(), NULL, ?)`,
-                [nextId, nome_area.trim(), lidId, subId, status, colabUp]
+                    id_area, nome_area, id_colaborador_lider, subordinado_id_area, status, criado_em, atualizado_em, id_colaborador_atualiza, nome_arquivo_atribuicoes, arquivo_atribuicoes
+                ) VALUES (?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?)`,
+                [nextId, nome_area.trim(), lidId, subId, status, colabUp, fileName, fileBuffer]
             );
             savedId = nextId;
         }
