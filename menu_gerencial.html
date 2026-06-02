@@ -1,0 +1,570 @@
+�<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Gerencial - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-maroon: #7b0000;
+            --dark-maroon: #5a0000;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --bg-light: #fff;
+            --primary-red: #8b1e1e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title-text {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.1;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-id {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #eee;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chevron-icon {
+            font-size: 10px;
+            color: #3498db;
+            background: #e1f0fa;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .chevron-icon.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Sidebar Navigation Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #8b0000;
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Main Container & Grid Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 53px); /* Subtract Header height */
+        }
+
+        /* Sidebar Gerencial (Esquerda) */
+        .sidebar-gerencial {
+            width: 120px;
+            flex-shrink: 0;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding-top: 10px;
+        }
+
+        .gerencial-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            border-bottom: 1px solid #f5f5f5;
+            text-align: center;
+        }
+
+        .gerencial-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .gerencial-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .gerencial-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #666;
+            text-transform: capitalize;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+
+        /* Content Area (Direita) */
+        .content-area {
+            flex: 1;
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-avatar" id="user-initials">
+                    <i class="fa-solid fa-user" style="color: #ccc; font-size: 20px;"></i>
+                </div>
+                <div class="chevron-icon" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">Seu perfil é <strong>Coordenador Nacional</strong></div>
+                        <div class="decorative-divider"><span></span><span></span><span></span></div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu (Menu 3 barras) -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Split Container -->
+    <div class="main-container">
+        <!-- Sidebar Gerencial (Esquerda) -->
+        <aside class="sidebar-gerencial" id="menu-gerencial-container">
+            <div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Carregando menu...</div>
+        </aside>
+
+        <!-- Área de Conteúdo (Direita) -->
+        <main class="content-area">
+            <!-- White space reserved for future implementation -->
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/header.js"></script>
+    <script>
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        async function loadMenuGerencial() {
+            const container = document.getElementById('menu-gerencial-container');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`${API_URL}/menu_gerencial`);
+                if (!response.ok) throw new Error('Erro ao buscar dados do menu gerencial');
+                const menuItems = await response.json();
+
+                if (menuItems.length === 0) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Nenhum menu gerencial ativo.</div>';
+                    return;
+                }
+
+                // Retrieve user parameters for URL redirection persistence
+                const nome = localStorage.getItem('user_nome') || '';
+                const id_colab = localStorage.getItem('user_id_colaborador') || '2';
+                const userParams = `&nome=${encodeURIComponent(nome)}&id_colaborador=${encodeURIComponent(id_colab)}&cpf=${encodeURIComponent(id_colab)}`;
+
+                container.innerHTML = menuItems.map(item => {
+                    let href = item.pagina;
+                    if (href && href !== '#') {
+                        href += href.includes('?') ? userParams : `?${userParams.substring(1)}`;
+                    } else {
+                        href = '#';
+                    }
+
+                    return `
+                        <a href="${href}" class="gerencial-item">
+                            ${item.imagem ? `<img class="gerencial-icon" src="${item.imagem}" alt="${item.nome_menu}" />` : ''}
+                            <span class="gerencial-label">${item.nome_menu}</span>
+                        </a>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: red; font-size: 11px;">Erro ao carregar menu.</div>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadMenuGerencial);
+    </script>
+</body>
+
+</html>

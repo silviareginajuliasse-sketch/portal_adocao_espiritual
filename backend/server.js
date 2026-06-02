@@ -80,6 +80,77 @@ app.get('/api/menu', async (req, res) => {
     }
 });
 
+// Route to get dynamic menu gerencial options ordered by order field
+app.get('/api/menu_gerencial', async (req, res) => {
+    try {
+        const query = 'SELECT id_menu, nome_menu, imagem, pagina, ordem, status FROM menu_gerencial WHERE status = "Ativo" ORDER BY ordem ASC';
+        const [rows] = await pool.query(query);
+
+        const menuItems = rows.map(item => {
+            let imagemBase64 = null;
+            if (item.imagem) {
+                imagemBase64 = `data:image/png;base64,${item.imagem.toString('base64')}`;
+            }
+            return {
+                id_menu: item.id_menu,
+                nome_menu: item.nome_menu,
+                imagem: imagemBase64,
+                pagina: item.pagina,
+                ordem: item.ordem,
+                status: item.status
+            };
+        });
+
+        res.json(menuItems);
+    } catch (err) {
+        console.error('Error fetching menu_gerencial items:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to search active collaborators by name across all birth months (global lookup)
+app.get('/api/colaboradores/aniversariantes/busca', async (req, res) => {
+    const { termo } = req.query;
+    console.log(`GET /api/colaboradores/aniversariantes/busca - Termo: ${termo}`);
+    try {
+        const query = `
+            SELECT c.nome_colaborador, c.cidade, e.sigla_estado, c.data_nascimento,
+                   DAY(c.data_nascimento) AS dia_nascimento, MONTH(c.data_nascimento) AS mes_nascimento
+            FROM colaboradores c
+            INNER JOIN estados e ON c.id_estado = e.id_estado
+            WHERE c.nome_colaborador LIKE ? AND c.status = 'Ativo'
+            ORDER BY MONTH(c.data_nascimento) ASC, DAY(c.data_nascimento) ASC
+            LIMIT 50
+        `;
+        const [rows] = await pool.query(query, [`%${termo || ''}%`]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar aniversariantes por termo:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get active collaborators whose birthday is in the specified month
+app.get('/api/colaboradores/aniversariantes/:mes', async (req, res) => {
+    const { mes } = req.params;
+    console.log(`GET /api/colaboradores/aniversariantes/${mes}`);
+    try {
+        const query = `
+            SELECT c.nome_colaborador, c.cidade, e.sigla_estado, c.data_nascimento,
+                   DAY(c.data_nascimento) AS dia_nascimento, MONTH(c.data_nascimento) AS mes_nascimento
+            FROM colaboradores c
+            INNER JOIN estados e ON c.id_estado = e.id_estado
+            WHERE MONTH(c.data_nascimento) = ? AND c.status = 'Ativo'
+            ORDER BY DAY(c.data_nascimento) ASC
+        `;
+        const [rows] = await pool.query(query, [parseInt(mes, 10)]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar aniversariantes:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Specific route: Regionais with States (must come BEFORE generic route)
 app.get('/api/regionais/detalhes', async (req, res) => {
     try {
@@ -573,6 +644,132 @@ app.get('/api/estrutura_organizacional/:id', async (req, res) => {
     } catch (err) {
         console.error('Erro ao obter detalhe de estrutura organizacional:', err);
         res.status(500).json({ error: err.message });
+    }
+});
+// Route to get a specific banner aniversariantes
+app.get('/api/banner_aniversariantes/:ano/:mes', async (req, res) => {
+    const { ano, mes } = req.params;
+    console.log(`GET /api/banner_aniversariantes/${ano}/${mes}`);
+    try {
+        const query = `
+            SELECT b.ano, b.mes, b.santo_referencia, b.texto_aniversariantes, b.imagem, b.criado_em, b.atualizado_em, b.id_colaborador_atualiza, c.apelido_colaborador AS nome_colaborador
+            FROM banner_aniversariantes b
+            LEFT JOIN colaboradores c ON b.id_colaborador_atualiza = c.id_colaborador
+            WHERE b.ano = ? AND b.mes = ?
+        `;
+        const [rows] = await pool.query(query, [parseInt(ano, 10), parseInt(mes, 10)]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Banner não encontrado' });
+        }
+
+        const banner = rows[0];
+        let imagemBase64 = null;
+        if (banner.imagem) {
+            imagemBase64 = `data:image/png;base64,${banner.imagem.toString('base64')}`;
+        }
+
+        res.json({
+            ano: banner.ano,
+            mes: banner.mes,
+            santo_referencia: banner.santo_referencia,
+            texto_aniversariantes: banner.texto_aniversariantes,
+            imagem: imagemBase64,
+            criado_em: banner.criado_em,
+            atualizado_em: banner.atualizado_em,
+            id_colaborador_atualiza: banner.id_colaborador_atualiza,
+            nome_colaborador: banner.nome_colaborador
+        });
+    } catch (err) {
+        console.error('Erro ao buscar banner:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to list all banner aniversariantes
+app.get('/api/banner_aniversariantes', async (req, res) => {
+    console.log('GET /api/banner_aniversariantes');
+    try {
+        const query = 'SELECT ano, mes, santo_referencia FROM banner_aniversariantes ORDER BY mes DESC, ano ASC';
+        const [rows] = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao listar banners:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save/update banner aniversariantes
+app.post('/api/banner_aniversariantes/save', async (req, res) => {
+    console.log('POST /api/banner_aniversariantes/save - Body keys:', Object.keys(req.body));
+    const { ano, mes, santo_referencia, texto_aniversariantes, imagem, id_colaborador_atualiza } = req.body;
+    
+    if (ano === undefined || mes === undefined) {
+        return res.status(400).json({ success: false, error: "Ano (mês) e Mês (ano) são obrigatórios." });
+    }
+
+    try {
+        // Check if record exists for this PRIMARY KEY (ano, mes)
+        const checkQuery = 'SELECT 1 FROM banner_aniversariantes WHERE ano = ? AND mes = ?';
+        const [existing] = await pool.query(checkQuery, [parseInt(ano, 10), parseInt(mes, 10)]);
+        
+        let imageBuffer = null;
+        if (imagem) {
+            const matches = imagem.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                imageBuffer = Buffer.from(matches[2], 'base64');
+            } else {
+                imageBuffer = Buffer.from(imagem, 'base64');
+            }
+        }
+
+        if (existing.length > 0) {
+            // Update
+            console.log(`Atualizando banner_aniversariantes para ano=${ano}, mes=${mes}...`);
+            let updateQuery = 'UPDATE banner_aniversariantes SET santo_referencia = ?, texto_aniversariantes = ?, id_colaborador_atualiza = ?, atualizado_em = NOW()';
+            const params = [santo_referencia, texto_aniversariantes, parseInt(id_colaborador_atualiza, 10) || 2];
+            
+            if (imageBuffer) {
+                updateQuery += ', imagem = ?';
+                params.push(imageBuffer);
+            }
+            
+            updateQuery += ' WHERE ano = ? AND mes = ?';
+            params.push(parseInt(ano, 10), parseInt(mes, 10));
+            
+            await pool.query(updateQuery, params);
+            res.json({ success: true, mode: 'update' });
+        } else {
+            // Insert
+            console.log(`Inserindo novo banner_aniversariantes para ano=${ano}, mes=${mes}...`);
+            const insertQuery = 'INSERT INTO banner_aniversariantes (ano, mes, santo_referencia, texto_aniversariantes, imagem, id_colaborador_atualiza, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, NOW(), NULL)';
+            await pool.query(insertQuery, [
+                parseInt(ano, 10), 
+                parseInt(mes, 10), 
+                santo_referencia, 
+                texto_aniversariantes, 
+                imageBuffer, 
+                parseInt(id_colaborador_atualiza, 10) || 2
+            ]);
+            res.status(201).json({ success: true, mode: 'insert' });
+        }
+    } catch (err) {
+        console.error('Erro ao salvar banner aniversariantes:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a banner aniversariantes
+app.delete('/api/banner_aniversariantes/:ano/:mes', async (req, res) => {
+    const { ano, mes } = req.params;
+    console.log(`DELETE /api/banner_aniversariantes/${ano}/${mes}`);
+    try {
+        const query = 'DELETE FROM banner_aniversariantes WHERE ano = ? AND mes = ?';
+        await pool.query(query, [parseInt(ano, 10), parseInt(mes, 10)]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir banner:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -2620,6 +2817,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
 
 // Start server
 app.listen(port, async () => {

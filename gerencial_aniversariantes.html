@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerencial Aniversariantes - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-maroon: #7b0000;
+            --dark-maroon: #5a0000;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --bg-light: #fff;
+            --primary-red: #8b1e1e;
+            --bg-gray: #fafafa;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title-text {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.1;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-id {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #eee;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chevron-icon {
+            font-size: 10px;
+            color: #3498db;
+            background: #e1f0fa;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .chevron-icon.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Sidebar Navigation Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #8b0000;
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Main Container & Grid Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 53px);
+        }
+
+        /* Sidebar Gerencial (Esquerda) */
+        .sidebar-gerencial {
+            width: 120px;
+            flex-shrink: 0;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding-top: 10px;
+        }
+
+        .gerencial-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            border-bottom: 1px solid #f5f5f5;
+            text-align: center;
+            border-left: 4px solid transparent;
+        }
+
+        .gerencial-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .gerencial-item.active {
+            background-color: #fcf8f8;
+            border-left: 4px solid var(--primary-red);
+            padding-left: 6px;
+        }
+
+        .gerencial-item.active .gerencial-label {
+            color: var(--primary-red);
+            font-weight: 700;
+        }
+
+        .gerencial-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .gerencial-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #666;
+            text-transform: capitalize;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+
+        /* Content Area (Direita) */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-gray);
+        }
+
+        /* Filters Bar */
+        .filters-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-light);
+            padding: 15px 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+        }
+
+        .filters-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filters-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .filters-subtitle {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .filters-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-select-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .modern-select {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e0;
+            background-color: #ffffff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2d3748;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 110px;
+        }
+
+        .modern-select:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(139, 30, 30, 0.1);
+        }
+
+        .search-container {
+            position: relative;
+            min-width: 240px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 16px 8px 36px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e0;
+            font-size: 0.85rem;
+            color: #2d3748;
+            outline: none;
+            transition: all 0.2s;
+            background-color: #f7fafc;
+        }
+
+        .search-input:focus {
+            background-color: #ffffff;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(139, 30, 30, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+
+        /* Workspace Split Layout */
+        .workspace-split {
+            display: flex;
+            gap: 30px;
+            padding: 30px;
+            flex: 1;
+            align-items: flex-start;
+        }
+
+        /* Panel Left: Banner */
+        .banner-panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-section-title i {
+            color: var(--primary-red);
+        }
+
+        .banner-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #edf2f7;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .banner-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .banner-image-container {
+            width: 100%;
+            height: auto;
+            overflow: hidden;
+            position: relative;
+            background: transparent;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .banner-img {
+            width: 50%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .banner-card:hover .banner-img {
+            transform: scale(1.03);
+        }
+
+        .banner-content-body {
+            padding: 24px;
+        }
+
+        .santo-reference {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-bottom: 12px;
+            border-bottom: 2px solid rgba(139, 30, 30, 0.1);
+            padding-bottom: 6px;
+        }
+
+        .banner-text-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #4a5568;
+            white-space: pre-wrap;
+        }
+
+        .banner-text-content p {
+            margin-bottom: 12px;
+        }
+
+        .banner-text-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Fallback Banner Styles */
+        .fallback-banner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+            border-radius: 12px;
+            border: 1px dashed #feb2b2;
+            color: #718096;
+            min-height: 250px;
+        }
+
+        .fallback-icon {
+            font-size: 3rem;
+            color: #fc8181;
+            margin-bottom: 16px;
+        }
+
+        .fallback-title {
+            font-weight: 700;
+            color: #c53030;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+        }
+
+        .fallback-text {
+            font-size: 0.9rem;
+            max-width: 280px;
+            line-height: 1.5;
+        }
+
+        /* Panel Right: Birthdays List */
+        .birthdays-panel {
+            flex: 1.2;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .birthdays-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .birthdays-count-badge {
+            background-color: #edf2f7;
+            color: #4a5568;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .birthdays-scroll-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 560px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        /* Custom Scrollbar */
+        .birthdays-scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .birthdays-scroll-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .birthdays-scroll-area::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .birthday-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+        }
+
+        .birthday-card:hover {
+            transform: translateX(3px);
+            border-color: #feb2b2;
+            box-shadow: 0 4px 15px rgba(139, 30, 30, 0.04);
+        }
+
+        .birthday-info-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .birthday-colab-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .birthday-location {
+            font-size: 0.8rem;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .birthday-location i {
+            color: #e53e3e;
+            font-size: 0.85rem;
+        }
+
+        .birthday-badge-right {
+            background-color: #fff5f5;
+            color: var(--primary-red);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #ffe3e3;
+        }
+
+        .birthday-badge-right i {
+            font-size: 0.85rem;
+            color: #e53e3e;
+        }
+
+        /* Empty State */
+        .empty-birthdays {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+            color: #a0aec0;
+            box-shadow: var(--card-shadow);
+        }
+
+        .empty-birthdays i {
+            font-size: 2.5rem;
+            color: #cbd5e0;
+            margin-bottom: 12px;
+        }
+
+        .empty-birthdays-title {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+
+        .empty-birthdays-text {
+            font-size: 0.85rem;
+            max-width: 250px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .workspace-split {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .banner-panel, .birthdays-panel {
+                width: 100%;
+            }
+
+            .banner-image-container {
+                height: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filters-bar {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filters-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .search-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-avatar" id="user-initials">
+                    <i class="fa-solid fa-user" style="color: #ccc; font-size: 20px;"></i>
+                </div>
+                <div class="chevron-icon" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">Seu perfil é <strong>Coordenador Nacional</strong></div>
+                        <div class="decorative-divider"><span></span><span></span><span></span></div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu (Menu 3 barras) -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Gerencial (Esquerda) -->
+        <aside class="sidebar-gerencial" id="menu-gerencial-container">
+            <div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Carregando menu...</div>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            
+            <!-- Filters Bar -->
+            <section class="filters-bar">
+                <div class="filters-left">
+                    <h1 class="filters-title">Painel de Aniversariantes</h1>
+                    <span class="filters-subtitle">Gerenciamento e visualização de aniversariantes e campanhas</span>
+                </div>
+                <div class="filters-controls">
+                    <div class="filter-select-group">
+                        <label for="mes-select">Mês</label>
+                        <select id="mes-select" class="modern-select">
+                            <!-- Months populated by JS -->
+                        </select>
+                    </div>
+                    <div class="filter-select-group">
+                        <label for="ano-select">Ano</label>
+                        <select id="ano-select" class="modern-select">
+                            <!-- Years populated by JS -->
+                        </select>
+                    </div>
+                    <div class="search-wrapper" style="display: flex; flex-direction: column; align-items: flex-end; position: relative;">
+                        <div class="search-container">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="buscar-colaborador" class="search-input" placeholder="Buscar colaborador..." />
+                        </div>
+                        <label class="search-mode-label" style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: #718096; margin-top: 5px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="buscar-todos-meses" style="accent-color: var(--primary-red); cursor: pointer;" />
+                            Buscar em outros meses (Pesquisa Geral)
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workspace Split Panel -->
+            <div class="workspace-split">
+                
+                <!-- Left Panel: Campaign Banner -->
+                <section class="banner-panel">
+                    <h2 class="panel-section-title">
+                        <i class="fa-solid fa-image"></i> Santo do Mês e Mensagem
+                    </h2>
+                    <div id="banner-render-area">
+                        <!-- Loaded dynamically or displays fallback -->
+                        <div style="text-align: center; padding: 40px; color: #718096;">
+                            <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                            <p>Carregando banner...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Panel: Birthdays List -->
+                <section class="birthdays-panel">
+                    <div class="birthdays-list-header">
+                        <h2 class="panel-section-title" id="birthdays-title-text">
+                            <i class="fa-solid fa-cake-candles"></i> Lista de Aniversariantes
+                        </h2>
+                        <span id="birthdays-count" class="birthdays-count-badge">0 aniversariantes</span>
+                    </div>
+                    <div id="birthdays-render-area" class="birthdays-scroll-area">
+                        <!-- Loaded dynamically -->
+                        <div style="text-align: center; padding: 40px; color: #718096; background: #fff; border-radius: 12px; border: 1px solid #edf2f7;">
+                            <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                            <p>Carregando aniversariantes...</p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/header.js"></script>
+    <script>
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+        
+        // Month translation helper
+        const monthNames = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
+        // Component references
+        const mesSelect = document.getElementById('mes-select');
+        const anoSelect = document.getElementById('ano-select');
+        const buscarInput = document.getElementById('buscar-colaborador');
+        const bannerRenderArea = document.getElementById('banner-render-area');
+        const birthdaysRenderArea = document.getElementById('birthdays-render-area');
+        const birthdaysCountBadge = document.getElementById('birthdays-count');
+
+        // Dynamic State
+        let currentCollaborators = [];
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        // Load left dynamic sidebar gerencial
+        async function loadMenuGerencial() {
+            const container = document.getElementById('menu-gerencial-container');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`${API_URL}/menu_gerencial`);
+                if (!response.ok) throw new Error('Erro ao buscar dados do menu gerencial');
+                const menuItems = await response.json();
+
+                if (menuItems.length === 0) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Nenhum menu gerencial ativo.</div>';
+                    return;
+                }
+
+                // Retrieve user parameters for URL redirection persistence
+                const nome = localStorage.getItem('user_nome') || '';
+                const id_colab = localStorage.getItem('user_id_colaborador') || '2';
+                const userParams = `&nome=${encodeURIComponent(nome)}&id_colaborador=${encodeURIComponent(id_colab)}&cpf=${encodeURIComponent(id_colab)}`;
+
+                container.innerHTML = menuItems.map(item => {
+                    let href = item.pagina;
+                    if (href && href !== '#') {
+                        href += href.includes('?') ? userParams : `?${userParams.substring(1)}`;
+                    } else {
+                        href = '#';
+                    }
+
+                    // Check if current page matches item.pagina
+                    const isCurrent = window.location.pathname.includes(item.pagina);
+                    const activeClass = isCurrent ? 'active' : '';
+
+                    return `
+                        <a href="${href}" class="gerencial-item ${activeClass}">
+                            ${item.imagem ? `<img class="gerencial-icon" src="${item.imagem}" alt="${item.nome_menu}" />` : ''}
+                            <span class="gerencial-label">${item.nome_menu}</span>
+                        </a>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: red; font-size: 11px;">Erro ao carregar menu.</div>';
+            }
+        }
+
+        // Initialize Month and Year filters
+        function initializeFilters() {
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1; // 1-12
+            const currentYear = currentDate.getFullYear();
+
+            // Populate months
+            mesSelect.innerHTML = monthNames.map((name, index) => {
+                const value = index + 1;
+                return `<option value="${value}">${name}</option>`;
+            }).join('');
+            mesSelect.value = currentMonth;
+
+            // Populate years (current year and current year + 1)
+            anoSelect.innerHTML = `
+                <option value="${currentYear}">${currentYear}</option>
+                <option value="${currentYear + 1}">${currentYear + 1}</option>
+            `;
+            anoSelect.value = currentYear;
+        }
+
+        // Format dates into "DD/MonthName"
+        function formatBirthday(day, month) {
+            const mName = monthNames[month - 1];
+            const zeroPaddedDay = String(day).padStart(2, '0');
+            return `${zeroPaddedDay}/${mName}`;
+        }
+
+        // Fetch and render the Campaign Banner
+        async function fetchCampaignBanner() {
+            const selectedMonth = mesSelect.value;
+            const selectedYear = anoSelect.value;
+
+            bannerRenderArea.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #718096; background: #fff; border-radius: 12px; border: 1px solid #edf2f7;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                    <p>Buscando banner...</p>
+                </div>
+            `;
+
+            try {
+                // Fetch using custom inverse parameter route: month = column 'ano', year = column 'mes'
+                const response = await fetch(`${API_URL}/banner_aniversariantes/${selectedMonth}/${selectedYear}`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        renderFallbackBanner();
+                        return;
+                    }
+                    throw new Error('Erro ao buscar dados do banner');
+                }
+
+                const banner = await response.json();
+                
+                bannerRenderArea.innerHTML = `
+                    <div class="banner-card">
+                        <div class="banner-image-container">
+                            <img src="${banner.imagem}" alt="${banner.santo_referencia}" class="banner-img" onerror="this.src='colaborador_default.png'">
+                        </div>
+                        <div class="banner-content-body">
+                            <h3 class="santo-reference">${banner.santo_referencia}</h3>
+                            <div class="banner-text-content">${banner.texto_aniversariantes || ''}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+                renderFallbackBanner();
+            }
+        }
+
+        // Fallback placeholder when no campaign banner exists
+        function renderFallbackBanner() {
+            bannerRenderArea.innerHTML = `
+                <div class="fallback-banner">
+                    <i class="fa-solid fa-circle-info fallback-icon"></i>
+                    <h3 class="fallback-title">Sem Campanha Cadastrada</h3>
+                    <p class="fallback-text">Não há um banner cadastrado para este mês e ano. Acesse a seção "Banner aniversariantes" no menu de navegação para cadastrar.</p>
+                </div>
+            `;
+        }
+
+        const buscarTodosMesesChk = document.getElementById('buscar-todos-meses');
+
+        // Fetch and load birthdays list
+        async function fetchBirthdays() {
+            const selectedMonth = mesSelect.value;
+            const isGlobalSearch = buscarTodosMesesChk.checked;
+
+            birthdaysRenderArea.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #718096; background: #fff; border-radius: 12px; border: 1px solid #edf2f7;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                    <p>Buscando aniversariantes...</p>
+                </div>
+            `;
+
+            try {
+                let url = `${API_URL}/colaboradores/aniversariantes/${selectedMonth}`;
+                if (isGlobalSearch) {
+                    const query = buscarInput.value.trim();
+                    url = `${API_URL}/colaboradores/aniversariantes/busca?termo=${encodeURIComponent(query)}`;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Erro ao buscar aniversariantes');
+                currentCollaborators = await response.json();
+
+                filterAndRenderBirthdays();
+            } catch (err) {
+                console.error(err);
+                birthdaysRenderArea.innerHTML = `
+                    <div class="empty-birthdays">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #e53e3e;"></i>
+                        <div class="empty-birthdays-title">Erro de Conexão</div>
+                        <div class="empty-birthdays-text">Não foi possível carregar a lista de aniversariantes.</div>
+                    </div>
+                `;
+                birthdaysCountBadge.textContent = '0 aniversariantes';
+            }
+        }
+
+        // Filter birthdays list locally and render
+        function filterAndRenderBirthdays() {
+            const isGlobalSearch = buscarTodosMesesChk.checked;
+            let filtered = currentCollaborators;
+
+            // If local monthly list, apply local filtering on current month list
+            if (!isGlobalSearch) {
+                const query = buscarInput.value.toLowerCase().trim();
+                filtered = currentCollaborators.filter(colab => {
+                    const nameMatch = colab.nome_colaborador.toLowerCase().includes(query);
+                    const cityMatch = colab.cidade ? colab.cidade.toLowerCase().includes(query) : false;
+                    const stateMatch = colab.sigla_estado ? colab.sigla_estado.toLowerCase().includes(query) : false;
+                    return nameMatch || cityMatch || stateMatch;
+                });
+            }
+
+            // Update panel title dynamically
+            const birthdaysTitle = document.getElementById('birthdays-title-text');
+            if (birthdaysTitle) {
+                if (isGlobalSearch) {
+                    birthdaysTitle.innerHTML = '<i class="fa-solid fa-earth-americas"></i> Todos os Meses (Pesquisa Geral)';
+                } else {
+                    birthdaysTitle.innerHTML = '<i class="fa-solid fa-cake-candles"></i> Lista de Aniversariantes';
+                }
+            }
+
+            // Update badge
+            birthdaysCountBadge.textContent = `${filtered.length} aniversariante${filtered.length !== 1 ? 's' : ''}`;
+
+            if (filtered.length === 0) {
+                const query = buscarInput.value.trim();
+                birthdaysRenderArea.innerHTML = `
+                    <div class="empty-birthdays">
+                        <i class="fa-solid fa-cake-candles"></i>
+                        <div class="empty-birthdays-title">Nenhum Aniversariante</div>
+                        <div class="empty-birthdays-text">${query ? 'Nenhum resultado encontrado para a busca.' : (isGlobalSearch ? 'Digite um nome para pesquisar em outros meses.' : 'Não há aniversariantes cadastrados neste mês.')}</div>
+                    </div>
+                `;
+                return;
+            }
+
+            birthdaysRenderArea.innerHTML = filtered.map(colab => {
+                const dateLabel = formatBirthday(colab.dia_nascimento, colab.mes_nascimento);
+                const locationLabel = colab.cidade && colab.sigla_estado 
+                    ? `${colab.cidade} - ${colab.sigla_estado}`
+                    : (colab.cidade || colab.sigla_estado || 'Não informada');
+
+                return `
+                    <div class="birthday-card">
+                        <div class="birthday-info-left">
+                            <span class="birthday-colab-name">${colab.nome_colaborador}</span>
+                            <span class="birthday-location">
+                                <i class="fa-solid fa-location-dot"></i> ${locationLabel}
+                            </span>
+                        </div>
+                        <div class="birthday-badge-right">
+                            <i class="fa-solid fa-gift"></i> ${dateLabel}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Dropdown updates
+            mesSelect.addEventListener('change', () => {
+                fetchCampaignBanner();
+                // Only fetch monthly list if not in global search mode
+                if (!buscarTodosMesesChk.checked) {
+                    fetchBirthdays();
+                }
+            });
+
+            anoSelect.addEventListener('change', () => {
+                fetchCampaignBanner();
+            });
+
+            // Live filter search or global fetch search
+            let searchTimeout;
+            buscarInput.addEventListener('input', () => {
+                if (buscarTodosMesesChk.checked) {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        fetchBirthdays();
+                    }, 400); // Debounce to avoid heavy API querying
+                } else {
+                    filterAndRenderBirthdays();
+                }
+            });
+
+            // Mode switch listener
+            buscarTodosMesesChk.addEventListener('change', () => {
+                fetchBirthdays();
+            });
+        }
+
+        // Initial setup
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMenuGerencial();
+            initializeFilters();
+            setupEventListeners();
+            
+            // Initial data load
+            fetchCampaignBanner();
+            fetchBirthdays();
+        });
+    </script>
+</body>
+
+</html>

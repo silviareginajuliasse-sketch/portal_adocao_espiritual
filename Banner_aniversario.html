@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+�<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -761,18 +761,17 @@
 
     <script src="assets/js/header.js"></script>
     <script>
-        
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+        const monthNames = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+        let bannersList = [];
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('sidebar-overlay').classList.toggle('active');
         }
-
-        
-
-        
-
-        
 
         function toggleDropdown(event) {
             event.stopPropagation();
@@ -793,7 +792,107 @@
             }
         }
 
-        
+        async function fetchBanners() {
+            try {
+                const response = await fetch(`${API_URL}/banner_aniversariantes`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar banners');
+                }
+                bannersList = await response.json();
+                renderBanners(bannersList);
+            } catch (err) {
+                console.error('Erro ao buscar banners:', err);
+                const container = document.querySelector('.list-container');
+                if (container) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Erro ao carregar banners do servidor.</div>';
+                }
+            }
+        }
+
+        function renderBanners(list) {
+            const container = document.querySelector('.list-container');
+            if (!container) return;
+
+            if (list.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhum banner cadastrado.</div>';
+                
+                // Hide pagination if empty
+                const pagination = document.querySelector('.pagination');
+                if (pagination) pagination.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = list.map(banner => {
+                const monthName = monthNames[banner.ano - 1] || 'Mês Inválido';
+                const year = banner.mes; // Inverted mapping (Mês = ano, Ano = mes)
+                const displayText = `${monthName} de ${year} - ${banner.santo_referencia}`;
+                
+                return `
+                    <div class="list-item" onclick="window.location.href='registro_banner_aniversariantes.html?ano=${banner.ano}&mes=${banner.mes}'">
+                        <i class="fa-regular fa-trash-can trash-icon" onclick="deleteBanner(event, ${banner.ano}, ${banner.mes})"></i>
+                        <span class="banner-name">
+                            <a href="registro_banner_aniversariantes.html?ano=${banner.ano}&mes=${banner.mes}" style="text-decoration: none; color: inherit;">
+                                ${displayText}
+                            </a>
+                        </span>
+                    </div>
+                `;
+            }).join('');
+
+            // Hide pagination since we render the list dynamically directly
+            const pagination = document.querySelector('.pagination');
+            if (pagination) pagination.style.display = 'none';
+        }
+
+        async function deleteBanner(event, ano, mes) {
+            event.stopPropagation(); // Prevent navigating to edit page
+            
+            const monthName = monthNames[ano - 1] || 'Mês Inválido';
+            const year = mes;
+            
+            if (!confirm(`Deseja realmente excluir o banner de ${monthName} de ${year}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/banner_aniversariantes/${ano}/${mes}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('Banner excluído com sucesso!');
+                    fetchBanners(); // Reload list
+                } else {
+                    alert('Erro ao excluir banner: ' + (result.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error('Erro ao excluir:', err);
+                alert('Erro ao conectar com o servidor: ' + err.message);
+            }
+        }
+
+        // Search Input Filter
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                if (!query) {
+                    renderBanners(bannersList);
+                    return;
+                }
+                
+                const filtered = bannersList.filter(banner => {
+                    const monthName = (monthNames[banner.ano - 1] || '').toLowerCase();
+                    const year = String(banner.mes);
+                    const santo = (banner.santo_referencia || '').toLowerCase();
+                    return monthName.includes(query) || year.includes(query) || santo.includes(query);
+                });
+                
+                renderBanners(filtered);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchBanners);
     </script>
 </body>
 
