@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Divisão Arquidiocesana - Adoção Espiritual</title>
+    <title>Cadastro de Projetos - Adoção Espiritual</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
         :root {
@@ -224,7 +224,7 @@
 
         .sidebar-item:hover {
             background-color: #f5f5f5;
-            color: var(--btn-blue);
+            color: var(--primary-red);
         }
 
         .sidebar-item i {
@@ -375,7 +375,7 @@
             text-decoration: underline;
         }
 
-        /* Main Content Layout */
+        /* Main Content */
         .main-container {
             width: 100%;
             max-width: 1200px;
@@ -396,7 +396,7 @@
             }
         }
 
-        /* Instructions Sidebar */
+        /* Instructions Sidebar Styles */
         .instructions-sidebar {
             flex: 0 0 380px;
             font-size: 0.95rem;
@@ -417,8 +417,7 @@
             margin-bottom: 20px;
         }
 
-        .instructions-sidebar-text i,
-        .instructions-sidebar-text svg {
+        .instructions-sidebar-text i {
             margin: 0 5px;
             vertical-align: middle;
         }
@@ -458,7 +457,9 @@
         }
 
         .subtitle-icon {
-            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
         }
 
         .search-container {
@@ -493,72 +494,87 @@
             align-items: center;
             padding: 12px 15px;
             border-bottom: 1px solid #eee;
-            gap: 15px;
             transition: background-color 0.2s;
-            cursor: pointer;
         }
 
         .list-item:hover {
             background-color: #f9f9f9;
         }
 
-        .trash-icon {
-            color: #555;
-            font-size: 1.1rem;
-            cursor: pointer;
+        .proj-name {
+            width: 35%;
+            flex: 0 0 35%;
+            color: #707b7c;
+            font-size: 0.95rem;
+            font-weight: 400;
         }
 
-        /* Pagination & Footer Actions */
+        .proj-area {
+            width: 30%;
+            flex: 0 0 30%;
+            color: #707b7c;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .proj-date-start {
+            width: 12%;
+            flex: 0 0 12%;
+            color: #707b7c;
+            font-size: 0.95rem;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        .proj-date-end {
+            width: 12%;
+            flex: 0 0 12%;
+            color: #707b7c;
+            font-size: 0.95rem;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        .proj-status {
+            width: 11%;
+            flex: 0 0 11%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .status-badge.status-iniciado {
+            background-color: #f0f7ff;
+            color: #4f46e5;
+            border: 1px solid #c7d2fe;
+        }
+
+        /* List Footer */
         .list-footer {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 30px;
             margin-top: 30px;
-        }
-
-        .export-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .excel-icon {
-            color: #1d6f42;
-            font-size: 1.4rem;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .excel-icon:hover {
-            opacity: 0.8;
-        }
-
-        .export-separator {
-            width: 1px;
-            height: 24px;
-            background-color: var(--primary-red);
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.95rem;
-        }
-
-        .page-num {
-            color: #777;
-            padding: 2px 8px;
-            cursor: pointer;
-        }
-
-        .page-num.active {
-            color: #3498db;
-            border: 1px solid #3498db;
-            border-radius: 4px;
-            font-weight: bold;
         }
     </style>
 </head>
@@ -579,7 +595,7 @@
             </div>
             <div class="account-container" onclick="toggleDropdown(event)">
                 <div class="account-info">
-                    <div class="user-display-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
                     <div class="user-detail-id" id="user-id">000.000.000-00</div>
                 </div>
                 <div class="user-initials" id="user-initials">--</div>
@@ -627,81 +643,43 @@
 
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
-    <script src="assets/js/header.js"></script>
-    <script src="assets/js/api.js"></script>
 
-    <!-- Sidebar Menu (Fallback) -->
+    <!-- Sidebar Menu -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span>Menu de Navegação</span>
             <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
         </div>
         <ul class="sidebar-list">
-            <li><a href="menu_principal_2.html" class="sidebar-item" id="nav-home"><i class="fa-solid fa-house"></i> Início</a></li>
-            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
-            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
-            <li><a href="calendario.html" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
-            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
-            <li><a href="arquidioceses.html" class="sidebar-item" id="nav-arquidioceses"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
-            <li><a href="lista_divisao_arquidiocesana.html" class="sidebar-item" id="nav-subdivisoes">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#777" style="vertical-align: middle; margin-right: 15px;">
-                    <rect x="0" y="10" width="4" height="4" />
-                    <rect x="0" y="15" width="4" height="4" />
-                    <rect x="0" y="20" width="4" height="4" />
-                    <rect x="5" y="15" width="4" height="4" />
-                    <rect x="5" y="20" width="4" height="4" />
-                    <rect x="10" y="20" width="4" height="4" />
-                    <rect x="8" y="5" width="4" height="4" />
-                    <rect x="14" y="11" width="4" height="4" />
-                    <rect x="16" y="2" width="4" height="4" />
-                </svg> Divisão Arquidiocesana</a>
-            </li>
-            <li><a href="paroquias.html" class="sidebar-item" id="nav-paroquias"><i class="fa-solid fa-house-chimney-window"></i> Paróquias e instituições pró-vida</a></li>
-            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
-            <li><a href="treinamentos.html" class="sidebar-item" id="nav-treinamentos"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
-            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+            <!-- Dynamic menu options injected here by header.js -->
         </ul>
     </nav>
 
     <main class="main-container">
-
         <div class="layout-split">
             <!-- Left Side: Instructions -->
             <aside class="instructions-sidebar">
                 <h2 class="instructions-sidebar-title">Orientações de uso</h2>
 
                 <div class="instructions-sidebar-text">
-                    Nessa página são listadas todas as divisões arquidiocesanas cadastradas.
+                    Nesta página são listados todos os projetos associados às áreas organizacionais do portal Adoção Espiritual.
                 </div>
 
                 <div class="instructions-sidebar-text">
-                    Ao clicar sobre o ícone lixeira, <i class="fa-regular fa-trash-can"></i> a divisão será
-                    excluída definitivamente.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Ao clicar sobre o título <strong>Lista de Divisão Arquidiocesana</strong> ou o ícone ao lado,
-                    o usuário é direcionado para a página de inclusão. Apenas usuários com o perfil
-                    Coordenador Nacional poderão realizar inclusões de divisões.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Na lista de Divisões, ao clicar sobre o item o sistema apresentará todos os
-                    dados do cadastro, para que os dados sejam alterados se necessário.
+                    A tabela exibe o nome do projeto, a área de responsabilidade na estrutura, as datas previstas de início e fim e a situação atual do projeto.
                 </div>
 
                 <div class="instructions-sidebar-tip">
-                    Dica: Utilize o campo busca, localizado acima da lista para exibir na lista apenas divisões
-                    que contenham no nome ou no nome da arquidiocese parte de uma expressão.
+                    Dica: Utilize o campo busca, localizado à direita da tela, para pesquisar projetos por nome, área ou status correspondentes.
                 </div>
             </aside>
 
-            <!-- Right Side: Existing Content -->
+            <!-- Right Side: Projects List -->
             <div class="main-content">
-                <!-- Search Header -->
-                <div class="search-row" id="header-search-row">
+                <!-- Title Row -->
+                <div class="search-row">
                     <div class="subtitle-with-icon" onclick="goToRegistro('new')" style="cursor: pointer;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#8b1e1e" class="subtitle-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#333" class="subtitle-icon">
                             <rect x="0" y="10" width="4" height="4" />
                             <rect x="0" y="15" width="4" height="4" />
                             <rect x="0" y="20" width="4" height="4" />
@@ -712,7 +690,7 @@
                             <rect x="14" y="11" width="4" height="4" />
                             <rect x="16" y="2" width="4" height="4" />
                         </svg>
-                        Lista de Divisão Arquidiocesana
+                        Projetos
                     </div>
                     <div class="search-container">
                         <input type="text" id="search-input" class="search-input" placeholder="busca"
@@ -720,35 +698,41 @@
                     </div>
                 </div>
 
-                <!-- The List -->
-                <div class="list-container" id="subdivisoes-list-container">
-                    <div style="padding: 20px; text-align: center; color: #777;">Carregando subdivisões...</div>
+                <!-- The List (Rendered dynamically) -->
+                <div class="list-container" id="projects-list-container">
+                    <!-- Dynamic content will go here -->
                 </div>
 
                 <!-- List Footer -->
                 <div class="list-footer">
-                    <div class="export-group">
-                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel"
-                            onclick="exportToExcel()"></i>
-                        <div class="export-separator"></div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="pagination" id="pagination-container">
-                        <!-- Dinamicamente preenchido -->
-                    </div>
                 </div>
             </div>
         </div>
-
     </main>
 
+    <script src="assets/js/header.js"></script>
     <script>
+        const API_URL = window.location.protocol === 'file:' 
+            ? 'http://localhost:3000/api'
+            : '/api';
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.toggle('active');
             overlay.classList.toggle('active');
+        }
+
+        function goToRegistro(mode, id) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            let targetUrl = `inclusao_projeto.html?mode=${mode}`;
+            if (id) {
+                targetUrl += `&id=${id}`;
+            }
+            targetUrl += `&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`;
+            window.location.href = targetUrl;
         }
 
         function toggleDropdown(event) {
@@ -757,7 +741,7 @@
             const toggleIcon = document.getElementById('account-toggle-icon');
 
             dropdown.classList.toggle('show');
-            toggleIcon.classList.toggle('active');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
         }
 
         // Close dropdown when clicking outside
@@ -766,177 +750,99 @@
             const toggleIcon = document.getElementById('account-toggle-icon');
             if (dropdown && dropdown.classList.contains('show')) {
                 dropdown.classList.remove('show');
-                toggleIcon.classList.remove('active');
+                if (toggleIcon) toggleIcon.classList.remove('active');
             }
         }
 
-        // Dynamic Data Variables
-        let allSubdivisoes = [];
-        let filteredSubdivisoes = [];
-        let currentPage = 1;
-        const itemsPerPage = 7;
-
-        async function initData() {
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
             try {
-                // Determine API URL dynamically (fallback to localhost:3000 if served via file://)
-                const apiPath = 'divisao_arquidiocesana/detalhes';
-                const data = await fetchData(apiPath);
-                allSubdivisoes = data;
-                filteredSubdivisoes = [...allSubdivisoes];
-                renderList();
-            } catch (error) {
-                console.error("Erro ao carregar subdivisões:", error);
-                document.getElementById('subdivisoes-list-container').innerHTML = 
-                    '<div style="padding: 20px; text-align: center; color: #8b1e1e;">Erro ao carregar dados.</div>';
-            }
-        }
-
-        function renderList() {
-            const container = document.getElementById('subdivisoes-list-container');
-            container.innerHTML = '';
-
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedItems = filteredSubdivisoes.slice(startIndex, endIndex);
-
-            if (paginatedItems.length === 0 && filteredSubdivisoes.length > 0) {
-                currentPage = 1;
-                renderList();
-                return;
-            }
-
-            if (paginatedItems.length === 0) {
-                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhuma subdivisão encontrada.</div>';
-                renderPagination(0);
-                return;
-            }
-
-            paginatedItems.forEach(itemData => {
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.onclick = () => goToRegistro('edit', itemData.id_subdivisao);
-                
-                const regional = itemData.nome_regional || 'N/A';
-                const arquidiocese = itemData.nome_arquidiocese || 'N/A';
-                const subdivisao = itemData.nome_divisao_arquidiocesana || itemData.nome_subdivisao || 'N/A';
-                const status = itemData.status ? itemData.status.toUpperCase() : 'N/A';
-
-                item.innerHTML = `
-                    <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation(); deleteSubdivisao(${itemData.id_subdivisao}, '${subdivisao}')"></i>
-                    <span style="color: #707b7c; font-size: 0.95rem; font-weight: 400; flex-grow: 1;">
-                        ${subdivisao} - ${arquidiocese} - ${regional} - ${status}
-                    </span>
-                `;
-                container.appendChild(item);
-            });
-
-            renderPagination(filteredSubdivisoes.length);
-        }
-
-        function renderPagination(totalItems) {
-            const container = document.getElementById('pagination-container');
-            container.innerHTML = '';
-            
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            if (totalPages <= 1) return;
-
-            for (let i = 1; i <= totalPages; i++) {
-                const span = document.createElement('span');
-                span.className = `page-num ${i === currentPage ? 'active' : ''}`;
-                span.textContent = i;
-                span.onclick = () => {
-                    currentPage = i;
-                    renderList();
-                };
-                container.appendChild(span);
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return '';
+                const day = String(date.getUTCDate()).padStart(2, '0');
+                const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                const year = date.getUTCFullYear();
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                return '';
             }
         }
 
         function filterList() {
             const query = document.getElementById('search-input').value.toLowerCase();
-            filteredSubdivisoes = allSubdivisoes.filter(s => 
-                (s.nome_divisao_arquidiocesana && s.nome_divisao_arquidiocesana.toLowerCase().includes(query)) ||
-                (s.nome_subdivisao && s.nome_subdivisao.toLowerCase().includes(query)) ||
-                (s.nome_arquidiocese && s.nome_arquidiocese.toLowerCase().includes(query)) ||
-                (s.nome_regional && s.nome_regional.toLowerCase().includes(query))
-            );
-            currentPage = 1;
-            renderList();
+            const items = document.querySelectorAll('.list-item');
+
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
         }
 
-        async function deleteSubdivisao(id, name) {
-            if (confirm(`Deseja realmente excluir a subdivisão "${name}"?`)) {
-                try {
-                    const response = await fetch(`${API_URL}/divisao_arquidiocesana/${id}`, { method: 'DELETE' });
-                    if (response.ok) {
-                        alert("Subdivisão excluída com sucesso!");
-                        initData();
-                    } else {
-                        const err = await response.json();
-                        alert("Erro ao excluir: " + (err.error || "Erro desconhecido"));
+        async function loadProjects() {
+            try {
+                const res = await fetch(`${API_URL}/projetos?_=${new Date().getTime()}`);
+                if (!res.ok) throw new Error('Erro ao buscar projetos');
+                const projects = await res.json();
+
+                const container = document.getElementById('projects-list-container');
+                if (!container) return;
+
+                container.innerHTML = '';
+
+                if (projects.length === 0) {
+                    container.innerHTML = `
+                        <div class="list-item" style="justify-content: center; color: #777; font-style: italic;">
+                            Nenhum projeto cadastrado.
+                        </div>
+                    `;
+                    return;
+                }
+
+                projects.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.style.cursor = 'pointer';
+                    item.onclick = function () {
+                        goToRegistro('edit', p.id_projeto);
+                    };
+
+                    const dateStartFormatted = formatDate(p.data_inicio);
+                    const dateEndFormatted = formatDate(p.data_fim);
+
+                    let statusHtml = '';
+                    if (p.status) {
+                        const normStatus = p.status.toLowerCase().trim();
+                        if (normStatus === 'iniciado') {
+                            statusHtml = `<span class="status-badge status-iniciado">INICIADO</span>`;
+                        } else {
+                            statusHtml = `<span class="status-badge" style="background-color: #eee; color: #666; border: 1px solid #ccc;">${p.status.toUpperCase()}</span>`;
+                        }
                     }
-                } catch (error) {
-                    console.error("Erro ao excluir:", error);
-                    alert("Erro ao excluir subdivisão.");
+
+                    item.innerHTML = `
+                        <div class="proj-name">${p.nome_projeto || ''}</div>
+                        <div class="proj-area">${p.nome_area || ''}</div>
+                        <div class="proj-date-start">${dateStartFormatted || ''}</div>
+                        <div class="proj-date-end">${dateEndFormatted || ''}</div>
+                        <div class="proj-status">${statusHtml}</div>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar projetos:', err);
+                const container = document.getElementById('projects-list-container');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="list-item" style="justify-content: center; color: #e74c3c; font-weight: 500;">
+                            Erro ao carregar lista de projetos.
+                        </div>
+                    `;
                 }
             }
         }
 
-        function goToRegistro(mode, id = null) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const nome = urlParams.get('nome') || '';
-            const cpf = urlParams.get('cpf') || '';
-            let url = `registro_divisao_arquidiocesana.html?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&mode=${mode}`;
-            if (id) url += `&id=${id}`;
-            window.location.href = url;
-        }
-
-        function exportToExcel() {
-            const timestamp = new Date().toISOString().slice(0, 10);
-            const fileName = `subdivisoes_${timestamp}.xls`;
-            const headerBg = "#8b1e1e";
-            const headerTextColor = "#ffffff";
-
-            let htmlContent = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head><meta charset="utf-8">
-                <style>
-                    table { border-collapse: collapse; }
-                    .header-row td { background-color: ${headerBg}; color: ${headerTextColor}; font-weight: bold; border: 0.5pt solid #000; padding: 5px; }
-                    .data-row td { border: 0.5pt solid #ccc; padding: 5px; color: #333; }
-                </style>
-                </head>
-                <body><table>
-                    <tr class="header-row"><td>Divisão Arquidiocesana</td><td>(Arqui)Diocese</td><td>Regional</td><td>Status</td></tr>
-            `;
-
-            filteredSubdivisoes.forEach(s => {
-                htmlContent += `
-                    <tr class="data-row">
-                        <td>${s.nome_divisao_arquidiocesana || s.nome_subdivisao || ''}</td>
-                        <td>${s.nome_arquidiocese || ''}</td>
-                        <td>${s.nome_regional || ''}</td>
-                        <td>${s.status || ''}</td>
-                    </tr>
-                `;
-            });
-
-            htmlContent += `</table></body></html>`;
-
-            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        window.onload = function() {
-            updateUserName();
-            initData();
-        };
+        // Run when DOM is ready
+        window.addEventListener('DOMContentLoaded', loadProjects);
     </script>
 </body>
 

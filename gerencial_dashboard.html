@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Gerencial (Dashboard) - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN for beautiful interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-maroon: #7b0000;
+            --dark-maroon: #5a0000;
+            --text-dark: #2d3748;
+            --text-gray: #718096;
+            --border-light: #e2e8f0;
+            --bg-gray: #f7fafc;
+            --accent-green: #2e7d32;
+            --accent-red: #c53030;
+            --accent-orange: #dd6b20;
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --primary-red: #8b1e1e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .header-logo-container img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title-text {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.1;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-id {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chevron-icon {
+            font-size: 10px;
+            color: #3498db;
+            background: #e1f0fa;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .chevron-icon.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Sidebar Navigation Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #8b0000;
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Main Container & Grid Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 53px);
+        }
+
+        /* Sidebar Gerencial (Esquerda) */
+        .sidebar-gerencial {
+            width: 120px;
+            flex-shrink: 0;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding-top: 10px;
+        }
+
+        .gerencial-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            border-bottom: 1px solid #f5f5f5;
+            text-align: center;
+            border-left: 4px solid transparent;
+        }
+
+        .gerencial-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .gerencial-item.active {
+            background-color: #fcf8f8;
+            border-left: 4px solid var(--primary-red);
+            padding-left: 6px;
+        }
+
+        .gerencial-item.active .gerencial-label {
+            color: var(--primary-red);
+            font-weight: 700;
+        }
+
+        .gerencial-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .gerencial-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #666;
+            text-transform: capitalize;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+
+        /* Content Area (Direita) */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-gray);
+        }
+
+        /* Filters / Dashboard Tabs Bar */
+        .filters-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-light);
+            padding: 15px 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filters-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filters-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .filters-subtitle {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            gap: 10px;
+            background-color: #edf2f7;
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .dashboard-tab {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #4a5568;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            outline: none;
+        }
+
+        .dashboard-tab:hover {
+            color: var(--primary-maroon);
+        }
+
+        .dashboard-tab.active {
+            background-color: white;
+            color: var(--primary-maroon);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Workspace Grid */
+        .workspace {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex: 1;
+        }
+
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 30px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-panel.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* KPI stats cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #edf2f7;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .stat-card-subtext {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        .card-icon {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            font-size: 1.6rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .card-icon.bg-maroon { background-color: var(--primary-maroon); }
+        .card-icon.bg-green { background-color: #2e7d32; }
+        .card-icon.bg-orange { background-color: #dd6b20; }
+        .card-icon.bg-red { background-color: #c53030; }
+
+        /* Dashboard Grid and Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 25px;
+        }
+
+        .dashboard-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #edf2f7;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+
+        @media (max-width: 992px) {
+            .col-8, .col-4, .col-6 {
+                grid-column: span 12;
+            }
+        }
+
+        .dashboard-card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .chart-container-large {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        /* Recent registrations table styling */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .recent-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .recent-table th {
+            padding: 12px 16px;
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .recent-table td {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #edf2f7;
+            color: var(--text-dark);
+            vertical-align: middle;
+        }
+
+        .recent-table tbody tr:hover {
+            background-color: #fafbfd;
+        }
+
+        .colab-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .colab-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #fcebeb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--primary-maroon);
+            flex-shrink: 0;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .colab-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .colab-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .badge-active {
+            background-color: #e6fffa;
+            color: #234e52;
+            border: 1px solid #b2f5ea;
+        }
+
+        .badge-pending {
+            background-color: #feebc8;
+            color: #7b341e;
+            border: 1px solid #fbd38d;
+        }
+
+        .badge-inactive {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+
+        /* Coming Soon Panel styling */
+        .coming-soon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 40px;
+            background-color: white;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+            box-shadow: var(--card-shadow);
+            max-width: 650px;
+            width: 100%;
+            margin: 40px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coming-soon-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-maroon), var(--primary-red), var(--primary-maroon));
+        }
+
+        .coming-soon-icon-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.25rem;
+            margin-bottom: 24px;
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        .coming-soon-icon-box.training {
+            background-color: rgba(123, 0, 0, 0.08);
+            color: var(--primary-maroon);
+        }
+
+        .coming-soon-icon-box.activity {
+            background-color: rgba(139, 30, 30, 0.08);
+            color: var(--primary-red);
+        }
+
+        @keyframes pulse-glow {
+            from {
+                transform: scale(0.96);
+                box-shadow: 0 0 0 0 rgba(123, 0, 0, 0.2);
+            }
+            to {
+                transform: scale(1.04);
+                box-shadow: 0 0 20px 10px rgba(123, 0, 0, 0.05);
+            }
+        }
+
+        .coming-soon-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .coming-soon-desc {
+            font-size: 0.95rem;
+            color: var(--text-gray);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            max-width: 500px;
+        }
+
+        .coming-soon-features {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            background-color: #f7fafc;
+            padding: 20px 24px;
+            border-radius: 10px;
+            border: 1px solid #edf2f7;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .coming-soon-feat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            color: #4a5568;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .coming-soon-feat-item i {
+            color: var(--accent-green);
+        }
+
+        .coming-soon-mock-stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            border-top: 1px solid #edf2f7;
+            padding-top: 24px;
+            width: 100%;
+        }
+
+        .mock-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .mock-stat-val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--primary-maroon);
+        }
+
+        .mock-stat-lbl {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container" onclick="window.location.href='menu_principal_2.html'">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-avatar" id="user-initials">
+                    <i class="fa-solid fa-user" style="color: #ccc; font-size: 20px;"></i>
+                </div>
+                <div class="chevron-icon" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">Seu perfil é <strong>Coordenador Nacional</strong></div>
+                        <div class="decorative-divider"><span></span><span></span><span></span></div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu (Menu 3 barras) -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
+            <li><a href="calendario.html" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Split Container -->
+    <div class="main-container">
+        <!-- Sidebar Gerencial (Esquerda) -->
+        <aside class="sidebar-gerencial" id="menu-gerencial-container">
+            <div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Carregando menu...</div>
+        </aside>
+
+        <!-- Área de Conteúdo (Direita) -->
+        <main class="content-area">
+            <!-- Header Filters and Tabs -->
+            <div class="filters-bar">
+                <div class="filters-left">
+                    <div class="filters-title">Painel de Indicadores (Dashboard)</div>
+                    <div class="filters-subtitle">Visões gerais do portal de Adoção Espiritual</div>
+                </div>
+                <!-- Tab Controls -->
+                <div class="dashboard-tabs">
+                    <button class="dashboard-tab active" data-tab="colaboradores" onclick="switchTab('colaboradores')">
+                        <i class="fa-solid fa-users"></i> Colaboradores
+                    </button>
+                    <button class="dashboard-tab" data-tab="treinamentos" onclick="switchTab('treinamentos')">
+                        <i class="fa-solid fa-chalkboard-user"></i> Treinamentos
+                    </button>
+                    <button class="dashboard-tab" data-tab="atividades" onclick="switchTab('atividades')">
+                        <i class="fa-solid fa-clipboard-list"></i> Atividades
+                    </button>
+                    <button class="dashboard-tab" data-tab="projetos" onclick="switchTab('projetos')">
+                        <i class="fa-solid fa-diagram-project"></i> Projetos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="workspace">
+                
+                <!-- Colaboradores Tab Panel -->
+                <div class="tab-panel active" id="panel-colaboradores">
+                    
+                    <!-- KPI Cards Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-title">Total Colaboradores</div>
+                            <div class="stat-card-value" id="colab-total">0</div>
+                            <div class="stat-card-subtext">Cadastrados no portal</div>
+                            <i class="fa-solid fa-users card-icon bg-maroon"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Colaboradores Ativos</div>
+                            <div class="stat-card-value" id="colab-ativos">0</div>
+                            <div class="stat-card-subtext" id="colab-ativos-pct">0% do total</div>
+                            <i class="fa-solid fa-user-check card-icon bg-green"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Em Análise</div>
+                            <div class="stat-card-value" id="colab-analise">0</div>
+                            <div class="stat-card-subtext" id="colab-analise-pct">0% do total</div>
+                            <i class="fa-solid fa-user-clock card-icon bg-orange"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Inativos</div>
+                            <div class="stat-card-value" id="colab-inativos">0</div>
+                            <div class="stat-card-subtext" id="colab-inativos-pct">0% do total</div>
+                            <i class="fa-solid fa-user-minus card-icon bg-red"></i>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card col-8">
+                            <div class="dashboard-card-title">Distribuição por Estado (Top Estados)</div>
+                            <div class="chart-container">
+                                <canvas id="chart-estados"></canvas>
+                            </div>
+                        </div>
+                        <div class="dashboard-card col-4">
+                            <div class="dashboard-card-title">Perfil de Acesso</div>
+                            <div class="chart-container">
+                                <canvas id="chart-perfis"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Growth Line Chart -->
+                    <div class="dashboard-card col-12">
+                        <div class="dashboard-card-title">Evolução Histórica de Cadastros</div>
+                        <div class="chart-container-large">
+                            <canvas id="chart-evolucao"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Table -->
+                    <div class="dashboard-card col-12">
+                        <div class="dashboard-card-title">Últimos Colaboradores Cadastrados</div>
+                        <div class="table-responsive">
+                            <table class="recent-table">
+                                <thead>
+                                    <tr>
+                                        <th>Colaborador</th>
+                                        <th>Perfil</th>
+                                        <th>Cidade / Estado</th>
+                                        <th>Paróquia</th>
+                                        <th>Data Cadastro</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-colabs-tbody">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 20px; color: #718096;">Carregando colaboradores...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Treinamentos Tab Panel (Coming Soon) -->
+                <div class="tab-panel" id="panel-treinamentos">
+                    <div class="coming-soon-container">
+                        <div class="coming-soon-icon-box training">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <h2 class="coming-soon-title">Painel de Treinamentos</h2>
+                        <p class="coming-soon-desc">Esta visão consolidará os dados de capacitação e formação continuada dos coordenadores e colaboradores.</p>
+                        
+                        <div class="coming-soon-features">
+                            <div class="coming-soon-feat-item">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Taxa de conclusão de treinamentos</span>
+                            </div>
+                            <div class="coming-soon-feat-item">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Acompanhamento de instrutores ativos e avaliações</span>
+                            </div>
+                            <div class="coming-soon-feat-item">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Controle de presença em reuniões de formação</span>
+                            </div>
+                        </div>
+                        
+                        <div class="coming-soon-mock-stats">
+                            <div class="mock-stat">
+                                <span class="mock-stat-val">15</span>
+                                <span class="mock-stat-lbl">Treinamentos</span>
+                            </div>
+                            <div class="mock-stat">
+                                <span class="mock-stat-val">8</span>
+                                <span class="mock-stat-lbl">Instrutores</span>
+                            </div>
+                            <div class="mock-stat">
+                                <span class="mock-stat-val">120h</span>
+                                <span class="mock-stat-lbl">Horas Ministradas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Atividades Tab Panel (Coming Soon) -->
+                <div class="tab-panel" id="panel-atividades">
+                    <div class="coming-soon-container">
+                        <div class="coming-soon-icon-box activity">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                        </div>
+                        <h2 class="coming-soon-title">Painel de Atividades Realizadas</h2>
+                        <p class="coming-soon-desc">Esta visão trará estatísticas de engajamento, metas regionais e registros de ações efetuadas pelas paróquias.</p>
+                        
+                        <div class="coming-soon-features">
+                            <div class="coming-soon-feat-item">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Evolução das metas por regional e estado</span>
+                            </div>
+                            <div class="coming-soon-feat-item">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Comparativo de atividades criadas x concluídas</span>
+                            </div>
+                            <div class="coming-soon-feat-item">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Frequência e histórico das reuniões paroquiais</span>
+                            </div>
+                        </div>
+
+                        <div class="coming-soon-mock-stats">
+                            <div class="mock-stat">
+                                <span class="mock-stat-val">342</span>
+                                <span class="mock-stat-lbl">Atividades</span>
+                            </div>
+                            <div class="mock-stat">
+                                <span class="mock-stat-val">24</span>
+                                <span class="mock-stat-lbl">Paróquias Atendidas</span>
+                            </div>
+                            <div class="mock-stat">
+                                <span class="mock-stat-val">87%</span>
+                                <span class="mock-stat-lbl">Conclusão de Tarefas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projetos Tab Panel -->
+                <div class="tab-panel" id="panel-projetos">
+                    <!-- KPI Cards Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-title">Total de Projetos</div>
+                            <div class="stat-card-value" id="proj-total">0</div>
+                            <div class="stat-card-subtext">Cadastrados no portal</div>
+                            <i class="fa-solid fa-diagram-project card-icon bg-maroon"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Em Andamento</div>
+                            <div class="stat-card-value" id="proj-andamento">0</div>
+                            <div class="stat-card-subtext" id="proj-andamento-pct">0% do total</div>
+                            <i class="fa-solid fa-spinner card-icon bg-green"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Não Iniciados</div>
+                            <div class="stat-card-value" id="proj-naoiniciado">0</div>
+                            <div class="stat-card-subtext" id="proj-naoiniciado-pct">0% do total</div>
+                            <i class="fa-solid fa-hourglass-start card-icon bg-orange"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Encerrados</div>
+                            <div class="stat-card-value" id="proj-encerrado">0</div>
+                            <div class="stat-card-subtext" id="proj-encerrado-pct">0% do total</div>
+                            <i class="fa-solid fa-circle-check card-icon bg-red"></i>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card col-8">
+                            <div class="dashboard-card-title">Projetos por Área Estrutural</div>
+                            <div class="chart-container">
+                                <canvas id="chart-proj-areas"></canvas>
+                            </div>
+                        </div>
+                        <div class="dashboard-card col-4">
+                            <div class="dashboard-card-title">Status dos Projetos</div>
+                            <div class="chart-container">
+                                <canvas id="chart-proj-status"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Projects Table -->
+                    <div class="dashboard-card col-12">
+                        <div class="dashboard-card-title">Lista Geral de Projetos</div>
+                        <div class="table-responsive">
+                            <table class="recent-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome do Projeto</th>
+                                        <th>Área</th>
+                                        <th>Data Início</th>
+                                        <th>Data Fim</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="proj-tbody">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 20px; color: #718096;">Carregando projetos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/header.js"></script>
+    <script>
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+        
+        let allCollaborators = [];
+        let allProjects = [];
+        let chartEstadosInstance = null;
+        let chartPerfisInstance = null;
+        let chartEvolucaoInstance = null;
+        let chartProjAreasInstance = null;
+        let chartProjStatusInstance = null;
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        // Switch Dashboard Tabs smoothly
+        function switchTab(tabName) {
+            // Remove active classes
+            document.querySelectorAll('.dashboard-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+            // Add active classes to selected
+            document.querySelector(`.dashboard-tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`panel-${tabName}`).classList.add('active');
+
+            // Force charts update/animation triggers
+            if (tabName === 'colaboradores' && allCollaborators.length > 0) {
+                renderCharts(allCollaborators);
+            } else if (tabName === 'projetos' && allProjects.length > 0) {
+                renderProjectsCharts(allProjects);
+            }
+        }
+
+        // Fetch menu gerencial items dynamically
+        async function loadMenuGerencial() {
+            const container = document.getElementById('menu-gerencial-container');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`${API_URL}/menu_gerencial`);
+                if (!response.ok) throw new Error('Erro ao buscar dados do menu gerencial');
+                const menuItems = await response.json();
+
+                if (menuItems.length === 0) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-size: 11px;">Nenhum menu gerencial ativo.</div>';
+                    return;
+                }
+
+                const nome = localStorage.getItem('user_nome') || '';
+                const id_colab = localStorage.getItem('user_id_colaborador') || '2';
+                const userParams = `&nome=${encodeURIComponent(nome)}&id_colaborador=${encodeURIComponent(id_colab)}&cpf=${encodeURIComponent(id_colab)}`;
+
+                container.innerHTML = menuItems.map(item => {
+                    let href = item.pagina;
+                    if (href && href !== '#') {
+                        href += href.includes('?') ? userParams : `?${userParams.substring(1)}`;
+                    } else {
+                        href = '#';
+                    }
+
+                    const isCurrent = window.location.pathname.includes(item.pagina);
+                    const activeClass = isCurrent ? 'active' : '';
+
+                    return `
+                        <a href="${href}" class="gerencial-item ${activeClass}">
+                            ${item.imagem ? `<img class="gerencial-icon" src="${item.imagem}" alt="${item.nome_menu}" />` : '<i class="fa-solid fa-square-poll-vertical" style="font-size: 20px; color: #8b1e1e; margin-bottom: 8px;"></i>'}
+                            <span class="gerencial-label">${item.nome_menu}</span>
+                        </a>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: red; font-size: 11px;">Erro ao carregar menu.</div>';
+            }
+        }
+
+        // Fetch and compute collaborator statistics
+        async function loadDashboardData() {
+            try {
+                const res = await fetch(`${API_URL}/colaboradores`);
+                if (!res.ok) throw new Error('Erro ao listar colaboradores.');
+                allCollaborators = await res.json();
+
+                const total = allCollaborators.length;
+                const ativos = allCollaborators.filter(c => c.status === 'Ativo').length;
+                const analise = allCollaborators.filter(c => c.status === 'Em analise').length;
+                const inativos = allCollaborators.filter(c => c.status === 'Inativo').length;
+
+                // Update KPI values
+                document.getElementById('colab-total').innerText = total;
+                document.getElementById('colab-ativos').innerText = ativos;
+                document.getElementById('colab-ativos-pct').innerText = total > 0 ? `${((ativos / total) * 100).toFixed(1)}% do total` : '0% do total';
+                
+                document.getElementById('colab-analise').innerText = analise;
+                document.getElementById('colab-analise-pct').innerText = total > 0 ? `${((analise / total) * 100).toFixed(1)}% do total` : '0% do total';
+                
+                document.getElementById('colab-inativos').innerText = inativos;
+                document.getElementById('colab-inativos-pct').innerText = total > 0 ? `${((inativos / total) * 100).toFixed(1)}% do total` : '0% do total';
+
+                // Render Charts
+                renderCharts(allCollaborators);
+
+                // Populate Recent Table
+                populateRecentTable(allCollaborators);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('recent-colabs-tbody').innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: var(--accent-red); font-weight: 600;">
+                            <i class="fa-solid fa-circle-exclamation"></i> Erro ao carregar dados do painel: ${err.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render Charts with Chart.js
+        function renderCharts(data) {
+            // Destroy existing instances if present to avoid overlay errors
+            if (chartEstadosInstance) chartEstadosInstance.destroy();
+            if (chartPerfisInstance) chartPerfisInstance.destroy();
+            if (chartEvolucaoInstance) chartEvolucaoInstance.destroy();
+
+            // 1. STATE CHART DATA PREPARATION
+            const stateCounts = {};
+            data.forEach(c => {
+                const sigla = c.sigla_estado || 'SP'; // Fallback to SP if state is missing
+                stateCounts[sigla] = (stateCounts[sigla] || 0) + 1;
+            });
+            const sortedStates = Object.entries(stateCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10); // top 10 states
+
+            const stateLabels = sortedStates.map(item => item[0]);
+            const stateValues = sortedStates.map(item => item[1]);
+
+            // 2. PROFILE CHART DATA PREPARATION
+            const profileCounts = {};
+            data.forEach(c => {
+                const perf = c.nome_perfil || 'Outro';
+                profileCounts[perf] = (profileCounts[perf] || 0) + 1;
+            });
+            const profileLabels = Object.keys(profileCounts);
+            const profileValues = Object.values(profileCounts);
+
+            // 3. EVOLUTION (GROWTH) DATA PREPARATION
+            const signupDates = data
+                .filter(c => c.criado_em)
+                .map(c => new Date(c.criado_em))
+                .sort((a, b) => a - b);
+
+            const growthByMonth = {};
+            signupDates.forEach(date => {
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                growthByMonth[key] = (growthByMonth[key] || 0) + 1;
+            });
+
+            const monthlyLabels = Object.keys(growthByMonth);
+            const monthlyValues = [];
+            let cumulative = 0;
+            monthlyLabels.forEach(label => {
+                cumulative += growthByMonth[label];
+                monthlyValues.push(cumulative);
+            });
+
+            // Convert label format (YYYY-MM to MM/YYYY)
+            const formattedMonthlyLabels = monthlyLabels.map(label => {
+                const [year, month] = label.split('-');
+                return `${month}/${year}`;
+            });
+
+            // --- CHART.JS CONFIGURATIONS ---
+            
+            // Bar Chart (Estados)
+            const ctxEstados = document.getElementById('chart-estados').getContext('2d');
+            chartEstadosInstance = new Chart(ctxEstados, {
+                type: 'bar',
+                data: {
+                    labels: stateLabels,
+                    datasets: [{
+                        label: 'Colaboradores',
+                        data: stateValues,
+                        backgroundColor: '#7b0000',
+                        borderRadius: 5,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 }
+                        }
+                    }
+                }
+            });
+
+            // Doughnut Chart (Perfis)
+            const ctxPerfis = document.getElementById('chart-perfis').getContext('2d');
+            chartPerfisInstance = new Chart(ctxPerfis, {
+                type: 'doughnut',
+                data: {
+                    labels: profileLabels,
+                    datasets: [{
+                        data: profileValues,
+                        backgroundColor: ['#7b0000', '#5a0000', '#a0aec0', '#4a5568'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { family: 'Outfit', size: 11 } }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // Line Chart (Evolução)
+            const ctxEvolucao = document.getElementById('chart-evolucao').getContext('2d');
+            chartEvolucaoInstance = new Chart(ctxEvolucao, {
+                type: 'line',
+                data: {
+                    labels: formattedMonthlyLabels,
+                    datasets: [{
+                        label: 'Evolução Acumulada',
+                        data: monthlyValues,
+                        borderColor: '#7b0000',
+                        backgroundColor: 'rgba(123, 0, 0, 0.05)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#7b0000',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate Recent Collaborators Table
+        function populateRecentTable(data) {
+            const tbody = document.getElementById('recent-colabs-tbody');
+            if (!tbody) return;
+
+            // Sort by criado_em descending (newest first)
+            const sorted = [...data]
+                .sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em))
+                .slice(0, 5); // top 5
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #718096;">
+                            Nenhum colaborador cadastrado.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(c => {
+                // Determine Avatar initials
+                let avatarHTML = '';
+                if (c.foto_colaborador) {
+                    avatarHTML = `<img src="${c.foto_colaborador}" class="colab-avatar-img" alt="${c.nome_colaborador}" />`;
+                } else {
+                    const initials = c.nome_colaborador
+                        ? c.nome_colaborador.split(' ').filter(x => x).map(n => n[0]).slice(0, 2).join('').toUpperCase()
+                        : 'AE';
+                    avatarHTML = `<span>${initials}</span>`;
+                }
+
+                // Determine Badge Class
+                let badgeClass = 'badge-active';
+                let statusLabel = 'Ativo';
+                if (c.status === 'Em analise') {
+                    badgeClass = 'badge-pending';
+                    statusLabel = 'Em Análise';
+                } else if (c.status === 'Inativo') {
+                    badgeClass = 'badge-inactive';
+                    statusLabel = 'Inativo';
+                }
+
+                // Format location
+                const cidade = c.cidade || 'Indefinida';
+                const estado = c.sigla_estado || 'SP';
+                const localizacao = `${cidade} / ${estado}`;
+
+                // Format Parish
+                const paroquia = c.nome_paroquia || 'Não Informada';
+
+                // Format date
+                const dateStr = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : '-';
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="colab-cell">
+                                <div class="colab-avatar">${avatarHTML}</div>
+                                <span class="colab-name">${c.nome_colaborador}</span>
+                            </div>
+                        </td>
+                        <td>${c.nome_perfil || 'Outro'}</td>
+                        <td>${localizacao}</td>
+                        <td>${paroquia}</td>
+                        <td>${dateStr}</td>
+                        <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Fetch and compute project statistics
+        async function loadProjectsData() {
+            try {
+                const res = await fetch(`${API_URL}/projetos`);
+                if (!res.ok) throw new Error('Erro ao listar projetos.');
+                allProjects = await res.json();
+
+                const total = allProjects.length;
+                const andamento = allProjects.filter(p => p.status === 'Em andamento').length;
+                const naoiniciado = allProjects.filter(p => p.status === 'Não iniciado').length;
+                const encerrado = allProjects.filter(p => p.status === 'Encerrado').length;
+
+                // Update KPI values
+                document.getElementById('proj-total').innerText = total;
+                document.getElementById('proj-andamento').innerText = andamento;
+                document.getElementById('proj-andamento-pct').innerText = total > 0 ? `${((andamento / total) * 100).toFixed(1)}% do total` : '0% do total';
+                
+                document.getElementById('proj-naoiniciado').innerText = naoiniciado;
+                document.getElementById('proj-naoiniciado-pct').innerText = total > 0 ? `${((naoiniciado / total) * 100).toFixed(1)}% do total` : '0% do total';
+                
+                document.getElementById('proj-encerrado').innerText = encerrado;
+                document.getElementById('proj-encerrado-pct').innerText = total > 0 ? `${((encerrado / total) * 100).toFixed(1)}% do total` : '0% do total';
+
+                // Render Charts
+                renderProjectsCharts(allProjects);
+
+                // Populate Projects Table
+                populateProjectsTable(allProjects);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('proj-tbody').innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px; color: var(--accent-red); font-weight: 600;">
+                            <i class="fa-solid fa-circle-exclamation"></i> Erro ao carregar projetos: ${err.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render Projects Charts
+        function renderProjectsCharts(data) {
+            if (chartProjAreasInstance) chartProjAreasInstance.destroy();
+            if (chartProjStatusInstance) chartProjStatusInstance.destroy();
+
+            // 1. Projects by Area
+            const areaCounts = {};
+            data.forEach(p => {
+                const areaName = p.nome_area || 'Sem Área';
+                areaCounts[areaName] = (areaCounts[areaName] || 0) + 1;
+            });
+            const sortedAreas = Object.entries(areaCounts)
+                .sort((a, b) => b[1] - a[1]);
+
+            const areaLabels = sortedAreas.map(item => item[0]);
+            const areaValues = sortedAreas.map(item => item[1]);
+
+            // 2. Projects by Status
+            const statusCounts = {
+                'Não iniciado': 0,
+                'Em andamento': 0,
+                'Encerrado': 0,
+                'Cancelado': 0
+            };
+            data.forEach(p => {
+                if (p.status in statusCounts) {
+                    statusCounts[p.status]++;
+                } else {
+                    statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
+                }
+            });
+
+            const statusLabels = Object.keys(statusCounts);
+            const statusValues = Object.values(statusCounts);
+
+            // Render Bar Chart (Areas)
+            const ctxAreas = document.getElementById('chart-proj-areas').getContext('2d');
+            chartProjAreasInstance = new Chart(ctxAreas, {
+                type: 'bar',
+                data: {
+                    labels: areaLabels,
+                    datasets: [{
+                        label: 'Projetos',
+                        data: areaValues,
+                        backgroundColor: '#8b1e1e',
+                        borderRadius: 5,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 }
+                        }
+                    }
+                }
+            });
+
+            // Render Doughnut Chart (Status)
+            const ctxStatus = document.getElementById('chart-proj-status').getContext('2d');
+            chartProjStatusInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusValues,
+                        backgroundColor: ['#a0aec0', '#2e7d32', '#3182ce', '#e53e3e'], // Grey, Green, Blue, Red
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { family: 'Outfit', size: 11 } }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // Populate Projects Table
+        function populateProjectsTable(data) {
+            const tbody = document.getElementById('proj-tbody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px; color: #718096;">
+                            Nenhum projeto cadastrado.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => {
+                // Status badge formatting
+                let badgeClass = 'badge-active';
+                if (p.status === 'Não iniciado') badgeClass = 'badge-pending';
+                else if (p.status === 'Encerrado') badgeClass = 'badge-active'; // Uses active layout (green/teal)
+                else if (p.status === 'Cancelado') badgeClass = 'badge-inactive';
+
+                // Date formatting
+                const dateStart = p.data_inicio ? new Date(p.data_inicio).toLocaleDateString('pt-BR') : '-';
+                const dateEnd = p.data_fim ? new Date(p.data_fim).toLocaleDateString('pt-BR') : '-';
+
+                return `
+                    <tr>
+                        <td style="font-weight: 600; color: var(--text-dark);">${p.nome_projeto}</td>
+                        <td><span class="badge" style="background-color: #f7fafc; border: 1px solid #edf2f7; color: #4a5568; font-weight: 600;">${p.nome_area || 'Sem Área'}</span></td>
+                        <td>${dateStart}</td>
+                        <td>${dateEnd}</td>
+                        <td><span class="badge ${badgeClass}">${p.status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMenuGerencial();
+            loadDashboardData();
+            loadProjectsData();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selecionar Colaboradores - Adoção Espiritual</title>
+    <title>Selecionar Integrantes da Equipe - Adoção Espiritual</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
         :root {
@@ -220,19 +219,18 @@
         }
     </style>
 </head>
-
 <body>
 
     <div class="modal-container">
         <i class="fa-solid fa-xmark close-btn" onclick="goBack()"></i>
 
-        <div id="training-title-container" style="display: none; margin-bottom: 15px; border-bottom: 1px dashed var(--border-light); padding-bottom: 10px;">
-            <span style="font-size: 0.85rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Treinamento</span>
-            <h3 id="training-title-text" style="font-size: 1.25rem; color: #333; font-weight: 700; margin-top: 2px;"></h3>
+        <div id="project-title-container" style="margin-bottom: 15px; border-bottom: 1px dashed var(--border-light); padding-bottom: 10px;">
+            <span style="font-size: 0.85rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">PROJETO</span>
+            <h3 id="project-title-text" style="font-size: 1.25rem; color: #333; font-weight: 700; margin-top: 2px;">--</h3>
         </div>
 
         <div class="modal-header">
-            <h2 class="modal-title">Colaboradores</h2>
+            <h2 class="modal-title">Integrantes da Equipe</h2>
             <div class="search-container">
                 <input type="text" class="search-input" placeholder="busca" id="search-input" onkeyup="filterList()">
             </div>
@@ -258,39 +256,54 @@
             ? `http://${window.location.hostname || 'localhost'}:3000/api`
             : '/api';
 
-        let currentInstructors = [];
+        const urlParams = new URLSearchParams(window.location.search);
+        const idProjeto = urlParams.get('id_projeto');
+        const nome = urlParams.get('nome') || '';
+        const cpf = urlParams.get('cpf') || '';
+
+        let currentTeamIds = new Set();
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const titleParam = urlParams.get('training_title');
-            if (titleParam) {
-                document.getElementById('training-title-text').innerText = decodeURIComponent(titleParam);
-                document.getElementById('training-title-container').style.display = 'block';
+            if (!idProjeto) {
+                alert("Erro: ID do projeto não encontrado na URL.");
+                return;
             }
-
-            const trainingId = urlParams.get('id');
-            const fromAtividades = urlParams.get('from') === 'atividades';
-            if (trainingId && !fromAtividades) {
-                try {
-                    const resInst = await fetch(`${API_URL}/treinamentos/${trainingId}/instrutores`);
-                    if (resInst.ok) {
-                        const instructors = await resInst.json();
-                        currentInstructors = instructors.map(ti => ti.id_colaborador);
-                    }
-                } catch (err) {
-                    console.error('Erro ao buscar instrutores:', err);
-                }
-            }
-
+            await loadProjectDetails();
+            await loadCurrentTeam();
             await loadCollaborators();
         });
+
+        async function loadProjectDetails() {
+            try {
+                const response = await fetch(`${API_URL}/projetos/${idProjeto}`);
+                if (response.ok) {
+                    const p = await response.json();
+                    document.getElementById('project-title-text').innerText = p.nome_projeto || '--';
+                }
+            } catch (err) {
+                console.error('Erro ao carregar detalhes do projeto:', err);
+            }
+        }
+
+        async function loadCurrentTeam() {
+            try {
+                const response = await fetch(`${API_URL}/projetos/${idProjeto}/equipe`);
+                if (response.ok) {
+                    const team = await response.json();
+                    team.forEach(member => {
+                        currentTeamIds.add(member.id_colaborador);
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar equipe atual:', err);
+            }
+        }
 
         async function loadCollaborators() {
             const listContainer = document.getElementById('collaborators-list');
             listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Carregando colaboradores...</div>';
 
             try {
-                // Fetch collaborators
                 const responseColab = await fetch(`${API_URL}/colaboradores`);
                 if (!responseColab.ok) throw new Error('Erro ao carregar colaboradores');
                 const colaboradores = await responseColab.json();
@@ -309,6 +322,12 @@
                     const item = document.createElement('div');
                     item.className = 'list-item';
                     item.dataset.idColaborador = c.id_colaborador;
+                    item.onclick = () => toggleSelection(item);
+
+                    // Check if they are already in the team
+                    if (currentTeamIds.has(c.id_colaborador)) {
+                        item.classList.add('selected');
+                    }
 
                     const checkbox = document.createElement('div');
                     checkbox.className = 'custom-checkbox';
@@ -319,24 +338,10 @@
                     const sigla = c.sigla_estado || '';
                     const cidadeEst = [c.cidade, sigla].filter(Boolean).join(' - ');
                     
-                    // Format: id_colaborador - nome_colaborador - cidade - sigla_estado
                     span.textContent = `${c.id_colaborador} - ${c.nome_colaborador}${cidadeEst ? ` - ${cidadeEst}` : ''}`;
 
                     item.appendChild(checkbox);
                     item.appendChild(span);
-
-                    // If collaborator is already an instructor, disable selection
-                    if (currentInstructors.includes(c.id_colaborador)) {
-                        item.style.opacity = '0.5';
-                        item.style.cursor = 'not-allowed';
-                        span.textContent += ' (Instrutor - Não permitido)';
-                        item.onclick = () => {
-                            alert(`O colaborador "${c.nome_colaborador}" já é INSTRUTOR deste treinamento e não pode ser adicionado como PARTICIPANTE.`);
-                        };
-                    } else {
-                        item.onclick = () => toggleSelection(item);
-                    }
-
                     listContainer.appendChild(item);
                 });
 
@@ -369,7 +374,6 @@
                     continue;
                 }
 
-                // Check if the text matches ANY of the search terms (OR condition)
                 const matchesAny = terms.some(term => text.includes(term));
                 
                 if (matchesAny) {
@@ -381,59 +385,19 @@
         }
 
         function goBack() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id') || '';
-            const mode = urlParams.get('mode') || '';
-            const nome = urlParams.get('nome') || '';
-            const cpf = urlParams.get('cpf') || '';
-            
-            if (window.location.href.includes('from=atividades') || document.referrer.includes('registro_atividades_realizadas.html')) {
-                window.location.href = `registro_atividades_realizadas.html?id=${id}&mode=${mode}&tab=tab-participantes`;
-            } else {
-                window.location.href = `registro_treinamentos.html?id=${id}&mode=${mode}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&tab=tab-participantes`;
-            }
+            window.location.href = `inclusao_projeto.html?mode=edit&id=${idProjeto}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&tab=tab-equipe&_t=${Date.now()}`;
         }
 
         async function saveSelection() {
             const selected = document.querySelectorAll('.list-item.selected');
-            if (selected.length === 0) {
-                alert("Por favor, selecione ao menos um colaborador.");
-                return;
-            }
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-            const fromAtividades = urlParams.get('from') === 'atividades';
-            
-            if (!id) {
-                alert(fromAtividades ? "Erro: ID da atividade não encontrado na URL." : "Erro: ID do treinamento não encontrado na URL.");
-                return;
-            }
-
             const collaboratorIds = Array.from(selected).map(item => parseInt(item.dataset.idColaborador, 10));
-
-            // Check if any selected collaborator is an instructor
-            if (!fromAtividades) {
-                for (const colabId of collaboratorIds) {
-                    if (currentInstructors.includes(colabId)) {
-                        const itemEl = Array.from(selected).find(item => parseInt(item.dataset.idColaborador, 10) === colabId);
-                        const colabName = itemEl ? itemEl.querySelector('.item-text').textContent : colabId;
-                        alert(`O colaborador "${colabName}" já é INSTRUTOR deste treinamento e não pode ser adicionado como PARTICIPANTE.`);
-                        return;
-                    }
-                }
-            }
             
             try {
                 const saveBtn = document.querySelector('.save-btn');
                 saveBtn.disabled = true;
                 saveBtn.innerText = 'Salvando...';
 
-                const endpoint = fromAtividades
-                    ? `${API_URL}/atividades_realizadas/${id}/participantes`
-                    : `${API_URL}/treinamentos/${id}/participantes`;
-
-                const response = await fetch(endpoint, {
+                const response = await fetch(`${API_URL}/projetos/${idProjeto}/equipe`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -443,16 +407,16 @@
 
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    alert("Participantes salvos com sucesso!");
+                    alert("Integrantes da equipe salvos com sucesso!");
                     goBack();
                 } else {
-                    alert("Erro ao salvar participantes: " + (result.error || 'Erro desconhecido.'));
+                    alert("Erro ao salvar integrantes da equipe: " + (result.error || 'Erro desconhecido.'));
                     saveBtn.disabled = false;
                     saveBtn.innerText = 'Salvar';
                 }
             } catch (err) {
-                console.error('Erro ao salvar participantes:', err);
-                alert('Erro de conexão ao salvar participantes.');
+                console.error('Erro ao salvar integrantes da equipe:', err);
+                alert('Erro de conexão ao salvar integrantes da equipe.');
                 const saveBtn = document.querySelector('.save-btn');
                 saveBtn.disabled = false;
                 saveBtn.innerText = 'Salvar';
@@ -460,5 +424,4 @@
         }
     </script>
 </body>
-
 </html>

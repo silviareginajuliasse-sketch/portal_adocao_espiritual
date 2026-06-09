@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selecionar Paróquia Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #777;
+            --border-light: #ddd;
+            --bg-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background-color: var(--bg-white);
+            width: 100%;
+            max-width: 580px;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Close Button */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.3rem;
+            color: #333;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: normal;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-red);
+        }
+
+        /* Header Area */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: #777;
+        }
+
+        .search-container {
+            width: 220px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            font-style: italic;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        /* List Area */
+        .paroquias-list {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            max-height: 380px;
+            overflow-y: auto;
+            margin-bottom: 25px;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        /* Custom Scrollbar */
+        .paroquias-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .paroquias-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .paroquias-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .paroquias-list::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Custom Radio box (single select) */
+        .custom-radio {
+            width: 22px;
+            height: 22px;
+            border: 1px solid #b5b5b5;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        .list-item.selected .custom-radio {
+            border-color: var(--primary-red);
+        }
+
+        .list-item.selected .custom-radio::after {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-red);
+            border-radius: 50%;
+        }
+
+        .item-text {
+            font-size: 1.05rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        /* Footer Area */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .save-btn {
+            background-color: #8b1e1e;
+            color: white;
+            border: none;
+            padding: 12px 50px;
+            border-radius: 30px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .save-btn:hover {
+            background-color: #721818;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="modal-container">
+        <a href="javascript:void(0)" class="close-btn" onclick="closePopup()">X</a>
+
+        <div class="modal-header">
+            <h2 class="modal-title">Paróquias Adoção Espiritual</h2>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="busca" id="search-input" onkeyup="filterList()">
+            </div>
+        </div>
+
+        <div class="paroquias-list" id="paroquias-list">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div class="modal-footer">
+            <button class="save-btn" onclick="saveSelection()">SALVAR</button>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        let selectedParoquiaId = null;
+
+        function closePopup() {
+            if (window.self !== window.top) {
+                window.parent.postMessage({ action: 'close' }, '*');
+            } else {
+                window.history.back();
+            }
+        }
+
+        function toggleSelection(element) {
+            const paroquiaId = parseInt(element.getAttribute('data-id'));
+            
+            // Radio-like behavior for single selection
+            const previouslySelected = document.querySelector('.list-item.selected');
+            if (previouslySelected && previouslySelected !== element) {
+                previouslySelected.classList.remove('selected');
+            }
+            
+            if (element.classList.contains('selected')) {
+                element.classList.remove('selected');
+                selectedParoquiaId = null;
+            } else {
+                element.classList.add('selected');
+                selectedParoquiaId = paroquiaId;
+            }
+        }
+
+        function filterList() {
+            const input = document.getElementById('search-input');
+            const filter = input.value.toLowerCase();
+            const list = document.getElementById('paroquias-list');
+            const items = list.getElementsByClassName('list-item');
+
+            for (let i = 0; i < items.length; i++) {
+                const text = items[i].getElementsByClassName('item-text')[0].innerText.toLowerCase();
+                if (text.indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+
+        async function loadData() {
+            try {
+                // Fetch parishes
+                let paroquias = [];
+                try {
+                    paroquias = await fetchData('paroquias/detalhes');
+                } catch (err) {
+                    console.warn("Could not fetch parishes from database, using mock data.", err);
+                }
+
+                if (!paroquias || paroquias.length === 0) {
+                    // Provide fallback mock data for testing offline/static layout
+                    paroquias = [
+                        { id_paroquia: 1, nome_paroquia: "Paróquia São José", cidade: "São José dos Campos", sigla_estado: "SP" },
+                        { id_paroquia: 2, nome_paroquia: "Paróquia Nossa Senhora da Paz", cidade: "São Paulo", sigla_estado: "SP" },
+                        { id_paroquia: 3, nome_paroquia: "Paróquia São Pedro", cidade: "Rio de Janeiro", sigla_estado: "RJ" },
+                        { id_paroquia: 4, nome_paroquia: "Catedral Metropolitana", cidade: "Belo Horizonte", sigla_estado: "MG" },
+                        { id_paroquia: 5, nome_paroquia: "Paróquia Santo Antônio", cidade: "Porto Alegre", sigla_estado: "RS" }
+                    ];
+                }
+
+                // Sort parishes alphabetically by name
+                paroquias.sort((a, b) => a.nome_paroquia.localeCompare(b.nome_paroquia));
+
+                const listContainer = document.getElementById('paroquias-list');
+                listContainer.innerHTML = '';
+
+                if (paroquias.length === 0) {
+                    listContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhuma paróquia cadastrada no sistema.</div>';
+                    return;
+                }
+
+                paroquias.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    div.setAttribute('data-id', p.id_paroquia);
+                    div.onclick = () => toggleSelection(div);
+                    div.ondblclick = () => {
+                        toggleSelection(div);
+                        saveSelection();
+                    };
+
+                    const locationText = (p.cidade && p.sigla_estado) ? ` (${p.cidade} - ${p.sigla_estado})` : '';
+
+                    div.innerHTML = `
+                        <div class="custom-radio"></div>
+                        <span class="item-text">${p.nome_paroquia}${locationText}</span>
+                    `;
+                    listContainer.appendChild(div);
+                });
+            } catch (err) {
+                console.error("Erro ao carregar dados das paróquias:", err);
+            }
+        }
+
+        function saveSelection() {
+            const selectedItem = document.querySelector('.list-item.selected');
+            if (!selectedItem) {
+                alert("Por favor, selecione uma paróquia.");
+                return;
+            }
+            const paroquiaId = parseInt(selectedItem.getAttribute('data-id'));
+            const paroquiaName = selectedItem.querySelector('.item-text').innerText;
+
+            if (window.self !== window.top) {
+                window.parent.postMessage({
+                    action: 'selectParoquia',
+                    id_paroquia: paroquiaId,
+                    nome_paroquia: paroquiaName
+                }, '*');
+            } else {
+                localStorage.setItem('temp_selected_paroquia', JSON.stringify({ id_paroquia: paroquiaId, nome_paroquia: paroquiaName }));
+                window.history.back();
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+
+</html>

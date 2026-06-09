@@ -293,11 +293,27 @@
             ? `http://${window.location.hostname || 'localhost'}:3000/api`
             : '/api';
 
+        let currentParticipants = [];
+
         document.addEventListener('DOMContentLoaded', async () => {
             loadTrainingTitle();
-            await loadInstructors();
 
             const urlParams = new URLSearchParams(window.location.search);
+            const trainingId = urlParams.get('id');
+            if (trainingId) {
+                try {
+                    const resPart = await fetch(`${API_URL}/treinamentos/${trainingId}/participantes`);
+                    if (resPart.ok) {
+                        const participants = await resPart.json();
+                        currentParticipants = participants.map(tp => tp.id_colaborador);
+                    }
+                } catch (err) {
+                    console.error('Erro ao buscar participantes:', err);
+                }
+            }
+
+            await loadInstructors();
+
             const agendaId = urlParams.get('agenda_id');
             if (agendaId) {
                 await loadAgendaData(agendaId);
@@ -372,6 +388,10 @@
                     const option = document.createElement('option');
                     option.value = c.id_colaborador;
                     option.textContent = c.nome_colaborador;
+                    if (currentParticipants.includes(c.id_colaborador)) {
+                        option.disabled = true;
+                        option.textContent += ' (Participante - Não permitido)';
+                    }
                     selectField.appendChild(option);
                 });
             } catch (err) {
@@ -512,6 +532,12 @@
             }
             if (!instructorVal) {
                 alert('O instrutor é obrigatório.');
+                return;
+            }
+            if (currentParticipants.includes(parseInt(instructorVal))) {
+                const selectEl = document.getElementById('select-instructor');
+                const selectedText = selectEl.options[selectEl.selectedIndex].text;
+                alert(`O colaborador "${selectedText}" já está cadastrado como PARTICIPANTE neste treinamento e não pode ser adicionado como INSTRUTOR.`);
                 return;
             }
             if (!pautaVal) {

@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa de Satisfação - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-maroon: #7b0000;
+            --dark-maroon: #5a0000;
+            --text-dark: #2d3748;
+            --text-gray: #718096;
+            --border-light: #e2e8f0;
+            --bg-gray: #f7fafc;
+            --accent-green: #2e7d32;
+            --accent-red: #c53030;
+            --accent-orange: #dd6b20;
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title-text {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.1;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-id {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chevron-icon {
+            font-size: 10px;
+            color: #3498db;
+            background: #e1f0fa;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .chevron-icon.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Container Layout */
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .survey-card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            width: 100%;
+            max-width: 700px;
+            padding: 40px;
+            border: 1px solid #edf2f7;
+            position: relative;
+        }
+
+        .survey-title-section {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f7fafc;
+            padding-bottom: 20px;
+        }
+
+        .survey-title {
+            color: var(--primary-maroon);
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .survey-subtitle {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-maroon);
+            margin: 25px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-section-title i {
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #2d3748;
+        }
+
+        .form-label span.required {
+            color: var(--accent-red);
+        }
+
+        .input-field, .select-field {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            outline: none;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background-color: #fcfcfc;
+        }
+
+        .input-field:focus, .select-field:focus {
+            border-color: var(--primary-maroon);
+            box-shadow: 0 0 0 3px rgba(123, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        .flex-row-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .flex-row-group > .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Star Rating styles */
+        .stars-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .star-rating {
+            font-size: 2rem;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .star-rating.selected, .star-rating:hover {
+            color: #f1c40f;
+            transform: scale(1.1);
+        }
+
+        /* Features Satisfaction table */
+        .features-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .features-grid th {
+            text-align: left;
+            padding: 10px;
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .features-grid td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 0.95rem;
+        }
+
+        .features-grid tr:hover {
+            background-color: #fafafa;
+        }
+
+        .rating-cell-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .rating-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        .rating-btn:hover {
+            background-color: #f7fafc;
+        }
+
+        .rating-btn.active[data-val="Muito Satisfeito"], .rating-btn.active[data-val="Satisfeito"] {
+            background-color: #e6fffa;
+            border-color: #319795;
+            color: #234e52;
+        }
+
+        .rating-btn.active[data-val="Passivo"] {
+            background-color: #feebc8;
+            border-color: #dd6b20;
+            color: #7b341e;
+        }
+
+        .rating-btn.active[data-val="Insatisfeito"], .rating-btn.active[data-val="Muito Insatisfeito"] {
+            background-color: #fed7d7;
+            border-color: #e53e3e;
+            color: #742a2a;
+        }
+
+        .rating-btn.active[data-val="Não Utilizo"] {
+            background-color: #edf2f7;
+            border-color: #718096;
+            color: #2d3748;
+        }
+
+        /* NPS Slider Styles */
+        .nps-slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #fdfefe;
+            border: 1px dashed var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .nps-emoji-display {
+            font-size: 3rem;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .nps-emoji-label {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-top: -5px;
+        }
+
+        .nps-score-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-maroon);
+        }
+
+        .nps-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .nps-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--primary-maroon);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+
+        .nps-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .nps-ticks {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 5px;
+        }
+
+        .nps-tick {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-gray);
+        }
+
+        /* Anonymous checkbox */
+        .anon-checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f7fafc;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            cursor: pointer;
+        }
+
+        .anon-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Button Group & Form Action Buttons */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .btn-submit {
+            background-color: var(--primary-maroon);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1.5;
+            min-width: 150px;
+            box-shadow: 0 4px 12px rgba(123, 0, 0, 0.15);
+        }
+
+        .btn-submit:hover {
+            background-color: var(--dark-maroon);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(123, 0, 0, 0.2);
+        }
+
+        .btn-cancel {
+            background-color: transparent;
+            color: var(--primary-maroon);
+            border: 2px solid var(--primary-maroon);
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-cancel:hover {
+            background-color: #fcebeb;
+            color: var(--dark-maroon);
+            border-color: var(--dark-maroon);
+            transform: translateY(-1px);
+        }
+
+        .btn-optout {
+            background-color: transparent;
+            color: #718096;
+            border: 2px solid #cbd5e0;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1.2;
+            min-width: 150px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-optout:hover {
+            background-color: #f7fafc;
+            color: #2d3748;
+            border-color: #a0aec0;
+            transform: translateY(-1px);
+        }
+
+        /* Success Card overlay */
+        .success-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            border-radius: 16px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            z-index: 10;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            color: var(--accent-green);
+            margin-bottom: 20px;
+            animation: bounce 0.6s ease;
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Sidebar Navigation Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #8b0000;
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container" onclick="window.location.href='menu_principal_2.html'" style="cursor: pointer;">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-avatar" id="user-initials">
+                    <i class="fa-solid fa-user" style="color: #ccc; font-size: 20px;"></i>
+                </div>
+                <div class="chevron-icon" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">Seu perfil é <strong>Coordenador Nacional</strong></div>
+                        <div class="decorative-divider"><span></span><span></span><span></span></div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
+            <li><a href="calendario.html" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <!-- Content Area -->
+    <div class="main-content">
+        <div class="survey-card">
+            <!-- Success Overlay Card -->
+            <div class="success-overlay" id="success-card">
+                <i class="fa-solid fa-circle-check success-icon"></i>
+                <h2 style="font-size: 1.8rem; font-weight: 700; color: #2d3748; margin-bottom: 12px;">Obrigado pelo seu Feedback!</h2>
+                <p style="color: var(--text-gray); font-size: 1rem; max-width: 400px; line-height: 1.5; margin-bottom: 25px;">
+                    Suas respostas foram gravadas e ajudarão nossa equipe a aprimorar o Portal da Adoção Espiritual.
+                </p>
+                <button type="button" class="btn-submit" style="width: auto; padding: 12px 30px;" onclick="window.location.href='menu_principal_2.html'">
+                    Voltar ao Início
+                </button>
+            </div>
+
+            <div class="survey-title-section">
+                <h1 class="survey-title">Pesquisa de Satisfação</h1>
+                <p class="survey-subtitle">Sua opinião é vital para melhorarmos a gestão do nosso projeto.</p>
+            </div>
+
+            <form id="form-satisfacao" onsubmit="submitSurvey(event)">
+                <!-- Perfil e Frequência -->
+                <div class="form-section-title">
+                    <i class="fa-solid fa-circle-user"></i> Identificação e Perfil
+                </div>
+                <div class="flex-row-group">
+                    <div class="form-group">
+                        <label class="form-label" for="select-funcao">Sua Função no Projeto <span class="required">*</span></label>
+                        <select class="select-field" id="select-funcao" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="Coordenador Regional">Coordenador Regional</option>
+                            <option value="Coordenador Paroquial">Coordenador Paroquial</option>
+                            <option value="Colaborador de Equipe">Colaborador de Equipe / Apoio</option>
+                            <option value="Administrador">Administrador</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="select-frequencia">Frequência de Uso do Portal <span class="required">*</span></label>
+                        <select class="select-field" id="select-frequencia" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="Diariamente">Diariamente</option>
+                            <option value="Algumas vezes por semana">Algumas vezes por semana</option>
+                            <option value="Uma vez por semana">Uma vez por semana</option>
+                            <option value="Quinzenalmente ou menos">Quinzenalmente ou menos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Usabilidade -->
+                <div class="form-section-title">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Usabilidade e Experiência
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Facilidade de Navegação (encontrar o que precisa) <span class="required">*</span></label>
+                    <div class="stars-container" id="stars-navegacao">
+                        <i class="fa-solid fa-star star-rating" data-idx="1"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="2"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="3"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="4"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="5"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Visual e Clareza das Telas <span class="required">*</span></label>
+                    <div class="stars-container" id="stars-visual">
+                        <i class="fa-solid fa-star star-rating" data-idx="1"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="2"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="3"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="4"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="5"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Experiência de Uso no Celular (Mobile)</label>
+                    <div class="stars-container" id="stars-celular">
+                        <i class="fa-solid fa-star star-rating" data-idx="1"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="2"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="3"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="4"></i>
+                        <i class="fa-solid fa-star star-rating" data-idx="5"></i>
+                    </div>
+                </div>
+
+                <!-- Avaliação de Ferramentas -->
+                <div class="form-section-title">
+                    <i class="fa-solid fa-puzzle-piece"></i> Avaliação dos Módulos do Portal
+                </div>
+                
+                <table class="features-grid">
+                    <thead>
+                        <tr>
+                            <th>Módulo / Funcionalidade</th>
+                            <th>Sua Avaliação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-feat="colaboradores">
+                            <td>Cadastro de Colaboradores e Lideranças</td>
+                            <td>
+                                <div class="rating-cell-group">
+                                    <button type="button" class="rating-btn" data-val="Satisfeito">Satisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Passivo">Passivo</button>
+                                    <button type="button" class="rating-btn" data-val="Insatisfeito">Insatisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Não Utilizo">Não Utilizo</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-feat="projetos">
+                            <td>Gestão de Projetos (Tarefas e Reuniões)</td>
+                            <td>
+                                <div class="rating-cell-group">
+                                    <button type="button" class="rating-btn" data-val="Satisfeito">Satisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Passivo">Passivo</button>
+                                    <button type="button" class="rating-btn" data-val="Insatisfeito">Insatisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Não Utilizo">Não Utilizo</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-feat="treinamentos">
+                            <td>Gestão de Treinamentos (Agenda e Presenças)</td>
+                            <td>
+                                <div class="rating-cell-group">
+                                    <button type="button" class="rating-btn" data-val="Satisfeito">Satisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Passivo">Passivo</button>
+                                    <button type="button" class="rating-btn" data-val="Insatisfeito">Insatisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Não Utilizo">Não Utilizo</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-feat="aniversariantes">
+                            <td>Gerenciador de Banners de Aniversariantes</td>
+                            <td>
+                                <div class="rating-cell-group">
+                                    <button type="button" class="rating-btn" data-val="Satisfeito">Satisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Passivo">Passivo</button>
+                                    <button type="button" class="rating-btn" data-val="Insatisfeito">Insatisfeito</button>
+                                    <button type="button" class="rating-btn" data-val="Não Utilizo">Não Utilizo</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label" for="select-erros">Com que frequência você encontra erros/travamentos? <span class="required">*</span></label>
+                    <select class="select-field" id="select-erros" required>
+                        <option value="" disabled selected>Selecione...</option>
+                        <option value="Nunca">Nunca encontro erros</option>
+                        <option value="Raramente">Raramente (uma vez ou outra)</option>
+                        <option value="Às vezes">Às vezes (em telas pontuais)</option>
+                        <option value="Frequentemente">Frequentemente (atrapalha meu uso)</option>
+                    </select>
+                </div>
+
+                <!-- NPS Slider -->
+                <div class="form-section-title">
+                    <i class="fa-solid fa-heart-circle-check"></i> Recomendação Geral (NPS)
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        Em uma escala de 0 a 10, qual a probabilidade de recomendar o Portal da Adoção Espiritual para outro coordenador ou colaborador? <span class="required">*</span>
+                    </label>
+                    
+                    <div class="nps-slider-container">
+                        <div class="nps-emoji-display" id="nps-emoji">😊</div>
+                        <div class="nps-emoji-label" id="nps-label">Passivo</div>
+                        <div class="nps-score-value">Nota: <span id="nps-score-txt">7</span>/10</div>
+                        
+                        <input type="range" class="nps-slider" id="nps-range" min="0" max="10" value="7" oninput="updateNPSDisplay(this.value)">
+                        
+                        <div class="nps-ticks">
+                            <span class="nps-tick">0</span>
+                            <span class="nps-tick">1</span>
+                            <span class="nps-tick">2</span>
+                            <span class="nps-tick">3</span>
+                            <span class="nps-tick">4</span>
+                            <span class="nps-tick">5</span>
+                            <span class="nps-tick">6</span>
+                            <span class="nps-tick">7</span>
+                            <span class="nps-tick">8</span>
+                            <span class="nps-tick">9</span>
+                            <span class="nps-tick">10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observação -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label" for="textarea-obs">Como podemos melhorar o portal para apoiar a sua missão? (Sugestões/Críticas)</label>
+                    <textarea class="input-field" id="textarea-obs" placeholder="Escreva aqui..." rows="4" maxlength="500" style="resize: vertical;" oninput="updateCharCounter(this)"></textarea>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); text-align: right; margin-top: -4px;" id="char-counter">0 / 500</div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn-optout" id="btn-optout">Não desejo responder</button>
+                    <button type="button" class="btn-cancel" onclick="window.location.href='menu_principal_2.html'">Responder Depois</button>
+                    <button type="submit" class="btn-submit">Responder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/header.js"></script>
+    <script>
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+        
+        let ratings = {
+            navegacao: 0,
+            visual: 0,
+            celular: 0
+        };
+
+        let featureSatisfaction = {
+            colaboradores: null,
+            projetos: null,
+            treinamentos: null,
+            aniversariantes: null
+        };
+
+        // Navigation Menu Drawer
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        // Star rating setup
+        function initStars(groupName) {
+            const container = document.getElementById(`stars-${groupName}`);
+            const stars = container.querySelectorAll('.star-rating');
+            
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const val = parseInt(star.getAttribute('data-idx'));
+                    ratings[groupName] = val;
+                    
+                    // Highlight selected and previous stars
+                    stars.forEach(s => {
+                        const idx = parseInt(s.getAttribute('data-idx'));
+                        if (idx <= val) {
+                            s.classList.add('selected');
+                        } else {
+                            s.classList.remove('selected');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseover', () => {
+                    const val = parseInt(star.getAttribute('data-idx'));
+                    stars.forEach(s => {
+                        const idx = parseInt(s.getAttribute('data-idx'));
+                        if (idx <= val) {
+                            s.style.color = '#f1c40f';
+                        } else {
+                            s.style.color = '#e2e8f0';
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', () => {
+                    stars.forEach(s => {
+                        const idx = parseInt(s.getAttribute('data-idx'));
+                        if (ratings[groupName] >= idx) {
+                            s.style.color = '#f1c40f';
+                        } else {
+                            s.style.color = '#e2e8f0';
+                        }
+                    });
+                });
+            });
+        }
+
+        // Initialize features satisfaction buttons
+        function initFeatures() {
+            const rows = document.querySelectorAll('.features-grid tbody tr');
+            rows.forEach(row => {
+                const feat = row.getAttribute('data-feat');
+                const btns = row.querySelectorAll('.rating-btn');
+                
+                btns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        btns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        featureSatisfaction[feat] = btn.getAttribute('data-val');
+                    });
+                });
+            });
+        }
+
+        // NPS Interactive representation
+        function updateNPSDisplay(val) {
+            document.getElementById('nps-score-txt').innerText = val;
+            const emojiEl = document.getElementById('nps-emoji');
+            const labelEl = document.getElementById('nps-label');
+            
+            const n = parseInt(val);
+            if (n <= 4) {
+                emojiEl.innerText = '😢';
+                labelEl.innerText = 'Insatisfeito';
+                labelEl.style.color = 'var(--accent-red)';
+            } else if (n <= 6) {
+                emojiEl.innerText = '😕';
+                labelEl.innerText = 'Insatisfeito';
+                labelEl.style.color = 'var(--accent-red)';
+            } else if (n <= 8) {
+                emojiEl.innerText = '😐';
+                labelEl.innerText = 'Passivo';
+                labelEl.style.color = 'var(--accent-orange)';
+            } else {
+                emojiEl.innerText = '😁';
+                labelEl.innerText = 'Satisfeito';
+                labelEl.style.color = 'var(--accent-green)';
+            }
+        }
+
+        // Char count for suggestion
+        function updateCharCounter(el) {
+            const len = el.value.length;
+            document.getElementById('char-counter').innerText = `${len} / 500`;
+        }
+
+        // Submit Survey Form Handler
+        async function submitSurvey(e) {
+            e.preventDefault();
+
+            const funcao = document.getElementById('select-funcao').value;
+            const frequencia_uso = document.getElementById('select-frequencia').value;
+            const frequencia_erros = document.getElementById('select-erros').value;
+            const nps = document.getElementById('nps-range').value;
+            const observacao = document.getElementById('textarea-obs').value.trim();
+            if (ratings.navegacao === 0 || ratings.visual === 0) {
+                alert('Por favor, avalie a Facilidade de Navegação e o Visual com estrelas.');
+                return;
+            }
+
+            const colabId = localStorage.getItem('user_id_colaborador');
+            if (!colabId || colabId === 'null' || colabId === 'undefined') {
+                alert('Identificação do colaborador não encontrada. Por favor, faça login novamente para responder a pesquisa.');
+                return;
+            }
+
+            const payload = {
+                id_colaborador: parseInt(colabId),
+                funcao,
+                frequencia_uso,
+                nota_navegacao: ratings.navegacao,
+                nota_visual: ratings.visual,
+                nota_celular: ratings.celular > 0 ? ratings.celular : null,
+                satisfacao_colaboradores: featureSatisfaction.colaboradores,
+                satisfacao_projetos: featureSatisfaction.projetos,
+                satisfacao_treinamentos: featureSatisfaction.treinamentos,
+                satisfacao_aniversariantes: featureSatisfaction.aniversariantes,
+                frequencia_erros,
+                nps,
+                observacao
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/pesquisa_satisfacao/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    localStorage.setItem('adocao_survey_responded_' + colabId, 'true');
+                    const pill = document.getElementById('survey-notification-pill');
+                    if (pill) pill.remove();
+                    // Show success block overlay
+                    document.getElementById('success-card').style.display = 'flex';
+                } else {
+                    throw new Error(result.error || 'Erro ao enviar pesquisa.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert(err.message);
+            }
+        }
+
+        // Document Ready Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            initStars('navegacao');
+            initStars('visual');
+            initStars('celular');
+            initFeatures();
+            updateNPSDisplay(7);
+
+            const optoutBtn = document.getElementById('btn-optout');
+            if (optoutBtn) {
+                optoutBtn.addEventListener('click', async () => {
+                    const colabId = localStorage.getItem('user_id_colaborador');
+                    if (!colabId || colabId === 'null' || colabId === 'undefined') {
+                        alert('Identificação do colaborador não encontrada. Não é possível salvar a opção de recusa.');
+                        return;
+                    }
+
+                    const payload = {
+                        id_colaborador: parseInt(colabId),
+                        recusado: true
+                    };
+
+                    try {
+                        const res = await fetch(`${API_URL}/pesquisa_satisfacao/save`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        const result = await res.json();
+                        if (res.ok && result.success) {
+                            localStorage.setItem('adocao_survey_responded_' + colabId, 'true');
+                            const pill = document.getElementById('survey-notification-pill');
+                            if (pill) pill.remove();
+                            window.location.href = 'menu_principal_2.html';
+                        } else {
+                            throw new Error(result.error || 'Erro ao salvar opção de não responder.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert(err.message);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

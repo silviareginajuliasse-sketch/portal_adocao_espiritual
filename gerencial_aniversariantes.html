@@ -924,7 +924,7 @@
             <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
             <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
             <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
-            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="calendario.html" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
             <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
             <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
             <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
@@ -1094,7 +1094,7 @@
 
                     return `
                         <a href="${href}" class="gerencial-item ${activeClass}">
-                            ${item.imagem ? `<img class="gerencial-icon" src="${item.imagem}" alt="${item.nome_menu}" />` : ''}
+                            ${item.imagem ? `<img class="gerencial-icon" src="${item.imagem}" alt="${item.nome_menu}" />` : '<i class="fa-solid fa-square-poll-vertical" style="font-size: 24px; margin-bottom: 8px; color: #8b1e1e;"></i>'}
                             <span class="gerencial-label">${item.nome_menu}</span>
                         </a>
                     `;

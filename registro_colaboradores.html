@@ -1153,7 +1153,7 @@
             <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner
                     aniversariantes</a>
             </li>
-            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
+            <li><a href="calendario.html" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
             </li>
             <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
             <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a>
@@ -1205,7 +1205,10 @@
                                 Treinamentos</button>
                             <button type="button" class="tab-btn" id="tab-btn-atividades" onclick="switchTab(event, 'tab-atividades')"><i
                                     class="fa-solid fa-list-ul" style="color: #1652b4; margin-right: 8px;"></i>
-                                Atividades<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #0056b3; transition: transform 0.2s;" onclick="event.stopPropagation(); openAtividadesModal()" title="Adicionar Atividade" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i></button>
+                                Atividades<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAtividadesModal()" title="Adicionar Atividade" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i></button>
+                            <button type="button" class="tab-btn" id="tab-btn-lideranca" onclick="switchTab(event, 'tab-lideranca')"><i
+                                    class="fa-solid fa-user-flag" style="color: #9b59b6; margin-right: 8px;"></i>
+                                LIDERANÇAS<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openLiderancasModal()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i></button>
                         </div>
                         <!-- Tab: Dados Pessoais -->
                         <div id="tab-dados" class="tab-content active">
@@ -1478,6 +1481,19 @@
                             </div>
 
                             <div class="list-container" id="collaborator-activities-list">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Tab: Liderança -->
+                        <div id="tab-lideranca" class="tab-content">
+                            <div class="search-row" style="justify-content: flex-end;">
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="busca" oninput="filterLeadership(this.value)">
+                                </div>
+                            </div>
+
+                            <div class="list-container" id="collaborator-leadership-list">
                                 <!-- Populated dynamically -->
                             </div>
                         </div>
@@ -1837,7 +1853,8 @@
                     updateTabStates();
                     await Promise.all([
                         loadCollaboratorTrainings(),
-                        loadCollaboratorActivities()
+                        loadCollaboratorActivities(),
+                        loadCollaboratorLeadership()
                     ]);
                 } else {
                     document.getElementById('metadata-atualizado').innerText = formatDate(new Date().toISOString());
@@ -2059,7 +2076,8 @@
                 updateTabStates();
                 await Promise.all([
                     loadCollaboratorTrainings(),
-                    loadCollaboratorActivities()
+                    loadCollaboratorActivities(),
+                    loadCollaboratorLeadership()
                 ]);
 
             } catch (err) {
@@ -2099,7 +2117,7 @@
             const deleteBtn = document.getElementById('btn-delete');
             const saveBtn   = document.getElementById('btn-save');
             if (deleteBtn && saveBtn) {
-                if (tabId === 'tab-treinamentos' || tabId === 'tab-atividades') {
+                if (tabId === 'tab-treinamentos' || tabId === 'tab-atividades' || tabId === 'tab-lideranca') {
                     deleteBtn.style.display = 'none';
                     saveBtn.style.display   = 'none';
                 } else if (tabId === 'tab-paroquias') {
@@ -2121,8 +2139,10 @@
             }
             const modalTr = document.getElementById('modal-treinamentos');
             const modalAt = document.getElementById('modal-atividades');
+            const modalLd = document.getElementById('modal-lideranca');
             if (event.target == modalTr) closeModal();
             if (event.target == modalAt) closeAtividadesModal();
+            if (event.target == modalLd) closeLiderancaModal();
         };
 
         function openModal() {
@@ -2140,6 +2160,22 @@
         }
         function closeAtividadesModal() { document.getElementById('modal-atividades').style.display  = 'none'; }
 
+        function openLiderancasModal() {
+            if (document.getElementById('tab-btn-lideranca') && document.getElementById('tab-btn-lideranca').hasAttribute('disabled')) {
+                return;
+            }
+            document.getElementById('modal-lideranca-title').innerText = 'Cadastrar Liderança';
+            document.getElementById('lideranca-id-movimentacao').value = '';
+            document.getElementById('select-tipo-lideranca').value = '';
+            document.getElementById('input-lideranca-inicio').value = '';
+            document.getElementById('input-lideranca-fim').value = '';
+            document.getElementById('select-lideranca-status').value = 'Ativo';
+            document.getElementById('input-lideranca-observacao').value = '';
+            
+            document.getElementById('modal-lideranca').style.display = 'flex';
+        }
+        function closeLiderancaModal() { document.getElementById('modal-lideranca').style.display = 'none'; }
+
         let collaboratorTrainings = [];
         let allTrainings = [];
         let collaboratorActivities = [];
@@ -2147,7 +2183,8 @@
         function updateTabStates() {
             const trTabBtn = document.getElementById('tab-btn-treinamentos');
             const atTabBtn = document.getElementById('tab-btn-atividades');
-            if (!trTabBtn || !atTabBtn) return;
+            const ldTabBtn = document.getElementById('tab-btn-lideranca');
+            if (!trTabBtn || !atTabBtn || !ldTabBtn) return;
             
             if (!currentColaboradorId) {
                 trTabBtn.setAttribute('disabled', 'true');
@@ -2159,6 +2196,12 @@
                 atTabBtn.style.cursor = 'not-allowed';
                 const atPlus = atTabBtn.querySelector('.fa-circle-plus');
                 if (atPlus) atPlus.style.pointerEvents = 'none';
+
+                ldTabBtn.setAttribute('disabled', 'true');
+                ldTabBtn.style.opacity = '0.5';
+                ldTabBtn.style.cursor = 'not-allowed';
+                const ldPlus = ldTabBtn.querySelector('.fa-circle-plus');
+                if (ldPlus) ldPlus.style.pointerEvents = 'none';
             } else {
                 trTabBtn.removeAttribute('disabled');
                 trTabBtn.style.opacity = '1';
@@ -2169,6 +2212,12 @@
                 atTabBtn.style.cursor = 'pointer';
                 const atPlus = atTabBtn.querySelector('.fa-circle-plus');
                 if (atPlus) atPlus.style.pointerEvents = 'auto';
+
+                ldTabBtn.removeAttribute('disabled');
+                ldTabBtn.style.opacity = '1';
+                ldTabBtn.style.cursor = 'pointer';
+                const ldPlus = ldTabBtn.querySelector('.fa-circle-plus');
+                if (ldPlus) ldPlus.style.pointerEvents = 'auto';
             }
         }
 
@@ -2330,6 +2379,166 @@
                 } catch (err) {
                     console.error('Erro ao excluir atividade:', err);
                     alert('Erro ao excluir associação: ' + err.message);
+                }
+            }
+        }
+
+        let collaboratorLeadership = [];
+
+        async function loadCollaboratorLeadership() {
+            if (!currentColaboradorId) return;
+            try {
+                const res = await fetch(`${API_URL}/colaboradores/${currentColaboradorId}/lideranca`);
+                if (!res.ok) throw new Error('Erro ao buscar lideranças do colaborador.');
+                collaboratorLeadership = await res.json();
+                renderCollaboratorLeadership();
+            } catch (err) {
+                console.error('Erro ao carregar lideranças do colaborador:', err);
+            }
+        }
+
+        function renderCollaboratorLeadership(filterText = '') {
+            const listContainer = document.getElementById('collaborator-leadership-list');
+            if (!listContainer) return;
+            
+            listContainer.innerHTML = '';
+            
+            const filtered = collaboratorLeadership.filter(lead => 
+                (lead.tipo_lideranca || '').toLowerCase().includes(filterText.toLowerCase()) ||
+                (lead.status || '').toLowerCase().includes(filterText.toLowerCase()) ||
+                (lead.observacao || '').toLowerCase().includes(filterText.toLowerCase())
+            );
+            
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhuma liderança registrada.</div>';
+                return;
+            }
+            
+            filtered.forEach(lead => {
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.style.display = 'flex';
+                item.style.alignItems = 'center';
+                item.style.gap = '15px';
+                
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.gap = '10px';
+                actions.style.color = '#777';
+
+                const editIcon = document.createElement('i');
+                editIcon.className = 'fa-regular fa-pen-to-square';
+                editIcon.style.cursor = 'pointer';
+                editIcon.title = 'Editar Liderança';
+                editIcon.onclick = (e) => {
+                    e.stopPropagation();
+                    editLeadership(lead);
+                };
+
+                const trash = document.createElement('i');
+                trash.className = 'fa-regular fa-trash-can trash-icon';
+                trash.style.cursor = 'pointer';
+                trash.title = 'Remover Liderança';
+                trash.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteLeadership(lead.id_movimentacao);
+                };
+                
+                actions.appendChild(editIcon);
+                actions.appendChild(trash);
+
+                const span = document.createElement('span');
+                const formattedInicio = formatSQLDate(lead.data_inicio);
+                const formattedFim = lead.data_fim ? formatSQLDate(lead.data_fim) : 'Ativo';
+                const statusBadge = `<span style="font-weight: 600; color: ${lead.status === 'Ativo' ? '#2e7d32' : '#c0392b'};">${lead.status}</span>`;
+                let leadText = `<strong>${lead.tipo_lideranca}</strong> - Período: ${formattedInicio} a ${formattedFim} - Status: ${statusBadge}`;
+                if (lead.observacao && lead.observacao.trim() !== '') {
+                    leadText += ` <span style="color: #7f8c8d; font-size: 0.9rem; font-style: italic;">(${lead.observacao})</span>`;
+                }
+                span.innerHTML = leadText;
+                
+                item.appendChild(actions);
+                item.appendChild(span);
+                listContainer.appendChild(item);
+            });
+        }
+
+        function filterLeadership(value) {
+            renderCollaboratorLeadership(value);
+        }
+
+        function editLeadership(lead) {
+            document.getElementById('modal-lideranca-title').innerText = 'Editar Liderança';
+            document.getElementById('lideranca-id-movimentacao').value = lead.id_movimentacao;
+            document.getElementById('select-tipo-lideranca').value = lead.tipo_lideranca;
+            document.getElementById('input-lideranca-inicio').value = formatSQLDate(lead.data_inicio);
+            document.getElementById('input-lideranca-fim').value = lead.data_fim ? formatSQLDate(lead.data_fim) : '';
+            document.getElementById('select-lideranca-status').value = lead.status;
+            document.getElementById('input-lideranca-observacao').value = lead.observacao || '';
+            
+            document.getElementById('modal-lideranca').style.display = 'flex';
+        }
+
+        async function saveLeadership(event) {
+            event.preventDefault();
+            if (!currentColaboradorId) return;
+
+            const id_movimentacao = document.getElementById('lideranca-id-movimentacao').value;
+            const tipo_lideranca = document.getElementById('select-tipo-lideranca').value;
+            const data_inicio = document.getElementById('input-lideranca-inicio').value;
+            const data_fim = document.getElementById('input-lideranca-fim').value;
+            const status = document.getElementById('select-lideranca-status').value;
+            const observacao = document.getElementById('input-lideranca-observacao').value;
+
+            if (!tipo_lideranca || !data_inicio || !status) {
+                alert('Por favor, preencha todos os campos obrigatórios (*).');
+                return;
+            }
+
+            const payload = {
+                id_colaborador: parseInt(currentColaboradorId),
+                id_movimentacao: id_movimentacao ? parseInt(id_movimentacao) : null,
+                tipo_lideranca,
+                data_inicio,
+                data_fim,
+                status,
+                observacao
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/colaborador_lideranca/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    closeLiderancaModal();
+                    await loadCollaboratorLeadership();
+                } else {
+                    throw new Error(result.error || 'Erro ao salvar liderança.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert(err.message);
+            }
+        }
+
+        async function deleteLeadership(idMovimentacao) {
+            if (confirm('Deseja realmente excluir este registro de liderança?')) {
+                try {
+                    const res = await fetch(`${API_URL}/colaborador_lideranca/${idMovimentacao}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await res.json();
+                    if (res.ok && result.success) {
+                        await loadCollaboratorLeadership();
+                    } else {
+                        throw new Error(result.error || 'Erro ao excluir liderança.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert(err.message);
                 }
             }
         }
@@ -2518,6 +2727,70 @@
                 </div>
                 <button type="button" class="btn-modal-save" onclick="closeAtividadesModal()">Salvar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Lideranças -->
+    <div id="modal-lideranca" class="modal-overlay">
+        <div class="modal-content-card">
+            <i class="fa-solid fa-xmark modal-close" onclick="closeLiderancaModal()"></i>
+
+            <div class="modal-header">
+                <span class="modal-title" id="modal-lideranca-title">Cadastro de Liderança</span>
+            </div>
+
+            <form id="form-lideranca" onsubmit="saveLeadership(event)">
+                <input type="hidden" id="lideranca-id-movimentacao">
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="form-label" for="select-tipo-lideranca" style="color: #7f8c8d; font-size: 0.95rem;">Tipo de Liderança *</label>
+                    <div class="input-wrapper">
+                        <select class="select-field" id="select-tipo-lideranca" required style="width: 100%;">
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="Colaborador paroquial">Colaborador paroquial</option>
+                            <option value="Coordenador paroquial">Coordenador paroquial</option>
+                            <option value="Coordenador diocesano">Coordenador diocesano</option>
+                            <option value="Coordenador de missão">Coordenador de missão</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label" for="input-lideranca-inicio" style="color: #7f8c8d; font-size: 0.95rem;">Data de Início *</label>
+                        <input type="text" class="input-field" id="input-lideranca-inicio" placeholder="DD/MM/YYYY" maxlength="10" oninput="maskDate(this)" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label" for="input-lideranca-fim" style="color: #7f8c8d; font-size: 0.95rem;">Data de Fim</label>
+                        <input type="text" class="input-field" id="input-lideranca-fim" placeholder="DD/MM/YYYY" maxlength="10" oninput="maskDate(this)">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="form-label" for="select-lideranca-status" style="color: #7f8c8d; font-size: 0.95rem;">Status *</label>
+                    <div class="input-wrapper">
+                        <select class="select-field" id="select-lideranca-status" required style="width: 100%;">
+                            <option value="Ativo">Ativo</option>
+                            <option value="Inativo">Inativo</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label class="form-label" for="input-lideranca-observacao" style="color: #7f8c8d; font-size: 0.95rem;">Observação</label>
+                    <textarea class="input-field" id="input-lideranca-observacao" placeholder="Observações adicionais..." maxlength="255" style="width: 100%; height: 60px; resize: vertical; box-sizing: border-box;"></textarea>
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="modal-logo">
+                        <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo">
+                        <div style="font-size: 0.7rem; font-weight: 600;">Adoção<br>Espiritual</div>
+                    </div>
+                    <button type="submit" class="btn-modal-save">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
 </body>

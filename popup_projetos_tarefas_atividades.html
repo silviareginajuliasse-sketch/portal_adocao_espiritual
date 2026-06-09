@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusão de Atividade - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #7f8c8d;
+            --border-color: #eee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .help-card {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-content-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: nowrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .form-label {
+            font-size: 0.95rem;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            background-color: white;
+            transition: border-color 0.2s;
+            height: 38px;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-red);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 15px;
+            padding-right: 35px;
+        }
+
+        .btn-action {
+            padding: 8px 32px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-style: italic;
+            border-radius: 20px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            height: 38px;
+        }
+
+        .btn-delete {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1.5px solid var(--primary-red);
+        }
+
+        .btn-delete:hover {
+            background-color: #faf5f5;
+        }
+
+        .btn-save {
+            background-color: #ae3326;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-save:hover {
+            background-color: #8b251a;
+        }
+
+        @media (max-width: 580px) {
+            .form-row {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            .form-row > .form-group {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="help-card">
+        <i class="fa-solid fa-xmark" style="position: absolute; top: 15px; right: 15px; font-size: 24px; color: #777; cursor: pointer;" onclick="goBack()" title="Voltar"></i>
+        
+        <div style="margin-bottom: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; display: flex; flex-direction: column; gap: 4px;">
+            <div>
+                <span style="font-size: 0.8rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">PROJETO</span>
+                <h3 id="activity-project-name" style="font-size: 1.1rem; color: #333; font-weight: 700; margin-top: 1px;">--</h3>
+            </div>
+            <div style="margin-top: 5px;">
+                <span style="font-size: 0.8rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">TAREFA</span>
+                <h4 id="activity-task-name" style="font-size: 1.05rem; color: #555; font-weight: 600; margin-top: 1px;">--</h4>
+            </div>
+        </div>
+        
+        <div class="form-content-rows">
+            <!-- Row 1: Descrição -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 100%;">
+                    <label class="form-label">Descrição da atividade <span>*</span></label>
+                    <input type="text" id="activity-descricao" class="form-control" placeholder="Digite a descrição da atividade" maxlength="255" />
+                </div>
+            </div>
+            
+            <!-- Row 2: Status, % Atingido -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 60%;">
+                    <label class="form-label">Status <span>*</span></label>
+                    <select id="activity-status" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="Não iniciado" selected>Não iniciado</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Cancelado">Cancelado</option>
+                        <option value="Encerrado">Encerrado</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1 1 40%;">
+                    <label class="form-label">% Atingido</label>
+                    <input type="number" id="activity-progresso" class="form-control" min="0" max="100" value="0" />
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-row" style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="./logo_circular.png" alt="Logo" style="width: 32px; height: 32px;" />
+                <div style="font-size: 0.85rem; font-weight: 700; line-height: 1.1; color: #000; text-align: left;">Adoção<br>Espiritual</div>
+            </div>
+            <div class="actions-group" style="display: flex; gap: 15px;">
+                <button class="btn-action btn-delete" onclick="goBack()">Cancelar</button>
+                <button class="btn-action btn-save" onclick="saveActivity()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const idProjeto = urlParams.get('id_projeto');
+        const idTarefa = urlParams.get('id_tarefa');
+        const idAtividade = urlParams.get('id_atividade');
+        const nome = urlParams.get('nome') || '';
+        const cpf = urlParams.get('cpf') || '';
+
+        function goBack() {
+            window.location.href = `inclusao_projeto.html?mode=edit&id=${idProjeto}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&tab=tab-tarefas&_t=${Date.now()}`;
+        }
+
+        async function loadDetails() {
+            if (!idProjeto || !idTarefa) return;
+            try {
+                // Load project name
+                const p = await fetchData(`projetos/${idProjeto}`);
+                if (p && p.nome_projeto) {
+                    document.getElementById('activity-project-name').textContent = p.nome_projeto;
+                }
+
+                // Load task name
+                const tasks = await fetchData(`projetos/${idProjeto}/tarefas`);
+                if (Array.isArray(tasks)) {
+                    const task = tasks.find(t => t.id_tarefa === parseInt(idTarefa, 10));
+                    if (task) {
+                        document.getElementById('activity-task-name').textContent = task.descricao_tarefa;
+                    }
+                }
+
+                // Load existing activity if in edit mode
+                if (idAtividade) {
+                    const act = await fetchData(`projetos/tarefas/atividades/${idAtividade}`);
+                    if (act) {
+                        document.getElementById('activity-descricao').value = act.descricao || '';
+                        document.getElementById('activity-status').value = act.status || '';
+                        document.getElementById('activity-progresso').value = act.perc_atingido !== null ? act.perc_atingido : 0;
+                        
+                        // Dynamically update UI labels
+                        document.title = 'Atualização de Atividade - Adoção Espiritual';
+                        document.querySelector('.btn-save').textContent = 'Atualizar';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao carregar detalhes:', err);
+            }
+        }
+
+        async function saveActivity() {
+            const descricao = document.getElementById('activity-descricao').value.trim();
+            const status = document.getElementById('activity-status').value;
+            const progresso = document.getElementById('activity-progresso').value;
+
+            if (!descricao) {
+                alert('Por favor, preencha a Descrição da atividade.');
+                return;
+            }
+            if (!status) {
+                alert('Por favor, selecione o Status.');
+                return;
+            }
+
+            const payload = {
+                id_projeto: parseInt(idProjeto, 10),
+                id_tarefa: parseInt(idTarefa, 10),
+                id_atividade: idAtividade ? parseInt(idAtividade, 10) : null,
+                descricao: descricao,
+                status: status,
+                perc_atingido: progresso !== '' ? parseInt(progresso, 10) : 0
+            };
+
+            try {
+                const response = await postData('projetos/tarefas/atividades/save', payload);
+                if (response.success) {
+                    alert('Atividade salva com sucesso!');
+                    goBack();
+                } else {
+                    alert('Erro ao salvar atividade: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao salvar atividade.');
+            }
+        }
+
+        window.onload = async function () {
+            await loadDetails();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusão de Projeto - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #eee;
+            --light-blue: #f0f7ff;
+            --btn-blue: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100vh;
+            height: 100vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -480px;
+            width: 480px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 24px;
+            padding: 24px 20px;
+            list-style: none;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-decoration: none;
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        .sidebar-item:hover {
+            color: var(--primary-red);
+        }
+
+        .sidebar-item i {
+            font-size: 1.4rem;
+            width: 28px;
+            text-align: center;
+            color: #888;
+            transition: color 0.2s;
+        }
+
+        .sidebar-item:hover i {
+            color: var(--primary-red);
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100vw;
+                right: -100vw;
+            }
+            .sidebar-list {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        /* Main Container Layout */
+        .main-container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        /* Card styles matching mockup design */
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            margin-top: 10px;
+        }
+
+        /* Page Title Container Styles (standardized with paroquias/colaboradores) */
+        .page-title-container {
+            display: flex;
+            align-items: baseline;
+            gap: 20px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .page-title {
+            color: var(--primary-red);
+            font-size: 1.85rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .mandatory-notice {
+            color: var(--primary-red);
+            font-style: italic;
+            font-size: 0.85rem;
+            margin: 0 !important;
+            display: inline-block !important;
+        }
+
+        /* Decorative Divider */
+        .title-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #333, transparent);
+            margin-top: -15px;
+            margin-bottom: 30px;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .title-divider::after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 5%;
+            right: 5%;
+            height: 12px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 75%);
+        }
+
+        /* Help Icon Styles */
+        .help-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            position: absolute;
+            top: 0;
+            right: 0;
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+
+        .help-icon-container:hover {
+            transform: scale(1.05);
+        }
+
+        .help-icon-circle {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #3498db;
+            background-color: white;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Form Rows Layout */
+        .form-content-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: nowrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row > .form-group {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+            }
+            .form-row {
+                gap: 15px;
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Removed duplicate utility classes to preserve proportions */
+
+        .form-label {
+            font-size: 0.85rem;
+            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            background-color: white;
+            transition: border-color 0.2s;
+            height: 38px;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-red);
+        }
+
+        /* Code box */
+        .code-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: white;
+            height: 38px;
+            width: 100%;
+            color: var(--primary-red);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Select styling */
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 15px;
+            padding-right: 35px;
+        }
+
+        /* Metadata Box styling */
+        .meta-container {
+            display: flex;
+            gap: 35px;
+            padding: 5px 0 15px 0;
+            width: 100%;
+        }
+
+        .meta-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .meta-label {
+            font-size: 0.82rem;
+            color: #999;
+        }
+
+        .meta-value {
+            font-size: 0.95rem;
+            color: #555;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        /* Footer buttons styling */
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+            padding-top: 20px;
+        }
+
+        .back-circle-btn {
+            width: 42px;
+            height: 42px;
+            background-color: var(--primary-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+            box-shadow: 0 3px 8px rgba(139, 30, 30, 0.2);
+        }
+
+        .back-circle-btn:hover {
+            opacity: 0.9;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-action {
+            padding: 8px 32px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-style: italic;
+            border-radius: 20px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            height: 38px;
+        }
+
+        .btn-delete {
+            background-color: white;
+            color: var(--primary-red);
+            border: 2px solid var(--primary-red);
+        }
+
+        .btn-delete:hover {
+            background-color: #faf5f5;
+        }
+
+        .btn-save {
+            background-color: var(--primary-red);
+            color: white;
+        }
+
+        .btn-save:hover {
+            background-color: #721818;
+        }
+
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        .dropdown-toggle-icon {
+            transition: transform 0.3s;
+        }
+
+        .dropdown-toggle-icon.active {
+            transform: rotate(180deg);
+        }
+
+        /* Tabs Navigation Styles */
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-red);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tab-btn:disabled:hover {
+            background-color: transparent;
+        }
+
+        /* Tasks Table/List Styles */
+        .tasks-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            padding: 0 5px;
+        }
+
+        .tasks-title-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-size: 1.4rem;
+            font-weight: 500;
+        }
+
+        .tasks-table-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+            margin-bottom: 25px;
+        }
+
+        .tasks-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tasks-table tr {
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .tasks-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .tasks-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .tasks-table th {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid #eee;
+            font-weight: 600;
+            color: #777;
+            font-size: 0.9rem;
+            background-color: #fcfcfc;
+        }
+
+        .tasks-table td {
+            padding: 12px 15px;
+            vertical-align: top;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .tasks-table td.col-actions {
+            width: 100px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .tasks-table td.col-actions i {
+            color: #777;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            margin: 0 5px;
+        }
+
+        .tasks-table td.col-actions i.action-delete:hover {
+            color: var(--primary-red);
+        }
+
+        .tasks-table td.col-actions i.action-edit:hover {
+            color: #0056b3;
+        }
+
+        .tasks-table td.col-actions i.action-add-activity:hover {
+            color: #2e7d32;
+        }
+
+        /* Help Overlay Modal Extensions */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        .help-card {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .help-card-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: #777;
+            cursor: pointer;
+        }
+
+        .help-card-title {
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down dropdown-toggle-icon"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <!-- Dynamic menu options injected here by header.js -->
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        <div class="form-card">
+            <!-- Title and Notice Row -->
+            <div class="page-title-container">
+                <h1 class="page-title" id="page-title-heading">Inclusão de Projeto</h1>
+                <span class="mandatory-notice">Os campos assinalados com asterisco (*) são de preenchimento obrigatório.</span>
+
+                <div class="help-icon-container" onclick="openHelpModal()">
+                    <div class="help-icon-circle">?</div>
+                    <span class="help-text">Ajuda</span>
+                </div>
+            </div>
+
+            <div class="title-divider"></div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs-container">
+                <button type="button" class="tab-btn active" id="tab-btn-identificacao" onclick="switchTab(event, 'tab-identificacao')">
+                    <i class="fa-solid fa-folder-open" style="color: #2b7cd3;"></i> IDENTIFICAÇÃO
+                </button>
+                <button type="button" class="tab-btn" id="tab-btn-equipe" onclick="switchTab(event, 'tab-equipe')">
+                    <i class="fa-solid fa-users" style="color: #2b7cd3;"></i> EQUIPE
+                    <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openTeamModal()" title="Adicionar Integrante" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                </button>
+                <button type="button" class="tab-btn" id="tab-btn-tarefas" onclick="switchTab(event, 'tab-tarefas')">
+                    <i class="fa-solid fa-list-check" style="color: #2b7cd3;"></i> TAREFAS
+                    <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openTaskModal()" title="Adicionar Tarefa" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                </button>
+                <button type="button" class="tab-btn" id="tab-btn-reunioes" onclick="switchTab(event, 'tab-reunioes')">
+                    <i class="fa-solid fa-people-arrows" style="color: #ff793f;"></i> REUNIÕES
+                    <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openMeetingModal()" title="Adicionar Reunião" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                </button>
+            </div>
+
+            <!-- Tab Content: IDENTIFICAÇÃO -->
+            <div id="tab-identificacao" class="tab-content active">
+                <div class="form-content-rows">
+                    <!-- Row 1: Código, Status, Incluído em, Atualizado em, Por -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1 1 12%; min-width: 80px;">
+                            <label class="form-label" style="color: #0e948c; font-weight: 600;">Código</label>
+                            <div id="code-box" class="code-box">--</div>
+                        </div>
+                        <div class="form-group" style="flex: 1 1 18%; min-width: 110px;">
+                            <label class="form-label">Status <span>*</span></label>
+                            <select id="select-status" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="Não iniciado">Não iniciado</option>
+                                <option value="Em andamento">Em andamento</option>
+                                <option value="Cancelado">Cancelado</option>
+                                <option value="Encerrado">Encerrado</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1 1 18%; min-width: 100px;">
+                            <label class="form-label">Incluído em</label>
+                            <div id="metadata-criado" class="meta-value">--</div>
+                        </div>
+                        <div class="form-group" style="flex: 1 1 18%; min-width: 100px;">
+                            <label class="form-label">Atualizado em</label>
+                            <div id="metadata-atualizado" class="meta-value">--</div>
+                        </div>
+                        <div class="form-group" style="flex: 1 1 34%; min-width: 150px;">
+                            <label class="form-label">Por</label>
+                            <div id="metadata-por" class="meta-value">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Nome do projeto, Área responsável, Data início, Data conclusão -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1 1 40%; min-width: 180px;">
+                            <label class="form-label">Nome do projeto <span>*</span></label>
+                            <input type="text" id="input-nome-projeto" class="form-control" placeholder="" />
+                        </div>
+                        <div class="form-group" style="flex: 1 1 30%; min-width: 150px;">
+                            <label class="form-label">Área responsável <span>*</span></label>
+                            <select id="select-area" class="form-control">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1 1 15%; min-width: 100px;">
+                            <label class="form-label">Data início</label>
+                            <input type="text" id="input-data-inicio" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" />
+                        </div>
+                        <div class="form-group" style="flex: 1 1 15%; min-width: 100px;">
+                            <label class="form-label">Data conclusão</label>
+                            <input type="text" id="input-data-fim" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" />
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Objetivo -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1 1 100%;">
+                            <label class="form-label">Objetivo <span>*</span></label>
+                            <textarea id="input-objetivo" class="form-control" placeholder="" style="height: 60px; min-height: 50px; resize: vertical; font-family: inherit;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Observações -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1 1 100%;">
+                            <label class="form-label">Observações</label>
+                            <input type="text" id="input-observacoes" class="form-control" placeholder="" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: EQUIPE -->
+            <div id="tab-equipe" class="tab-content">
+                <div class="tasks-table-container">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%; text-align: center;">Ações</th>
+                                <th style="width: 40%;">Nome</th>
+                                <th style="width: 20%;">Cidade</th>
+                                <th style="width: 18%;">E-mail</th>
+                                <th style="width: 14%;">Telefone</th>
+                            </tr>
+                        </thead>
+                        <tbody id="team-tbody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: TAREFAS -->
+            <div id="tab-tarefas" class="tab-content">
+                <div class="tasks-table-container">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%; text-align: center;">Ações</th>
+                                <th style="width: 35%;">Descrição da Tarefa</th>
+                                <th style="width: 12%;">Início Previsto</th>
+                                <th style="width: 12%;">Fim Previsto</th>
+                                <th style="width: 15%;">Responsável</th>
+                                <th style="width: 10%;">Status</th>
+                                <th style="width: 8%; text-align: center;">Progresso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-tbody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: REUNIÕES -->
+            <div id="tab-reunioes" class="tab-content">
+                <div class="tasks-table-container">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%; text-align: center;">Ações</th>
+                                <th style="width: 15%;">Data</th>
+                                <th style="width: 25%;">Participantes</th>
+                                <th style="width: 52%;">O que foi resolvido</th>
+                            </tr>
+                        </thead>
+                        <tbody id="meetings-tbody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: #777; font-style: italic;">Nenhuma reunião cadastrada.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer Action Buttons -->
+            <div class="footer-row">
+                <button class="back-circle-btn" onclick="goBack()" title="Voltar para a lista">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="actions-group">
+                    <button class="btn-action btn-delete" id="btn-delete" onclick="deleteProject()">Excluir</button>
+                    <button class="btn-action btn-save" id="btn-save" onclick="saveProject()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Help Modal Overlay -->
+    <div id="help-overlay" class="help-overlay" onclick="closeHelpModal()">
+        <div class="help-card" onclick="event.stopPropagation()">
+            <i class="fa-solid fa-xmark help-card-close" onclick="closeHelpModal()" title="Fechar"></i>
+            <div class="help-card-title">Funcionalidades do Projeto</div>
+            <div class="help-card-body" style="font-size: 0.95rem; line-height: 1.6; color: #555; display: flex; flex-direction: column; gap: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                <p>O módulo de **Projetos** permite gerenciar o ciclo de vida e a execução das iniciativas do projeto Adoção Espiritual. A tela é dividida em quatro abas principais:</p>
+                
+                <div>
+                    <strong style="color: var(--primary-red);"><i class="fa-solid fa-folder-open"></i> 1. IDENTIFICAÇÃO</strong>
+                    <p style="margin-left: 18px; margin-top: 3px;">Permite cadastrar as informações gerais do projeto, incluindo: Nome do projeto, Status, Área responsável (Estrutura Organizacional), Data de Início, Data de Conclusão, Objetivo e Observações adicionais.</p>
+                </div>
+
+                <div>
+                    <strong style="color: var(--primary-red);"><i class="fa-solid fa-users"></i> 2. EQUIPE</strong>
+                    <p style="margin-left: 18px; margin-top: 3px;">Lista os colaboradores vinculados ao projeto. Você pode incluir integrantes ativos clicando no ícone de adição (**+**) no cabeçalho da aba, permitindo multiseleção de colaboradores. Para remover um integrante, clique no ícone de lixeira.</p>
+                </div>
+
+                <div>
+                    <strong style="color: var(--primary-red);"><i class="fa-solid fa-list-check"></i> 3. TAREFAS</strong>
+                    <p style="margin-left: 18px; margin-top: 3px;">Gerencia o cronograma e os responsáveis pelas tarefas do projeto. Para adicionar uma tarefa, clique no ícone (**+**) no cabeçalho da aba. Ao lado de cada tarefa, você pode:</p>
+                    <ul style="margin-left: 35px; margin-top: 5px;">
+                        <li><i class="fa-solid fa-circle-plus" style="color: #2e7d32;"></i> **Adicionar Atividade**: Cadastrar novas atividades ligadas à tarefa (Descrição, Status e % Atingido).</li>
+                        <li><i class="fa-regular fa-pen-to-square" style="color: #0056b3;"></i> **Editar/Excluir**: Modificar ou remover tarefas e suas atividades correspondentes.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <strong style="color: var(--primary-red);"><i class="fa-solid fa-people-arrows" style="color: #ff793f;"></i> 4. REUNIÕES</strong>
+                    <p style="margin-left: 18px; margin-top: 3px;">Registra as reuniões realizadas no projeto. Você pode gerenciar reuniões clicando no ícone (**+**) no cabeçalho da aba. Permite inserir Data, Participantes e um resumo do que foi resolvido na reunião.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/header.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode') || 'new';
+        const id = urlParams.get('id');
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function openHelpModal() {
+            document.getElementById('help-overlay').classList.add('active');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-overlay').classList.remove('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('dropdown-menu').classList.toggle('show');
+            document.getElementById('account-toggle-icon').classList.toggle('active');
+        }
+
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        function goBack() {
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `lista_projetos.html?nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`;
+        }
+
+        function maskDate(input) {
+            if (!input) return;
+            input.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 8) v = v.slice(0, 8);
+                if (v.length > 4) {
+                    v = v.replace(/^(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+                } else if (v.length > 2) {
+                    v = v.replace(/^(\d{2})(\d{0,2})/, '$1/$2');
+                }
+                e.target.value = v;
+            });
+        }
+
+        function formatDateToBR(dateStr) {
+            if (!dateStr) return '';
+            // If it's already in DD/MM/YYYY format, return it
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const year = date.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatDateToISO(brDateStr) {
+            if (!brDateStr) return null;
+            const parts = brDateStr.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].trim();
+                const month = parts[1].trim();
+                const year = parts[2].trim();
+                if (day.length === 2 && month.length === 2 && year.length === 4) {
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            return brDateStr; // Fallback if already ISO
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '--';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        async function loadAreaOptions() {
+            try {
+                const response = await fetchData('estrutura_organizacional');
+                const select = document.getElementById('select-area');
+                select.innerHTML = '<option value="">Selecione...</option>';
+                if (Array.isArray(response)) {
+                    response.forEach(area => {
+                        const opt = document.createElement('option');
+                        opt.value = area.id_area;
+                        opt.textContent = area.nome_area;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar áreas:', err);
+            }
+        }
+
+        async function loadStatusOptions() {
+            const select = document.getElementById('select-status');
+            try {
+                const response = await fetchData('projetos/status-options');
+                select.innerHTML = '<option value="">Selecione...</option>';
+                if (Array.isArray(response)) {
+                    response.forEach(status => {
+                        const opt = document.createElement('option');
+                        opt.value = status;
+                        opt.textContent = status;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar status:', err);
+                select.innerHTML = `
+                    <option value="">Selecione...</option>
+                    <option value="Não iniciado">Não iniciado</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Cancelado">Cancelado</option>
+                    <option value="Encerrado">Encerrado</option>
+                `;
+            }
+        }
+
+        async function loadProjectData() {
+            try {
+                const p = await fetchData(`projetos/${id}`);
+                if (p) {
+                    document.getElementById('code-box').textContent = p.id_projeto;
+                    document.getElementById('select-status').value = p.status || '';
+                    document.getElementById('input-nome-projeto').value = p.nome_projeto || '';
+                    document.getElementById('select-area').value = p.id_area || '';
+                    document.getElementById('input-data-inicio').value = formatDateToBR(p.data_inicio);
+                    document.getElementById('input-data-fim').value = formatDateToBR(p.data_fim);
+                    document.getElementById('input-objetivo').value = p.objetivo_projeto || '';
+                    document.getElementById('input-observacoes').value = p.observacoes || '';
+                    
+                    // Metadata
+                    document.getElementById('metadata-criado').textContent = formatDateTime(p.criado_em);
+                    document.getElementById('metadata-atualizado').textContent = formatDateTime(p.atualizado_em);
+                    document.getElementById('metadata-por').textContent = p.nome_colaborador_atualiza || '--';
+                }
+            } catch (err) {
+                console.error('Erro ao carregar projeto:', err);
+                alert('Erro ao carregar os dados cadastrais do projeto.');
+            }
+        }
+
+        async function saveProject() {
+            const status = document.getElementById('select-status').value;
+            const nome = document.getElementById('input-nome-projeto').value.trim();
+            const areaId = document.getElementById('select-area').value;
+            const dInicio = formatDateToISO(document.getElementById('input-data-inicio').value);
+            const dFim = formatDateToISO(document.getElementById('input-data-fim').value);
+            const objetivo = document.getElementById('input-objetivo').value.trim();
+            const observacoes = document.getElementById('input-observacoes').value.trim();
+            const userId = localStorage.getItem('user_id_colaborador');
+
+            // Validation
+            if (!status) {
+                alert('Por favor, selecione o Status.');
+                return;
+            }
+            if (!nome) {
+                alert('Por favor, preencha o Nome do projeto.');
+                return;
+            }
+            if (!areaId) {
+                alert('Por favor, selecione a Área responsável.');
+                return;
+            }
+            if (!objetivo) {
+                alert('Por favor, preencha o Objetivo.');
+                return;
+            }
+
+            const payload = {
+                id: mode === 'edit' ? parseInt(id, 10) : null,
+                nome_projeto: nome,
+                id_area: parseInt(areaId, 10),
+                data_inicio: dInicio || null,
+                data_fim: dFim || null,
+                status: status,
+                objetivo_projeto: objetivo,
+                observacoes: observacoes || null,
+                id_colaborador_atualiza: userId ? parseInt(userId, 10) : null
+            };
+
+            try {
+                const response = await postData('projetos/save', payload);
+                if (response.success) {
+                    alert('Dados salvos com sucesso!');
+                    goBack();
+                } else {
+                    alert('Erro ao salvar: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                alert('Erro ao conectar com a API para salvar.');
+            }
+        }
+
+        async function deleteProject() {
+            if (!confirm('Deseja realmente excluir este projeto?')) return;
+            try {
+                const response = await deleteData(`projetos/${id}`);
+                if (response.success) {
+                    alert('Projeto excluído com sucesso!');
+                    goBack();
+                } else {
+                    alert('Erro ao excluir: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                alert('Erro ao conectar com a API para excluir.');
+            }
+        }
+
+        // Tab switching logic
+        function switchTab(event, tabId) {
+            const btn = event ? event.currentTarget : document.getElementById(`tab-btn-${tabId.replace('tab-', '')}`);
+            if (btn && btn.hasAttribute('disabled')) {
+                return;
+            }
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (btn) btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            // Hide/Show Excluir button based on active tab and mode
+            const btnDelete = document.getElementById('btn-delete');
+            if (btnDelete) {
+                if (mode === 'edit' && id && tabId === 'tab-identificacao') {
+                    btnDelete.style.display = 'inline-block';
+                } else {
+                    btnDelete.style.display = 'none';
+                }
+            }
+        }
+
+        // List of collaborators loaded dynamically
+        let activeCollaborators = [];
+        async function loadCollaboratorOptions() {
+            try {
+                const response = await fetchData('colaboradores');
+                if (Array.isArray(response)) {
+                    activeCollaborators = response;
+                }
+            } catch (err) {
+                console.error('Erro ao carregar colaboradores:', err);
+            }
+        }
+
+        // Team (Equipe) logic
+        let projectTeam = [];
+        async function loadProjectTeam() {
+            if (!id || mode !== 'edit') return;
+            const tbody = document.getElementById('team-tbody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777;">Carregando equipe...</td></tr>';
+            try {
+                const response = await fetchData(`projetos/${id}/equipe`);
+                tbody.innerHTML = '';
+                projectTeam = response || [];
+                
+                if (projectTeam.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777; font-style: italic;">Nenhum integrante cadastrado.</td></tr>';
+                    return;
+                }
+
+                projectTeam.forEach(m => {
+                    const tr = document.createElement('tr');
+                    const email = m.email || '--';
+                    const telefone = m.telefone || '--';
+                    const sigla = m.sigla_estado || '';
+                    const cidadeEst = [m.cidade, sigla].filter(Boolean).join(' - ') || '--';
+
+                    tr.innerHTML = `
+                        <td class="col-actions">
+                            <i class="fa-regular fa-trash-can action-delete" onclick="deleteTeamMember(${m.id_colaborador})" title="Excluir Integrante"></i>
+                        </td>
+                        <td>${m.nome_colaborador}</td>
+                        <td>${cidadeEst}</td>
+                        <td>${email}</td>
+                        <td>${telefone}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar equipe:', err);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--primary-red);">Erro ao carregar equipe.</td></tr>';
+            }
+        }
+
+        function openTeamModal() {
+            if (mode !== 'edit' || !id) {
+                alert('Por favor, salve o projeto antes de gerenciar a equipe.');
+                return;
+            }
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `popup_projetos_equipe.html?id_projeto=${id}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&_t=${Date.now()}`;
+        }
+
+        async function deleteTeamMember(colabId) {
+            if (!confirm('Deseja realmente remover este integrante da equipe?')) return;
+            try {
+                const response = await deleteData(`projetos/equipe/${id}/${colabId}`);
+                if (response.success) {
+                    alert('Integrante removido com sucesso!');
+                    await loadProjectTeam();
+                } else {
+                    alert('Erro ao remover integrante: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao remover integrante.');
+            }
+        }
+
+        // Tasks logic
+        let projectTasks = [];
+        async function loadProjectTasks() {
+            if (!id || mode !== 'edit') return;
+            const tbody = document.getElementById('tasks-tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #777;">Carregando tarefas...</td></tr>';
+            try {
+                const response = await fetchData(`projetos/${id}/tarefas`);
+                tbody.innerHTML = '';
+                projectTasks = response || [];
+                
+                if (projectTasks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #777; font-style: italic;">Nenhuma tarefa cadastrada.</td></tr>';
+                    return;
+                }
+
+                projectTasks.forEach(t => {
+                    const tr = document.createElement('tr');
+                    
+                    const inicioFormatar = formatDateToBR(t.inicio_previsto);
+                    const fimFormatar = formatDateToBR(t.fim_previsto);
+                    const progresso = t.perc_atingido !== null && t.perc_atingido !== undefined ? `${t.perc_atingido}%` : '0%';
+                    const respName = t.apelido_colaborador || '--';
+
+                    let activitiesHtml = '';
+                    if (Array.isArray(t.atividades) && t.atividades.length > 0) {
+                        activitiesHtml = `
+                            <div class="task-activities-container" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                ${t.atividades.map(act => `
+                                    <div class="task-activity-row" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #555;">
+                                        <i class="fa-regular fa-pen-to-square" onclick="editActivity(${t.id_tarefa}, ${act.id_atividade})" title="Editar Atividade" style="cursor: pointer; color: #777; font-size: 0.95rem; transition: color 0.2s;" onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#777'"></i>
+                                        <i class="fa-regular fa-trash-can" onclick="deleteActivity(${act.id_atividade})" title="Excluir Atividade" style="cursor: pointer; color: #777; font-size: 0.95rem; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-red)'" onmouseout="this.style.color='#777'"></i>
+                                        <span>${act.descricao}. Progresso: <span style="color: var(--primary-red); font-weight: 600;">${act.perc_atingido}%</span>. - ${act.status}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="col-actions">
+                            <i class="fa-solid fa-circle-plus action-add-activity" onclick="openActivityModal(${t.id_tarefa})" title="Adicionar Atividade"></i>
+                            <i class="fa-regular fa-pen-to-square action-edit" onclick="editTask(${t.id_tarefa})" title="Editar Tarefa"></i>
+                            <i class="fa-regular fa-trash-can action-delete" onclick="deleteTask(${t.id_tarefa})" title="Excluir Tarefa"></i>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500; color: #333;">${t.descricao_tarefa}</div>
+                            ${activitiesHtml}
+                        </td>
+                        <td>${inicioFormatar || '--'}</td>
+                        <td>${fimFormatar || '--'}</td>
+                        <td>${respName}</td>
+                        <td>${t.status || 'Iniciada'}</td>
+                        <td style="text-align: center; font-weight: 600; color: var(--primary-red);">${progresso}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar tarefas:', err);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--primary-red);">Erro ao carregar tarefas.</td></tr>';
+            }
+        }
+
+        // Open Modal to Add/Edit Task
+        function openTaskModal() {
+            if (mode !== 'edit' || !id) {
+                alert('Por favor, salve o projeto antes de gerenciar tarefas.');
+                return;
+            }
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `popup_projetos_tarefas.html?id_projeto=${id}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&_t=${Date.now()}`;
+        }
+
+        function editTask(taskId) {
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `popup_projetos_tarefas.html?id_projeto=${id}&id_tarefa=${taskId}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&_t=${Date.now()}`;
+        }
+
+        function openActivityModal(taskId) {
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `popup_projetos_tarefas_atividades.html?id_projeto=${id}&id_tarefa=${taskId}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&_t=${Date.now()}`;
+        }
+
+        function editActivity(taskId, activityId) {
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `popup_projetos_tarefas_atividades.html?id_projeto=${id}&id_tarefa=${taskId}&id_atividade=${activityId}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&_t=${Date.now()}`;
+        }
+
+        async function deleteActivity(activityId) {
+            if (!confirm('Deseja realmente excluir esta atividade?')) return;
+            try {
+                const response = await deleteData(`projetos/tarefas/atividades/${activityId}`);
+                if (response.success) {
+                    alert('Atividade excluída com sucesso!');
+                    await loadProjectTasks();
+                } else {
+                    alert('Erro ao excluir atividade: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao excluir atividade.');
+            }
+        }
+
+        // Meetings logic
+        let projectMeetings = [];
+        async function loadProjectMeetings() {
+            if (!id || mode !== 'edit') return;
+            const tbody = document.getElementById('meetings-tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #777;">Carregando reuniões...</td></tr>';
+            try {
+                const response = await fetchData(`projetos/${id}/reunioes`);
+                tbody.innerHTML = '';
+                projectMeetings = response || [];
+                
+                if (projectMeetings.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #777; font-style: italic;">Nenhuma reunião cadastrada.</td></tr>';
+                    return;
+                }
+
+                projectMeetings.forEach(m => {
+                    const tr = document.createElement('tr');
+                    const dataFormatar = formatDateToBR(m.data);
+
+                    tr.innerHTML = `
+                        <td class="col-actions">
+                            <i class="fa-regular fa-pen-to-square action-edit" onclick="editMeeting(${m.id_reuniao})" title="Editar Reunião"></i>
+                            <i class="fa-regular fa-trash-can action-delete" onclick="deleteMeeting(${m.id_reuniao})" title="Excluir Reunião"></i>
+                        </td>
+                        <td>${dataFormatar || '--'}</td>
+                        <td>${m.participantes || '--'}</td>
+                        <td>${m.descricao_resolvido || '--'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar reuniões:', err);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--primary-red);">Erro ao carregar reuniões.</td></tr>';
+            }
+        }
+
+        function openMeetingModal() {
+            if (mode !== 'edit' || !id) {
+                alert('Por favor, salve o projeto antes de gerenciar reuniões.');
+                return;
+            }
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `popup_projetos_reunioes.html?id_projeto=${id}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&_t=${Date.now()}`;
+        }
+
+        function editMeeting(meetingId) {
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            window.location.href = `popup_projetos_reunioes.html?id_projeto=${id}&id_reuniao=${meetingId}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&_t=${Date.now()}`;
+        }
+
+        async function deleteMeeting(meetingId) {
+            if (!confirm('Deseja realmente excluir esta reunião?')) return;
+            try {
+                const response = await deleteData(`projetos/reunioes/${meetingId}`);
+                if (response.success) {
+                    alert('Reunião excluída com sucesso!');
+                    await loadProjectMeetings();
+                } else {
+                    alert('Erro ao excluir reunião: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao excluir reunião.');
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if (!confirm('Deseja realmente excluir esta tarefa?')) return;
+            try {
+                const response = await deleteData(`projetos/tarefas/${taskId}`);
+                if (response.success) {
+                    alert('Tarefa excluída com sucesso!');
+                    await loadProjectTasks();
+                } else {
+                    alert('Erro ao excluir tarefa: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao excluir tarefa.');
+            }
+        }
+
+        window.onload = async function () {
+            // Apply Date Masks
+            maskDate(document.getElementById('input-data-inicio'));
+            maskDate(document.getElementById('input-data-fim'));
+
+            // Load Por from localStorage initially for inclusion mode
+            const savedName = localStorage.getItem('user_nome');
+            if (savedName) {
+                document.getElementById('metadata-por').textContent = savedName;
+            }
+
+            // Load Areas
+            await loadAreaOptions();
+
+            // Load Status Options dynamically from Database structure
+            await loadStatusOptions();
+
+            // Set Mode
+            if (mode === 'edit' && id) {
+                document.getElementById('page-title-heading').textContent = 'Atualização de Projeto';
+                document.getElementById('btn-save').textContent = 'Atualizar';
+                document.getElementById('btn-delete').style.display = 'inline-block';
+                document.getElementById('tab-btn-tarefas').removeAttribute('disabled');
+                document.getElementById('tab-btn-equipe').removeAttribute('disabled');
+                document.getElementById('tab-btn-reunioes').removeAttribute('disabled');
+                await loadProjectData();
+                await loadProjectTasks();
+                await loadProjectTeam();
+                await loadProjectMeetings();
+                
+                // Auto switch to tasks or team tab if specified in URL
+                const tabParam = urlParams.get('tab');
+                if (tabParam === 'tab-tarefas') {
+                    switchTab(null, 'tab-tarefas');
+                } else if (tabParam === 'tab-equipe') {
+                    switchTab(null, 'tab-equipe');
+                } else if (tabParam === 'tab-reunioes') {
+                    switchTab(null, 'tab-reunioes');
+                }
+            } else {
+                document.getElementById('page-title-heading').textContent = 'Inclusão de Projeto';
+                document.getElementById('btn-save').textContent = 'Salvar';
+                document.getElementById('btn-delete').style.display = 'none';
+                document.getElementById('tab-btn-tarefas').setAttribute('disabled', 'true');
+                document.getElementById('tab-btn-equipe').setAttribute('disabled', 'true');
+                document.getElementById('tab-btn-reunioes').setAttribute('disabled', 'true');
+            }
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário de Atividades - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #eee;
+            --btn-accent: #b25e5e;
+            --light-blue: #f0f7ff;
+            --orange: #ff851b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 120vh;
+            height: 120vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: invert(24%) sepia(85%) saturate(2250%) hue-rotate(210deg);
+            opacity: 0.05;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .user-initials img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .account-toggle {
+            width: 20px;
+            height: 20px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .account-toggle.active {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Main Content */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        .main-content {
+            width: 100%;
+        }
+
+        /* Help Icon Styles */
+        .help-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+
+        .help-icon-container:hover {
+            transform: scale(1.05);
+        }
+
+        .help-icon-circle {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            color: #3498db;
+            background-color: white;
+            font-weight: 500;
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Help Modal Overlay */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        .help-card {
+            background: white;
+            width: 95%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border-top: 4px solid var(--primary-red);
+        }
+
+        .help-card-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: #777;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .help-card-close:hover {
+            color: var(--primary-red);
+        }
+
+        .help-card-title {
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .help-card-content {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Search & Subtitle Row */
+        .search-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        .subtitle-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-red);
+            font-style: normal;
+            font-size: 1.4rem;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        .subtitle-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 5px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-style: italic;
+            color: #555;
+            outline: none;
+            width: 160px;
+        }
+
+        @media (min-width: 768px) {
+            .search-input {
+                width: 250px;
+            }
+        }
+
+        /* List Area */
+        .list-container {
+            border-top: 2px solid var(--primary-red);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            border-radius: 0 0 4px 4px;
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .list-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .event-date {
+            width: 25%;
+            flex: 0 0 25%;
+            color: #4a5568;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .event-name {
+            width: 45%;
+            flex: 0 0 45%;
+            color: #1a202c;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .event-recorrente {
+            width: 15%;
+            flex: 0 0 15%;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .event-onde {
+            width: 15%;
+            flex: 0 0 15%;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        /* Custom Badges style */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .badge:hover {
+            transform: scale(1.03);
+        }
+
+        .badge i {
+            font-size: 0.8rem;
+        }
+
+        /* Recorrente badges */
+        .badge-recorrente-sim {
+            background-color: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+
+        .badge-recorrente-nao {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Location badges */
+        .badge-onde-google {
+            background-color: #f0f9ff;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+        }
+
+        .badge-onde-instagram {
+            background-color: #fdf2f8;
+            color: #db2777;
+            border: 1px solid #fbcfe8;
+        }
+
+        .badge-onde-paroquia {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #e0e7ff;
+        }
+
+        .badge-onde-outro {
+            background-color: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #ffedd5;
+        }
+
+        /* List Footer */
+        .list-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            justify-content: center;
+            color: #718096;
+            font-style: italic;
+            padding: 30px;
+            text-align: center;
+        }
+
+        /* Accordion style for multiple dates */
+        .event-group-container {
+            border-bottom: 1px solid #eee;
+        }
+
+        .list-item.main-row {
+            border-bottom: none !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .accordion-chevron {
+            transition: transform 0.2s ease;
+            display: inline-block;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .event-group-container.expanded .accordion-chevron {
+            transform: rotate(90deg);
+        }
+
+        .accordion-content {
+            padding: 12px 20px 16px 45px;
+            background-color: #fafafa;
+            border-top: 1px dashed #eee;
+            border-bottom: 1px solid #eee;
+        }
+
+        .accordion-date-item {
+            font-size: 0.9rem;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-display-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu de Navegação</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <li><a href="menu_principal_2.html" class="sidebar-item"><i class="fa-solid fa-house"></i> Início</a></li>
+            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-cake-candles"></i> Aniversariantes do mês</a></li>
+            <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a></li>
+            <li><a href="calendario.html" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a></li>
+            <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
+            <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a></li>
+            <li><a href="paroquias.html" class="sidebar-item"><i class="fa-solid fa-house-chimney-window"></i> Paróquias</a></li>
+            <li><a href="colaboradores.html" class="sidebar-item"><i class="fa-solid fa-users"></i> Colaboradores</a></li>
+            <li><a href="treinamentos.html" class="sidebar-item"><i class="fa-solid fa-chalkboard-user"></i> Treinamentos</a></li>
+            <li><a href="Lista_atividades_realizadas.html" class="sidebar-item"><i class="fa-solid fa-clipboard-list"></i> Registro de atividades</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        <!-- Events List -->
+        <div class="main-content">
+            <!-- Title Row -->
+            <div class="search-row">
+                <div class="subtitle-with-icon" onclick="goToRegistro('new')" style="cursor: pointer;" title="Adicionar Novo Evento">
+                    <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
+                    Calendário de Atividades - exceto treinamentos
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-input" placeholder="busca"
+                            oninput="filterList()">
+                    </div>
+                    <div class="help-icon-container" onclick="toggleHelp()">
+                        <div class="help-icon-circle">?</div>
+                        <span class="help-text">Ajuda</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The List -->
+            <div class="list-container">
+                <div class="list-header">
+                    <div style="width: 25%; flex: 0 0 25%;">Data e Hora</div>
+                    <div style="width: 45%; flex: 0 0 45%;">Nome do Evento</div>
+                    <div style="width: 15%; flex: 0 0 15%;">Recorrente</div>
+                    <div style="width: 15%; flex: 0 0 15%;">Onde</div>
+                </div>
+                <div id="events-list-container">
+                    <!-- Dynamic content will go here -->
+                    <div class="list-item empty-state">Carregando eventos...</div>
+                </div>
+            </div>
+
+            <!-- List Footer -->
+            <div class="list-footer">
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/js/header.js"></script>
+    <script>
+        const API_URL = window.location.protocol === 'file:' 
+            ? 'http://localhost:3000/api'
+            : '/api';
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function goToRegistro(mode, id) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nome = urlParams.get('nome') || '';
+            const cpf = urlParams.get('cpf') || '';
+            let targetUrl = `registro_calendario.html?mode=${mode}`;
+            if (id) {
+                targetUrl += `&id=${id}`;
+            }
+            targetUrl += `&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}`;
+            window.location.href = targetUrl;
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+
+            dropdown.classList.toggle('show');
+            if (toggleIcon) toggleIcon.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const toggleIcon = document.getElementById('account-toggle-icon');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                if (toggleIcon) toggleIcon.classList.remove('active');
+            }
+        }
+
+        // Helpers to format dates with/without year
+        function formatDate(val) {
+            if (!val) return '';
+            const str = String(val);
+            if (str.length >= 8) {
+                // YYYYMMDD
+                const year = str.substring(0, 4);
+                const month = str.substring(4, 6);
+                const day = str.substring(6, 8);
+                return `${day}/${month}/${year}`;
+            } else {
+                // MMDD (padded to 4 digits)
+                const padded = str.padStart(4, '0');
+                const month = padded.substring(0, 2);
+                const day = padded.substring(2, 4);
+                return `${day}/${month}`;
+            }
+        }
+
+        const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        function getWeekday(val) {
+            const str = String(val);
+            let day, month, year;
+            if (str.length >= 8) {
+                year = parseInt(str.substring(0, 4), 10);
+                month = parseInt(str.substring(4, 6), 10);
+                day = parseInt(str.substring(6, 8), 10);
+            } else {
+                const padded = str.padStart(4, '0');
+                month = parseInt(padded.substring(0, 2), 10);
+                day = parseInt(padded.substring(2, 4), 10);
+                year = new Date().getFullYear();
+            }
+            const date = new Date(year, month - 1, day);
+            return weekdays[date.getDay()];
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const parts = timeStr.split(':');
+            if (parts.length >= 2) {
+                return `${parts[0]}:${parts[1]}`;
+            }
+            return timeStr;
+        }
+
+        function filterList() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const items = document.querySelectorAll('#events-list-container .event-group-container');
+
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function toggleAccordion(element) {
+            const container = element.closest('.event-group-container');
+            const content = container.querySelector('.accordion-content');
+            if (container.classList.contains('expanded')) {
+                container.classList.remove('expanded');
+                content.style.display = 'none';
+            } else {
+                container.classList.add('expanded');
+                content.style.display = 'block';
+            }
+        }
+
+        async function loadEvents() {
+            try {
+                const res = await fetch(`${API_URL}/calendario?_=${new Date().getTime()}`);
+                if (!res.ok) throw new Error('Erro ao buscar eventos do calendário');
+                const events = await res.json();
+
+                const container = document.getElementById('events-list-container');
+                if (!container) return;
+
+                container.innerHTML = '';
+
+                if (events.length === 0) {
+                    container.innerHTML = `
+                        <div class="list-item empty-state">
+                            Nenhum evento agendado no calendário.
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Sort events chronologically based on date integer helper
+                function getSortTimestamp(val) {
+                    const str = String(val);
+                    let day, month, year;
+                    if (str.length >= 8) {
+                        year = parseInt(str.substring(0, 4), 10);
+                        month = parseInt(str.substring(4, 6), 10);
+                        day = parseInt(str.substring(6, 8), 10);
+                    } else {
+                        const padded = str.padStart(4, '0');
+                        month = parseInt(padded.substring(0, 2), 10);
+                        day = parseInt(padded.substring(2, 4), 10);
+                        year = new Date().getFullYear();
+                    }
+                    return new Date(year, month - 1, day).getTime();
+                }
+
+                // Group events by id_calendario
+                const groupedMap = new Map();
+                events.forEach(ev => {
+                    const id = ev.id_calendario;
+                    if (!groupedMap.has(id)) {
+                        groupedMap.set(id, {
+                            id_calendario: ev.id_calendario,
+                            id_evento: ev.id_evento,
+                            nome_evento: ev.nome_evento,
+                            calendario_religioso: ev.calendario_religioso,
+                            feriado: ev.feriado,
+                            recorrente: ev.recorrente,
+                            onde: ev.onde,
+                            id_paroquia: ev.id_paroquia,
+                            hora: ev.hora,
+                            observacoes: ev.observacoes,
+                            datas: []
+                        });
+                    }
+                    if (ev.data) {
+                        groupedMap.get(id).datas.push(ev.data);
+                    }
+                });
+                const groupedEvents = Array.from(groupedMap.values());
+
+                // Sort dates inside each event
+                groupedEvents.forEach(ge => {
+                    ge.datas.sort((a, b) => getSortTimestamp(a) - getSortTimestamp(b));
+                });
+
+                // Sort events by their earliest date occurrence
+                groupedEvents.sort((a, b) => {
+                    const dateA = a.datas.length > 0 ? a.datas[0] : 0;
+                    const dateB = b.datas.length > 0 ? b.datas[0] : 0;
+                    return getSortTimestamp(dateA) - getSortTimestamp(dateB);
+                });
+
+                groupedEvents.forEach(ev => {
+                    const groupContainer = document.createElement('div');
+                    groupContainer.className = 'event-group-container';
+
+                    const hasMultipleDates = ev.datas.length > 1;
+                    
+                    // Format dates
+                    let dateTimeDisplay = '';
+                    if (hasMultipleDates) {
+                        const nextDateVal = ev.datas[0];
+                        const dateFormatted = formatDate(nextDateVal);
+                        const weekday = getWeekday(nextDateVal);
+                        const timeFormatted = formatTime(ev.hora);
+                        const timePart = timeFormatted ? ` - ${timeFormatted}h` : '';
+                        
+                        dateTimeDisplay = `
+                            <i class="fa-solid fa-chevron-right accordion-chevron" style="width: 14px; margin-right: 8px; color: #888;"></i>
+                            Próxima: ${dateFormatted} - ${weekday}${timePart} 
+                            <span style="color: var(--primary-red); font-size: 0.8rem; font-weight: 600; margin-left: 5px;">(+${ev.datas.length - 1} datas)</span>
+                        `;
+                    } else if (ev.datas.length === 1) {
+                        const singleDateVal = ev.datas[0];
+                        const dateFormatted = formatDate(singleDateVal);
+                        const weekday = getWeekday(singleDateVal);
+                        const timeFormatted = formatTime(ev.hora);
+                        const timePart = timeFormatted ? ` - ${timeFormatted}h` : '';
+                        
+                        dateTimeDisplay = `
+                            <i class="fa-regular fa-calendar" style="width: 14px; margin-right: 8px; color: #aaa;"></i>
+                            ${dateFormatted} - ${weekday}${timePart}
+                        `;
+                    } else {
+                        dateTimeDisplay = `
+                            <i class="fa-regular fa-calendar" style="width: 14px; margin-right: 8px; color: #aaa;"></i>
+                            Sem data definida
+                        `;
+                    }
+
+                    // Recorrente Badge
+                    let recBadge = '';
+                    const isRec = ev.recorrente && ev.recorrente.trim().toLowerCase() === 'sim';
+                    if (isRec) {
+                        recBadge = `<span class="badge badge-recorrente-sim"><i class="fa-solid fa-arrows-rotate"></i> Sim</span>`;
+                    } else {
+                        recBadge = `<span class="badge badge-recorrente-nao"><i class="fa-solid fa-minus"></i> Não</span>`;
+                    }
+
+                    // Onde Badge
+                    let ondeBadge = '';
+                    const rawOnde = ev.onde ? ev.onde.trim().toLowerCase() : '';
+                    if (rawOnde === 'google meeting' || rawOnde === 'google meet') {
+                        ondeBadge = `<span class="badge badge-onde-google"><i class="fa-solid fa-video"></i> Google Meet</span>`;
+                    } else if (rawOnde === 'instagram') {
+                        ondeBadge = `<span class="badge badge-onde-instagram"><i class="fa-brands fa-instagram"></i> Instagram</span>`;
+                    } else if (rawOnde === 'paroquia' || rawOnde === 'paróquia') {
+                        ondeBadge = `<span class="badge badge-onde-paroquia"><i class="fa-solid fa-church"></i> Paróquia</span>`;
+                    } else if (rawOnde === 'não se aplica' || rawOnde === 'nao se aplica') {
+                        ondeBadge = `<span class="badge badge-onde-outro" style="background-color: #f3f4f6; color: #4b5563; border-color: #e5e7eb;"><i class="fa-solid fa-ban"></i> Não se aplica</span>`;
+                    } else {
+                        const label = ev.onde || 'Outro';
+                        ondeBadge = `<span class="badge badge-onde-outro"><i class="fa-solid fa-location-dot"></i> ${label}</span>`;
+                    }
+
+                    // Main Row HTML
+                    const mainRow = document.createElement('div');
+                    mainRow.className = 'list-item main-row';
+                    mainRow.style.cursor = 'pointer';
+                    
+                    mainRow.onclick = function (e) {
+                        if (e.target.closest('.accordion-chevron')) {
+                            toggleAccordion(this);
+                        } else {
+                            goToRegistro('edit', ev.id_calendario);
+                        }
+                    };
+
+                    mainRow.innerHTML = `
+                        <div class="event-date" style="width: 25%; flex: 0 0 25%; display: flex; align-items: center;">${dateTimeDisplay}</div>
+                        <div class="event-name" style="width: 45%; flex: 0 0 45%;">${ev.nome_evento || ''}</div>
+                        <div class="event-recorrente" style="width: 15%; flex: 0 0 15%;">${recBadge}</div>
+                        <div class="event-onde" style="width: 15%; flex: 0 0 15%;">${ondeBadge}</div>
+                    `;
+                    groupContainer.appendChild(mainRow);
+
+                    // Accordion collapsible content (if multiple dates)
+                    if (hasMultipleDates) {
+                        const accordionContent = document.createElement('div');
+                        accordionContent.className = 'accordion-content';
+                        accordionContent.style.display = 'none';
+
+                        let datesListHtml = '';
+                        ev.datas.forEach(d => {
+                            const df = formatDate(d);
+                            const wd = getWeekday(d);
+                            const tf = formatTime(ev.hora);
+                            const tp = tf ? ` - ${tf}h` : '';
+                            datesListHtml += `
+                                <div class="accordion-date-item">
+                                    <i class="fa-regular fa-calendar-check" style="color: #27ae60; font-size: 0.85rem;"></i>
+                                    <span>${df} - ${wd}${tp}</span>
+                                </div>
+                            `;
+                        });
+
+                        accordionContent.innerHTML = `
+                            <div style="font-weight: 600; font-size: 0.8rem; color: #7f8c8d; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Ocorrências Programadas:</div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                ${datesListHtml}
+                            </div>
+                        `;
+                        groupContainer.appendChild(accordionContent);
+                    }
+
+                    container.appendChild(groupContainer);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar calendário:', err);
+                const container = document.getElementById('events-list-container');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="list-item empty-state" style="color: #e74c3c; font-weight: 500;">
+                            Erro ao carregar calendário. Por favor, verifique se a API está online.
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function toggleHelp() {
+            document.getElementById('help-overlay').classList.toggle('active');
+        }
+
+        // Run when DOM is ready
+        window.addEventListener('DOMContentLoaded', loadEvents);
+    </script>
+
+    <!-- Help Modal -->
+    <div class="help-overlay" id="help-overlay" onclick="toggleHelp()">
+        <div class="help-card" onclick="event.stopPropagation()">
+            <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
+            <h2 class="help-card-title">Orientações de uso</h2>
+            <div class="help-card-content">
+                <p style="margin-bottom: 15px;">Nesta página são listados todos os eventos e atividades programados no calendário da Adoção Espiritual.</p>
+                <p style="margin-bottom: 15px;">A tabela exibe a data e horário do evento, o nome do evento, se é recorrente ou não, e o local ou meio de transmissão/reunião.</p>
+                <p><strong>Dica:</strong> Utilize o campo busca, localizado à direita da tela, para pesquisar eventos por nome, local ou data correspondentes.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

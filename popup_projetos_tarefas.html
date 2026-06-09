@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Tarefa - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #7f8c8d;
+            --border-color: #eee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .help-card {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-content-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: nowrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .form-label {
+            font-size: 0.95rem;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            background-color: white;
+            transition: border-color 0.2s;
+            height: 38px;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-red);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 15px;
+            padding-right: 35px;
+        }
+
+        /* Hide the native calendar indicator in WebKit but make it clickable */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            opacity: 0;
+            z-index: 2;
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .btn-action {
+            padding: 8px 32px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-style: italic;
+            border-radius: 20px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            height: 38px;
+        }
+
+        .btn-delete {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1.5px solid var(--primary-red);
+        }
+
+        .btn-delete:hover {
+            background-color: #faf5f5;
+        }
+
+        .btn-save {
+            background-color: #ae3326;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-save:hover {
+            background-color: #8b251a;
+        }
+
+        @media (max-width: 580px) {
+            .form-row {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            .form-row > .form-group {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="help-card">
+        <i class="fa-solid fa-xmark" style="position: absolute; top: 15px; right: 15px; font-size: 24px; color: #777; cursor: pointer;" onclick="goBack()" title="Voltar"></i>
+        
+        <div style="margin-bottom: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 10px;">
+            <span style="font-size: 0.8rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">PROJETO</span>
+            <h3 id="task-project-name" style="font-size: 1.25rem; color: #333; font-weight: 700; margin-top: 2px;">--</h3>
+        </div>
+        
+        <div class="form-content-rows">
+            <!-- Row 1: Atividade -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 100%;">
+                    <label class="form-label">Tarefa <span>*</span></label>
+                    <input type="text" id="task-descricao" class="form-control" placeholder="Digite a atividade" maxlength="100" />
+                </div>
+            </div>
+            
+            <!-- Row 2: Status, Início previsto, Fim previsto -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 45%;">
+                    <label class="form-label">Status <span>*</span></label>
+                    <select id="task-status" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="Planejada">Planejada</option>
+                        <option value="Iniciada">Iniciada</option>
+                        <option value="Concluída">Concluída</option>
+                        <option value="Cancelada">Cancelada</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1 1 27.5%;">
+                    <label class="form-label">Início previsto</label>
+                    <div class="input-wrapper">
+                        <input type="date" id="task-inicio" class="form-control" style="padding-right: 35px;" />
+                        <i class="fa-regular fa-calendar" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #777; z-index: 1; pointer-events: none;"></i>
+                    </div>
+                </div>
+                <div class="form-group" style="flex: 1 1 27.5%;">
+                    <label class="form-label">Fim previsto</label>
+                    <div class="input-wrapper">
+                        <input type="date" id="task-fim" class="form-control" style="padding-right: 35px;" />
+                        <i class="fa-regular fa-calendar" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #777; z-index: 1; pointer-events: none;"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Row 3: Descrição da tarefa -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 100%;">
+                    <label class="form-label">Descrição da tarefa <span>*</span></label>
+                    <textarea id="task-descricao-detalhada" class="form-control" placeholder="" style="height: 80px; resize: vertical; min-height: 50px; padding: 8px 12px; font-family: inherit;"></textarea>
+                </div>
+            </div>
+            
+            <!-- Row 3.5: Observações -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 100%;">
+                    <label class="form-label">Observações</label>
+                    <textarea id="task-observacoes" class="form-control" placeholder="" style="height: 80px; resize: vertical; min-height: 50px; padding: 8px 12px; font-family: inherit;"></textarea>
+                </div>
+            </div>
+            
+            <!-- Row 4: Atribuída a, % Atingido -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 75%;">
+                    <label class="form-label">Atribuída a</label>
+                    <select id="task-colaborador" class="form-control">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1 1 25%;">
+                    <label class="form-label">% Atingido</label>
+                    <input type="number" id="task-progresso" class="form-control" min="0" max="100" value="0" />
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-row" style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="./logo_circular.png" alt="Logo" style="width: 32px; height: 32px;" />
+                <div style="font-size: 0.85rem; font-weight: 700; line-height: 1.1; color: #000; text-align: left;">Adoção<br>Espiritual</div>
+            </div>
+            <div class="actions-group" style="display: flex; gap: 15px;">
+                <button class="btn-action btn-delete" onclick="goBack()">Cancelar</button>
+                <button class="btn-action btn-save" onclick="saveTask()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const idProjeto = urlParams.get('id_projeto');
+        const idTarefa = urlParams.get('id_tarefa');
+        const nome = urlParams.get('nome') || '';
+        const cpf = urlParams.get('cpf') || '';
+        function goBack() {
+            window.location.href = `inclusao_projeto.html?mode=edit&id=${idProjeto}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&tab=tab-tarefas&_t=${Date.now()}`;
+        }
+
+        function maskDate(input) {
+            if (!input) return;
+            input.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 8) v = v.slice(0, 8);
+                if (v.length > 4) {
+                    v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+                } else if (v.length > 2) {
+                    v = v.slice(0, 2) + '/' + v.slice(2);
+                }
+                e.target.value = v;
+            });
+        }
+
+
+        // (Date format helpers removed - native input type="date" handles YYYY-MM-DD directly)
+
+        let teamMembers = [];
+        async function loadTeamOptions() {
+            if (!idProjeto) return;
+            try {
+                const response = await fetchData(`projetos/${idProjeto}/equipe`);
+                const select = document.getElementById('task-colaborador');
+                select.innerHTML = '<option value="">Selecione...</option>';
+                if (Array.isArray(response)) {
+                    teamMembers = response;
+                    response.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id_colaborador;
+                        opt.textContent = m.nome_colaborador;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar equipe do projeto:', err);
+            }
+        }
+
+        async function loadProjectDetails() {
+            if (!idProjeto) return;
+            try {
+                const p = await fetchData(`projetos/${idProjeto}`);
+                if (p && p.nome_projeto) {
+                    document.getElementById('task-project-name').textContent = p.nome_projeto;
+                }
+            } catch (err) {
+                console.error('Erro ao carregar detalhes do projeto:', err);
+            }
+        }
+
+        async function loadTaskDetails() {
+            if (!idProjeto || !idTarefa) return;
+            try {
+                const response = await fetchData(`projetos/${idProjeto}/tarefas`);
+                if (Array.isArray(response)) {
+                    const t = response.find(x => x.id_tarefa === parseInt(idTarefa, 10));
+                    if (t) {
+                        document.getElementById('task-descricao').value = t.descricao_tarefa || '';
+                        document.getElementById('task-inicio').value = t.inicio_previsto ? t.inicio_previsto.substring(0, 10) : '';
+                        document.getElementById('task-fim').value = t.fim_previsto ? t.fim_previsto.substring(0, 10) : '';
+                        
+                        const colabSelect = document.getElementById('task-colaborador');
+                        colabSelect.value = t.id_colaborador || '';
+
+                        document.getElementById('task-status').value = t.status || '';
+                        document.getElementById('task-progresso').value = t.perc_atingido !== null && t.perc_atingido !== undefined ? t.perc_atingido : '0';
+                        document.getElementById('task-descricao-detalhada').value = t.descricao_detalhada || '';
+                        document.getElementById('task-observacoes').value = t.observacoes || '';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao carregar dados da tarefa:', err);
+            }
+        }
+
+        async function saveTask() {
+            const descricao = document.getElementById('task-descricao').value.trim();
+            const inicioInput = document.getElementById('task-inicio');
+            const fimInput = document.getElementById('task-fim');
+            const colabId = document.getElementById('task-colaborador').value;
+            const status = document.getElementById('task-status').value;
+            const progresso = document.getElementById('task-progresso').value;
+            const descDet = document.getElementById('task-descricao-detalhada').value.trim();
+            const observacoes = document.getElementById('task-observacoes').value.trim();
+
+            if (!descricao) {
+                alert('Por favor, preencha a Tarefa.');
+                return;
+            }
+            
+            // Validate dates
+            if (inicioInput.validity.badInput) {
+                alert('Por favor, insira uma data de início prevista válida.');
+                return;
+            }
+            if (fimInput.validity.badInput) {
+                alert('Por favor, insira uma data de fim prevista válida.');
+                return;
+            }
+            if (inicioInput.value && fimInput.value && inicioInput.value > fimInput.value) {
+                alert('A data de início previsto não pode ser posterior à data de fim previsto.');
+                return;
+            }
+
+            if (!status) {
+                alert('Por favor, selecione o Status da tarefa.');
+                return;
+            }
+            if (!descDet) {
+                alert('Por favor, preencha a Descrição da tarefa.');
+                return;
+            }
+
+            if (parseInt(progresso, 10) === 100 && status !== 'Concluída') {
+                alert('Por favor, altere o Status para "Concluída" ou reduza o % Atingido (pois a tarefa está marcada como 100% atingida).');
+                return;
+            }
+
+            if (status === 'Concluída' && (progresso === '' || parseInt(progresso, 10) < 100)) {
+                alert('Uma tarefa concluída deve ter 100% de atingimento. Por favor, ajuste o % Atingido para 100 ou altere o Status.');
+                return;
+            }
+
+            const payload = {
+                id_tarefa: idTarefa ? parseInt(idTarefa, 10) : null,
+                id_projeto: parseInt(idProjeto, 10),
+                descricao_tarefa: descricao,
+                inicio_previsto: inicioInput.value || null,
+                fim_previsto: fimInput.value || null,
+                id_colaborador: colabId ? parseInt(colabId, 10) : null,
+                status: status,
+                perc_atingido: progresso !== '' ? parseInt(progresso, 10) : 0,
+                descricao_detalhada: descDet,
+                observacoes: observacoes || null
+            };
+
+            try {
+                const response = await postData('projetos/tarefas/save', payload);
+                if (response.success) {
+                    alert('Tarefa salva com sucesso!');
+                    goBack();
+                } else {
+                    alert('Erro ao salvar tarefa: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao salvar tarefa.');
+            }
+        }
+
+        window.onload = async function () {
+            // Setup date pickers to open native calendar on click
+            ['task-inicio', 'task-fim'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('click', () => {
+                        try {
+                            input.showPicker();
+                        } catch (e) {
+                            console.warn('showPicker not supported:', e);
+                        }
+                    });
+                }
+            });
+
+            // Load dependencies
+            await loadTeamOptions();
+            await loadProjectDetails();
+            
+            // If editing, load details
+            if (idTarefa) {
+                await loadTaskDetails();
+            }
+        };
+
+    </script>
+</body>
+</html>

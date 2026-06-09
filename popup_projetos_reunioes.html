@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Reunião - Adoção Espiritual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #7f8c8d;
+            --border-color: #eee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .help-card {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-content-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: nowrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .form-label {
+            font-size: 0.95rem;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            background-color: white;
+            transition: border-color 0.2s;
+            height: 38px;
+            width: 100%;
+        }
+
+        textarea.form-control {
+            height: auto;
+            resize: vertical;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-red);
+        }
+
+        .btn-action {
+            padding: 8px 32px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-style: italic;
+            border-radius: 20px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            height: 38px;
+        }
+
+        .btn-delete {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1.5px solid var(--primary-red);
+        }
+
+        .btn-delete:hover {
+            background-color: #faf5f5;
+        }
+
+        .btn-save {
+            background-color: #ae3326;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-save:hover {
+            background-color: #8b251a;
+        }
+
+        @media (max-width: 580px) {
+            .form-row {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            .form-row > .form-group {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="help-card">
+        <i class="fa-solid fa-xmark" style="position: absolute; top: 15px; right: 15px; font-size: 24px; color: #777; cursor: pointer;" onclick="goBack()" title="Voltar"></i>
+        
+        <div style="margin-bottom: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; display: flex; flex-direction: column; gap: 4px;">
+            <div>
+                <span style="font-size: 0.8rem; color: var(--primary-red); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">PROJETO</span>
+                <h3 id="meeting-project-name" style="font-size: 1.1rem; color: #333; font-weight: 700; margin-top: 1px;">--</h3>
+            </div>
+            <div style="margin-top: 5px;">
+                <span id="meeting-popup-action-title" style="font-size: 0.9rem; color: #555; font-weight: 600; text-transform: uppercase;">Inclusão de Reunião</span>
+            </div>
+        </div>
+        
+        <div class="form-content-rows">
+            <!-- Row 1: Data, Participantes -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 35%;">
+                    <label class="form-label">Data <span>*</span></label>
+                    <input type="text" id="meeting-data" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" />
+                </div>
+                <div class="form-group" style="flex: 1 1 65%;">
+                    <label class="form-label">Participantes <span>*</span></label>
+                    <input type="text" id="meeting-participantes" class="form-control" placeholder="Nomes dos participantes" maxlength="100" />
+                </div>
+            </div>
+            
+            <!-- Row 2: O que foi resolvido -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1 1 100%;">
+                    <label class="form-label">O que foi resolvido <span>*</span></label>
+                    <textarea id="meeting-resolvido" class="form-control" placeholder="Descreva as decisões ou pauta resolvida" rows="4" maxlength="500"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-row" style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="./logo_circular.png" alt="Logo" style="width: 32px; height: 32px;" />
+                <div style="font-size: 0.85rem; font-weight: 700; line-height: 1.1; color: #000; text-align: left;">Adoção<br>Espiritual</div>
+            </div>
+            <div class="actions-group" style="display: flex; gap: 15px;">
+                <button class="btn-action btn-delete" onclick="goBack()">Cancelar</button>
+                <button class="btn-action btn-save" onclick="saveMeeting()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const idProjeto = urlParams.get('id_projeto');
+        const idReuniao = urlParams.get('id_reuniao');
+        const nome = urlParams.get('nome') || '';
+        const cpf = urlParams.get('cpf') || '';
+
+        function goBack() {
+            window.location.href = `inclusao_projeto.html?mode=edit&id=${idProjeto}&nome=${encodeURIComponent(nome)}&cpf=${encodeURIComponent(cpf)}&tab=tab-reunioes&_t=${Date.now()}`;
+        }
+
+        function maskDate(input) {
+            if (!input) return;
+            input.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 8) v = v.slice(0, 8);
+                if (v.length > 4) {
+                    v = v.replace(/^(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+                } else if (v.length > 2) {
+                    v = v.replace(/^(\d{2})(\d{0,2})/, '$1/$2');
+                }
+                e.target.value = v;
+            });
+        }
+
+        function formatDateToBR(dateStr) {
+            if (!dateStr) return '';
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const year = date.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatDateToISO(brDateStr) {
+            if (!brDateStr) return null;
+            const parts = brDateStr.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].trim();
+                const month = parts[1].trim();
+                const year = parts[2].trim();
+                if (day.length === 2 && month.length === 2 && year.length === 4) {
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            return brDateStr;
+        }
+
+        async function loadDetails() {
+            if (!idProjeto) return;
+            try {
+                // Load project name
+                const p = await fetchData(`projetos/${idProjeto}`);
+                if (p && p.nome_projeto) {
+                    document.getElementById('meeting-project-name').textContent = p.nome_projeto;
+                }
+
+                // Load existing meeting if in edit mode
+                if (idReuniao) {
+                    const m = await fetchData(`projetos/reunioes/${idReuniao}`);
+                    if (m) {
+                        document.getElementById('meeting-data').value = formatDateToBR(m.data);
+                        document.getElementById('meeting-participantes').value = m.participantes || '';
+                        document.getElementById('meeting-resolvido').value = m.descricao_resolvido || '';
+                        
+                        document.title = 'Atualização de Reunião - Adoção Espiritual';
+                        document.getElementById('meeting-popup-action-title').textContent = 'Atualização de Reunião';
+                        document.querySelector('.btn-save').textContent = 'Atualizar';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao carregar detalhes:', err);
+            }
+        }
+
+        async function saveMeeting() {
+            const dataInput = document.getElementById('meeting-data').value.trim();
+            const participantes = document.getElementById('meeting-participantes').value.trim();
+            const resolvido = document.getElementById('meeting-resolvido').value.trim();
+
+            if (!dataInput) {
+                alert('Por favor, preencha a Data.');
+                return;
+            }
+            
+            // Basic date format validation
+            if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dataInput)) {
+                alert('Por favor, insira uma data válida no formato DD/MM/YYYY.');
+                return;
+            }
+
+            if (!participantes) {
+                alert('Por favor, preencha os Participantes.');
+                return;
+            }
+            if (!resolvido) {
+                alert('Por favor, preencha o campo O que foi resolvido.');
+                return;
+            }
+
+            const isoDate = formatDateToISO(dataInput);
+
+            const payload = {
+                id_projeto: parseInt(idProjeto, 10),
+                id_reuniao: idReuniao ? parseInt(idReuniao, 10) : null,
+                data: isoDate,
+                descricao_resolvido: resolvido,
+                participantes: participantes
+            };
+
+            try {
+                const response = await postData('projetos/reunioes/save', payload);
+                if (response.success) {
+                    alert('Reunião salva com sucesso!');
+                    goBack();
+                } else {
+                    alert('Erro ao salvar reunião: ' + (response.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao salvar reunião.');
+            }
+        }
+
+        window.onload = async function () {
+            maskDate(document.getElementById('meeting-data'));
+            await loadDetails();
+        };
+    </script>
+</body>
+</html>

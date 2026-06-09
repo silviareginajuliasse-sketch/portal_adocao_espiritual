@@ -1025,7 +1025,7 @@
             </li>
             <li><a href="Banner_aniversario.html" class="sidebar-item"><i class="fa-solid fa-image"></i> Banner aniversariantes</a>
             </li>
-            <li><a href="#" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
+            <li><a href="calendario.html" class="sidebar-item"><i class="fa-solid fa-calendar-days"></i> Calendário de atividades</a>
             </li>
             <li><a href="lista_regionais.html" class="sidebar-item" id="nav-regionais"><i class="fa-solid fa-globe"></i> Regionais</a></li>
             <li><a href="arquidioceses.html" class="sidebar-item"><i class="fa-solid fa-church"></i> Arquidioceses</a>
@@ -1089,13 +1089,13 @@
                         <button type="button" class="tab-btn active" id="tab-btn-dados" onclick="switchTab(event, 'tab-dados')">
                             <i class="fa-solid fa-clipboard-list"></i> IDENTIFICAÇÃO
                         </button>
-                        <button type="button" class="tab-btn" id="tab-btn-datas" onclick="switchTab(event, 'tab-datas')">
+                        <button type="button" class="tab-btn" id="tab-btn-datas" onclick="switchTab(event, 'tab-datas')" disabled title="Salve os dados de identificação primeiro para liberar esta aba">
                             <i class="fa-solid fa-calendar-day"></i> DATAS E INSTRUTORES
-                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #0056b3; transition: transform 0.2s;" onclick="event.stopPropagation(); openPopupTreinador()" title="Adicionar Instrutor/Data" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openPopupTreinador()" title="Adicionar Instrutor/Data" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
-                        <button type="button" class="tab-btn" id="tab-btn-participantes" onclick="switchTab(event, 'tab-participantes')">
+                        <button type="button" class="tab-btn" id="tab-btn-participantes" onclick="switchTab(event, 'tab-participantes')" disabled title="Salve os dados de identificação primeiro para liberar esta aba">
                             <i class="fa-solid fa-users"></i> PARTICIPANTES
-                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #0056b3; transition: transform 0.2s;" onclick="event.stopPropagation(); openPopupColaboradores()" title="Adicionar Participantes" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openPopupColaboradores()" title="Adicionar Participantes" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                     </div>
 
@@ -1238,12 +1238,12 @@
             if (mode === 'edit' && idTreinamento) {
                 btnExcluir.style.display = 'inline-block';
                 btnExcluir.addEventListener('click', deleteTreinamento);
-                await loadTreinamentoData(idTreinamento);
-
                 document.getElementById('tab-btn-datas').removeAttribute('disabled');
                 document.getElementById('tab-btn-datas').removeAttribute('title');
-                document.getElementById('tab-btn-participantes').removeAttribute('disabled');
-                document.getElementById('tab-btn-participantes').removeAttribute('title');
+                document.getElementById('tab-btn-participantes').setAttribute('disabled', 'true');
+                document.getElementById('tab-btn-participantes').setAttribute('title', 'Cadastre datas e instrutores primeiro para liberar esta aba');
+
+                await loadTreinamentoData(idTreinamento);
             } else {
                 btnExcluir.style.display = 'none';
                 
@@ -1385,7 +1385,8 @@
                 
                 if (response.ok && result.success) {
                     alert(mode === 'edit' ? 'Treinamento atualizado com sucesso!' : 'Treinamento incluído com sucesso!');
-                    window.location.href = `treinamentos.html?nome=${encodeURIComponent(urlParams.get('nome') || '')}&cpf=${encodeURIComponent(urlParams.get('cpf') || '')}`;
+                    const nextId = result.id || idTreinamento;
+                    window.location.href = `registro_treinamentos.html?id=${nextId}&mode=edit&nome=${encodeURIComponent(urlParams.get('nome') || '')}&cpf=${encodeURIComponent(urlParams.get('cpf') || '')}&_t=${Date.now()}`;
                 } else {
                     alert('Erro ao salvar treinamento: ' + (result.error || 'Erro desconhecido.'));
                 }
@@ -1496,6 +1497,17 @@
                 }
                 const instructors = await response.json();
                 listEl.innerHTML = '';
+
+                const tabParticipantes = document.getElementById('tab-btn-participantes');
+                if (tabParticipantes) {
+                    if (Array.isArray(instructors) && instructors.length > 0) {
+                        tabParticipantes.removeAttribute('disabled');
+                        tabParticipantes.removeAttribute('title');
+                    } else {
+                        tabParticipantes.setAttribute('disabled', 'true');
+                        tabParticipantes.setAttribute('title', 'Cadastre datas e instrutores primeiro para liberar esta aba');
+                    }
+                }
                 
                 if (instructors.length === 0) {
                     listEl.innerHTML = '<li class="instructor-item" style="color: #777; font-style: italic;">Nenhum instrutor registrado.</li>';

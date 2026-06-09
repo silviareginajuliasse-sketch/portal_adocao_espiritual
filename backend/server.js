@@ -44,6 +44,46 @@ async function connectDB() {
     try {
         pool = mysql.createPool(dbConfig);
         console.log('Conectado ao MySQL!');
+
+        // Check if criado_em in table treinamentos has implicit "on update CURRENT_TIMESTAMP"
+        const [columns] = await pool.query(`
+            SELECT EXTRA 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = 'treinamentos' 
+              AND COLUMN_NAME = 'criado_em'
+        `);
+        if (columns.length > 0 && columns[0].EXTRA.toLowerCase().includes('on update')) {
+            console.log('Corrigindo coluna criado_em da tabela treinamentos (removendo ON UPDATE)...');
+            await pool.query(`
+                ALTER TABLE treinamentos 
+                MODIFY COLUMN criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            `);
+            console.log('Coluna criado_em corrigida com sucesso.');
+        }
+
+        // Check if recusado column exists in table pesquisas_satisfacao
+        const [psColumns] = await pool.query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = 'pesquisas_satisfacao' 
+              AND COLUMN_NAME = 'recusado'
+        `);
+        if (psColumns.length === 0) {
+            console.log('Atualizando a tabela pesquisas_satisfacao para suportar recusa e campos nulos...');
+            await pool.query(`
+                ALTER TABLE pesquisas_satisfacao 
+                ADD COLUMN recusado TINYINT(1) DEFAULT 0,
+                MODIFY COLUMN funcao VARCHAR(100) NULL,
+                MODIFY COLUMN frequencia_uso VARCHAR(100) NULL,
+                MODIFY COLUMN nota_navegacao INT NULL,
+                MODIFY COLUMN nota_visual INT NULL,
+                MODIFY COLUMN frequencia_erros VARCHAR(100) NULL,
+                MODIFY COLUMN nps INT NULL
+            `);
+            console.log('Tabela pesquisas_satisfacao atualizada com sucesso.');
+        }
     } catch (err) {
         console.error('Erro ao conectar ao MySQL:', err);
         process.exit(1);
@@ -723,6 +763,255 @@ app.get('/api/banner_aniversariantes', async (req, res) => {
     }
 });
 
+// Route to list all calendar events (joining with calendario_datas)
+app.get('/api/calendario', async (req, res) => {
+    console.log('GET /api/calendario');
+    try {
+        const query = `
+            SELECT c.id_calendario, c.id_evento, c.nome_evento, c.calendario_religioso, c.feriado, c.recorrente, c.onde, c.id_paroquia, c.hora, c.observacoes, cd.data 
+            FROM calendario c
+            INNER JOIN calendario_datas cd ON c.id_calendario = cd.id_calendario AND c.id_evento = cd.id_evento
+            ORDER BY cd.data ASC, c.hora ASC
+        `;
+        const [rows] = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao listar eventos do calendario:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get enum values for calendario onde
+app.get('/api/calendario/onde/valores', async (req, res) => {
+    try {
+        const [rows] = await pool.query("SHOW COLUMNS FROM calendario LIKE 'onde'");
+        if (rows.length > 0) {
+            const type = rows[0].Type; // e.g. enum('Google meeting','Instagram','Paroquia','Não se aplica')
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                const values = match[1].split(',').map(v => v.replace(/^'(.*)'$/, '$1'));
+                return res.json(values);
+            }
+        }
+        res.json([]);
+    } catch (err) {
+        console.error('Erro ao obter valores de onde do calendario:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get a single calendar event by id (with its dates)
+app.get('/api/calendario/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`GET /api/calendario/${id}`);
+    try {
+        const eventQuery = `
+            SELECT c.*, col.nome_colaborador AS nome_colaborador_atualiza
+            FROM calendario c
+            LEFT JOIN colaboradores col ON c.id_colaborador_atualiza = col.id_colaborador
+            WHERE c.id_calendario = ?
+        `;
+        const [eventRows] = await pool.query(eventQuery, [parseInt(id, 10)]);
+        if (eventRows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Evento não encontrado' });
+        }
+        const event = eventRows[0];
+
+        const datesQuery = 'SELECT data FROM calendario_datas WHERE id_calendario = ?';
+        const [dateRows] = await pool.query(datesQuery, [parseInt(id, 10)]);
+        
+        event.datas = dateRows.map(row => row.data);
+        res.json(event);
+    } catch (err) {
+        console.error(`Erro ao buscar evento ${id}:`, err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save or update calendar events and their dates
+app.post('/api/calendario/save', async (req, res) => {
+    console.log('POST /api/calendario/save - Body:', req.body);
+    const {
+        id_calendario,
+        nome_evento,
+        calendario_religioso,
+        feriado,
+        recorrente,
+        onde,
+        id_paroquia,
+        hora,
+        observacoes,
+        id_colaborador_atualiza,
+        datas
+    } = req.body;
+
+    if (!nome_evento) {
+        return res.status(400).json({ success: false, error: 'Nome do evento é obrigatório.' });
+    }
+    if (!recorrente) {
+        return res.status(400).json({ success: false, error: 'Campo Recorrente é obrigatório.' });
+    }
+    if (!onde) {
+        return res.status(400).json({ success: false, error: 'Campo Onde é obrigatório.' });
+    }
+    if (onde === 'Paroquia' && !id_paroquia) {
+        return res.status(400).json({ success: false, error: 'Paróquia é obrigatória quando local é Paróquia.' });
+    }
+    if (!datas || !Array.isArray(datas) || datas.length === 0) {
+        return res.status(400).json({ success: false, error: 'Ao menos uma data deve ser incluída.' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        let eventId = id_calendario ? parseInt(id_calendario, 10) : null;
+        const relVal = (calendario_religioso === 'Sim' || calendario_religioso === true) ? 'Sim' : 'Não';
+        const feriadoVal = (feriado === 'Sim' || feriado === true) ? 'Sim' : 'Não';
+        const paroquiaId = id_paroquia ? parseInt(id_paroquia, 10) : null;
+        const colabId = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza, 10) : 2;
+
+        if (eventId) {
+            // Update event
+            const updateQuery = `
+                UPDATE calendario 
+                SET nome_evento = ?, calendario_religioso = ?, feriado = ?, recorrente = ?, onde = ?, id_paroquia = ?, hora = ?, observacoes = ?, id_colaborador_atualiza = ?, atualizado_em = CURRENT_TIMESTAMP
+                WHERE id_calendario = ?
+            `;
+            await connection.query(updateQuery, [
+                nome_evento,
+                relVal,
+                feriadoVal,
+                recorrente,
+                onde,
+                paroquiaId,
+                hora || null,
+                observacoes || null,
+                colabId,
+                eventId
+            ]);
+
+            // Delete existing dates
+            await connection.query('DELETE FROM calendario_datas WHERE id_calendario = ?', [eventId]);
+        } else {
+            // Insert event
+            const [maxRows] = await connection.query('SELECT COALESCE(MAX(id_evento), 0) + 1 AS nextId FROM calendario');
+            const nextIdEvento = maxRows[0].nextId;
+
+            const insertQuery = `
+                INSERT INTO calendario (id_evento, nome_evento, calendario_religioso, feriado, recorrente, onde, id_paroquia, hora, observacoes, id_colaborador_atualiza, criado_em)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            `;
+            const [result] = await connection.query(insertQuery, [
+                nextIdEvento,
+                nome_evento,
+                relVal,
+                feriadoVal,
+                recorrente,
+                onde,
+                paroquiaId,
+                hora || null,
+                observacoes || null,
+                colabId
+            ]);
+            eventId = result.insertId;
+        }
+
+        // Get id_evento
+        const [evRows] = await connection.query('SELECT id_evento FROM calendario WHERE id_calendario = ?', [eventId]);
+        const idEvento = evRows[0].id_evento;
+
+        // Insert dates
+        const dateValues = datas.map(d => [eventId, idEvento, parseInt(d, 10)]);
+        await connection.query('INSERT INTO calendario_datas (id_calendario, id_evento, data) VALUES ?', [dateValues]);
+
+        await connection.commit();
+        res.json({ success: true, id_calendario: eventId });
+    } catch (err) {
+        console.error('Erro ao salvar evento no calendario:', err);
+        await connection.rollback();
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        connection.release();
+    }
+});
+
+// Route to delete a calendar event and its dates
+app.delete('/api/calendario/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`DELETE /api/calendario/${id}`);
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        
+        // Delete associated dates
+        await connection.query('DELETE FROM calendario_datas WHERE id_calendario = ?', [parseInt(id, 10)]);
+
+        // Delete event
+        const [result] = await connection.query('DELETE FROM calendario WHERE id_calendario = ?', [parseInt(id, 10)]);
+        
+        if (result.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, error: 'Evento não encontrado' });
+        }
+
+        await connection.commit();
+        res.json({ success: true });
+    } catch (err) {
+        console.error(`Erro ao deletar evento ${id}:`, err);
+        await connection.rollback();
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        connection.release();
+    }
+});
+
+// Route to add a single date to an event
+app.post('/api/calendario/:id/data', async (req, res) => {
+    const { id } = req.params;
+    const { data } = req.body;
+    if (!data) {
+        return res.status(400).json({ success: false, error: 'Data é obrigatória.' });
+    }
+    try {
+        const [rows] = await pool.query('SELECT id_evento FROM calendario WHERE id_calendario = ?', [parseInt(id, 10)]);
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Evento não encontrado.' });
+        }
+        const id_evento = rows[0].id_evento;
+
+        const [existing] = await pool.query(
+            'SELECT 1 FROM calendario_datas WHERE id_calendario = ? AND data = ?',
+            [parseInt(id, 10), parseInt(data, 10)]
+        );
+        if (existing.length === 0) {
+            await pool.query(
+                'INSERT INTO calendario_datas (id_calendario, id_evento, data) VALUES (?, ?, ?)',
+                [parseInt(id, 10), id_evento, parseInt(data, 10)]
+            );
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao adicionar data ao evento:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a single date from an event
+app.delete('/api/calendario/:id/data/:data', async (req, res) => {
+    const { id, data } = req.params;
+    try {
+        await pool.query(
+            'DELETE FROM calendario_datas WHERE id_calendario = ? AND data = ?',
+            [parseInt(id, 10), parseInt(data, 10)]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao remover data do evento:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Route to save/update banner aniversariantes
 app.post('/api/banner_aniversariantes/save', async (req, res) => {
     console.log('POST /api/banner_aniversariantes/save - Body keys:', Object.keys(req.body));
@@ -797,10 +1086,507 @@ app.delete('/api/banner_aniversariantes/:ano/:mes', async (req, res) => {
     }
 });
 
+// GET: Status enum options for projects table
+app.get('/api/projetos/status-options', async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT COLUMN_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = ? 
+              AND TABLE_NAME = 'projetos' 
+              AND COLUMN_NAME = 'status'
+        `, [process.env.DB_NAME || 'adocao_espiritual']);
+
+        if (rows.length > 0) {
+            const columnType = rows[0].COLUMN_TYPE;
+            const match = columnType.match(/^enum\((.*)\)$/);
+            if (match) {
+                const options = match[1]
+                    .split(',')
+                    .map(val => val.trim().replace(/^'(.*)'$/, '$1').replace(/\\'/g, "'"));
+                return res.json(options);
+            }
+        }
+        res.json(['Não iniciado', 'Em andamento', 'Cancelado', 'Encerrado']);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos/status-options:', err);
+        res.json(['Não iniciado', 'Em andamento', 'Cancelado', 'Encerrado']);
+    }
+});
+
+// GET: List all projects
+app.get('/api/projetos', async (req, res) => {
+    try {
+        const query = `
+            SELECT p.id_projeto, p.nome_projeto, p.id_area, eo.nome_area, p.data_inicio, p.data_fim, p.status
+            FROM projetos p
+            LEFT JOIN estrutura_organizacional eo ON p.id_area = eo.id_area
+            ORDER BY p.nome_projeto ASC
+        `;
+        const [rows] = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET: Get specific project details
+app.get('/api/projetos/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT p.id_projeto, p.nome_projeto, p.id_area, p.objetivo_projeto, p.data_inicio, p.data_fim, p.status, p.observacoes,
+                   p.criado_em, p.atualizado_em, p.id_colaborador_atualiza,
+                   c.apelido_colaborador AS nome_colaborador_atualiza
+            FROM projetos p
+            LEFT JOIN colaboradores c ON p.id_colaborador_atualiza = c.id_colaborador
+            WHERE p.id_projeto = ?
+        `;
+        const [rows] = await pool.query(query, [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Projeto não encontrado' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos/:id:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST: Save/Update project
+app.post('/api/projetos/save', async (req, res) => {
+    console.log('POST /api/projetos/save - Body:', req.body);
+    const { id, nome_projeto, id_area, objetivo_projeto, data_inicio, data_fim, status, observacoes, id_colaborador_atualiza } = req.body;
+
+    try {
+        // Validation
+        if (!nome_projeto || nome_projeto.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, preencha o Nome do projeto.' });
+        }
+        if (!id_area) {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione a Área responsável.' });
+        }
+        if (!status) {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o Status.' });
+        }
+        if (!objetivo_projeto || objetivo_projeto.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, preencha o Objetivo.' });
+        }
+
+        const areaId = parseInt(id_area, 10);
+        const colabId = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza, 10) : null;
+        const dInicio = data_inicio ? data_inicio : null;
+        const dFim = data_fim ? data_fim : null;
+
+        if (id) {
+            // Edit mode (Alteração)
+            // O campo criado_em não deve ser gravado/alterado
+            const query = `
+                UPDATE projetos 
+                SET nome_projeto = ?, id_area = ?, objetivo_projeto = ?, data_inicio = ?, data_fim = ?, status = ?, observacoes = ?, id_colaborador_atualiza = ?, atualizado_em = NOW()
+                WHERE id_projeto = ?
+            `;
+            await pool.query(query, [nome_projeto.trim(), areaId, objetivo_projeto.trim(), dInicio, dFim, status, observacoes ? observacoes.trim() : null, colabId, parseInt(id, 10)]);
+            res.json({ success: true, id });
+        } else {
+            // Creation mode (Inclusão)
+            // O campo atualizado_em deve ser gravado como NULL (não atualizado)
+            const query = `
+                INSERT INTO projetos (nome_projeto, id_area, objetivo_projeto, data_inicio, data_fim, status, observacoes, id_colaborador_atualiza, criado_em, atualizado_em)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL)
+            `;
+            const [result] = await pool.query(query, [nome_projeto.trim(), areaId, objetivo_projeto.trim(), dInicio, dFim, status, observacoes ? observacoes.trim() : null, colabId]);
+            res.json({ success: true, id: result.insertId });
+        }
+    } catch (err) {
+        console.error('[API ERROR] POST /api/projetos/save:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// DELETE: Delete project
+app.delete('/api/projetos/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await pool.query('DELETE FROM projetos WHERE id_projeto = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Projeto não encontrado' });
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] DELETE /api/projetos/:id:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- ROTAS PARA TAREFAS DE PROJETOS ---
+
+// GET: List tasks for a specific project
+app.get('/api/projetos/:id/tarefas', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT pt.id_tarefa, pt.id_projeto, pt.descricao_tarefa, pt.inicio_previsto, pt.fim_previsto, pt.id_colaborador, c.apelido_colaborador, pt.status, pt.perc_atingido, pt.observacoes, pt.descricao_detalhada, pt.criado_em
+            FROM projetos_tarefas pt
+            LEFT JOIN colaboradores c ON pt.id_colaborador = c.id_colaborador
+            WHERE pt.id_projeto = ?
+            ORDER BY pt.criado_em ASC, pt.id_tarefa ASC
+        `;
+        const [tasks] = await pool.query(query, [id]);
+
+        // Fetch all activities for this project
+        const [activities] = await pool.query(
+            'SELECT id_atividade, id_tarefa, descricao, status, perc_atingido FROM projetos_tarefas_atividades WHERE id_projeto = ? ORDER BY id_atividade ASC',
+            [id]
+        );
+
+        // Group activities by id_tarefa
+        const activitiesByTask = {};
+        activities.forEach(act => {
+            if (!activitiesByTask[act.id_tarefa]) {
+                activitiesByTask[act.id_tarefa] = [];
+            }
+            activitiesByTask[act.id_tarefa].push(act);
+        });
+
+        // Append activities to tasks
+        const tasksWithActivities = tasks.map(t => {
+            return {
+                ...t,
+                atividades: activitiesByTask[t.id_tarefa] || []
+            };
+        });
+
+        res.json(tasksWithActivities);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos/:id/tarefas:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST: Save/Update task
+app.post('/api/projetos/tarefas/save', async (req, res) => {
+    console.log('POST /api/projetos/tarefas/save - Body:', req.body);
+    const { id_tarefa, id_projeto, descricao_tarefa, inicio_previsto, fim_previsto, id_colaborador, status, perc_atingido, observacoes, descricao_detalhada } = req.body;
+
+    try {
+        // Validation
+        if (!id_projeto) {
+            return res.status(400).json({ success: false, error: 'ID do projeto é obrigatório.' });
+        }
+        if (!descricao_tarefa || descricao_tarefa.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Atividade é obrigatória.' });
+        }
+        if (!descricao_detalhada || descricao_detalhada.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Descrição da tarefa é obrigatória.' });
+        }
+        if (!status) {
+            return res.status(400).json({ success: false, error: 'Status é obrigatório.' });
+        }
+
+        const projId = parseInt(id_projeto, 10);
+        const colabId = id_colaborador ? parseInt(id_colaborador, 10) : null;
+        const perc = perc_atingido !== undefined && perc_atingido !== null && perc_atingido !== '' ? parseInt(perc_atingido, 10) : null;
+
+        if (perc === 100 && status !== 'Concluída') {
+            return res.status(400).json({ success: false, error: 'Por favor, altere o Status para "Concluída" ou reduza o % Atingido (pois a tarefa está marcada como 100% atingida).' });
+        }
+        if (status === 'Concluída' && (perc === null || perc < 100)) {
+            return res.status(400).json({ success: false, error: 'Uma tarefa concluída deve ter 100% de atingimento. Por favor, ajuste o % Atingido para 100 ou altere o Status.' });
+        }
+
+        const dInicio = inicio_previsto ? inicio_previsto : null;
+        const dFim = fim_previsto ? fim_previsto : null;
+        const obs = observacoes ? observacoes.trim() : null;
+        const descDet = descricao_detalhada ? descricao_detalhada.trim() : null;
+
+        if (id_tarefa) {
+            // Update
+            const query = `
+                UPDATE projetos_tarefas
+                SET descricao_tarefa = ?, inicio_previsto = ?, fim_previsto = ?, id_colaborador = ?, status = ?, perc_atingido = ?, observacoes = ?, descricao_detalhada = ?
+                WHERE id_tarefa = ?
+            `;
+            await pool.query(query, [descricao_tarefa.trim(), dInicio, dFim, colabId, status, perc, obs, descDet, parseInt(id_tarefa, 10)]);
+            res.json({ success: true, id_tarefa });
+        } else {
+            // Insert - generate id_tarefa manually
+            const [rows] = await pool.query('SELECT COALESCE(MAX(id_tarefa), 0) + 1 AS nextId FROM projetos_tarefas');
+            const nextId = rows[0].nextId;
+
+            const query = `
+                INSERT INTO projetos_tarefas (id_tarefa, id_projeto, descricao_tarefa, inicio_previsto, fim_previsto, id_colaborador, status, perc_atingido, observacoes, descricao_detalhada, criado_em)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            `;
+            await pool.query(query, [nextId, projId, descricao_tarefa.trim(), dInicio, dFim, colabId, status, perc, obs, descDet]);
+            res.json({ success: true, id_tarefa: nextId });
+        }
+    } catch (err) {
+        console.error('[API ERROR] POST /api/projetos/tarefas/save:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// DELETE: Delete task
+app.delete('/api/projetos/tarefas/:id_tarefa', async (req, res) => {
+    const { id_tarefa } = req.params;
+    try {
+        await pool.query('DELETE FROM projetos_tarefas WHERE id_tarefa = ?', [id_tarefa]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] DELETE /api/projetos/tarefas/:id_tarefa:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// POST: Save project task activity
+app.post('/api/projetos/tarefas/atividades/save', async (req, res) => {
+    console.log('POST /api/projetos/tarefas/atividades/save - Body:', req.body);
+    const { id_projeto, id_tarefa, id_atividade, descricao, status, perc_atingido } = req.body;
+
+    try {
+        if (!id_projeto) {
+            return res.status(400).json({ success: false, error: 'ID do projeto é obrigatório.' });
+        }
+        if (!id_tarefa) {
+            return res.status(400).json({ success: false, error: 'ID da tarefa é obrigatório.' });
+        }
+        if (!descricao || descricao.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Descrição é obrigatória.' });
+        }
+        if (!status) {
+            return res.status(400).json({ success: false, error: 'Status é obrigatório.' });
+        }
+
+        const projId = parseInt(id_projeto, 10);
+        const taskId = parseInt(id_tarefa, 10);
+        const perc = perc_atingido !== undefined && perc_atingido !== null && perc_atingido !== '' ? parseInt(perc_atingido, 10) : 0;
+
+        if (id_atividade) {
+            // Update
+            const query = `
+                UPDATE projetos_tarefas_atividades
+                SET descricao = ?, status = ?, perc_atingido = ?
+                WHERE id_atividade = ?
+            `;
+            await pool.query(query, [descricao.trim(), status, perc, parseInt(id_atividade, 10)]);
+            res.json({ success: true, id_atividade });
+        } else {
+            // Insert - generate id_atividade manually
+            const [rows] = await pool.query('SELECT COALESCE(MAX(id_atividade), 0) + 1 AS nextId FROM projetos_tarefas_atividades');
+            const nextId = rows[0].nextId;
+
+            const query = `
+                INSERT INTO projetos_tarefas_atividades (id_projeto, id_tarefa, id_atividade, descricao, status, perc_atingido)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
+            await pool.query(query, [projId, taskId, nextId, descricao.trim(), status, perc]);
+            res.json({ success: true, id_atividade: nextId });
+        }
+    } catch (err) {
+        console.error('[API ERROR] POST /api/projetos/tarefas/atividades/save:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET: Fetch a single task activity
+app.get('/api/projetos/tarefas/atividades/:id_atividade', async (req, res) => {
+    const { id_atividade } = req.params;
+    try {
+        const [rows] = await pool.query('SELECT * FROM projetos_tarefas_atividades WHERE id_atividade = ?', [id_atividade]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Atividade não encontrada' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos/tarefas/atividades/:id_atividade:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE: Delete project task activity
+app.delete('/api/projetos/tarefas/atividades/:id_atividade', async (req, res) => {
+    const { id_atividade } = req.params;
+    try {
+        await pool.query('DELETE FROM projetos_tarefas_atividades WHERE id_atividade = ?', [id_atividade]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] DELETE /api/projetos/tarefas/atividades/:id_atividade:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- ROTAS PARA REUNIÕES DE PROJETOS ---
+
+// GET: List meetings for a specific project
+app.get('/api/projetos/:id/reunioes', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT id_projeto, id_reuniao, data, descricao_resolvido, participantes
+            FROM projetos_reunioes
+            WHERE id_projeto = ?
+            ORDER BY data DESC, id_reuniao DESC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos/:id/reunioes:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET: Fetch details of a single meeting
+app.get('/api/projetos/reunioes/:id_reuniao', async (req, res) => {
+    const { id_reuniao } = req.params;
+    try {
+        const [rows] = await pool.query('SELECT * FROM projetos_reunioes WHERE id_reuniao = ?', [id_reuniao]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Reunião não encontrada' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos/reunioes/:id_reuniao:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST: Save/Update project meeting
+app.post('/api/projetos/reunioes/save', async (req, res) => {
+    console.log('POST /api/projetos/reunioes/save - Body:', req.body);
+    const { id_projeto, id_reuniao, data, descricao_resolvido, participantes } = req.body;
+
+    try {
+        if (!id_projeto) {
+            return res.status(400).json({ success: false, error: 'ID do projeto é obrigatório.' });
+        }
+        if (!data) {
+            return res.status(400).json({ success: false, error: 'Data da reunião é obrigatória.' });
+        }
+        if (!descricao_resolvido || descricao_resolvido.trim() === '') {
+            return res.status(400).json({ success: false, error: 'O que foi resolvido é obrigatório.' });
+        }
+        if (!participantes || participantes.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Participantes são obrigatórios.' });
+        }
+
+        const projId = parseInt(id_projeto, 10);
+
+        if (id_reuniao) {
+            // Update
+            const query = `
+                UPDATE projetos_reunioes
+                SET data = ?, descricao_resolvido = ?, participantes = ?
+                WHERE id_reuniao = ?
+            `;
+            await pool.query(query, [data, descricao_resolvido.trim(), participantes.trim(), parseInt(id_reuniao, 10)]);
+            res.json({ success: true, id_reuniao });
+        } else {
+            // Insert - generate id_reuniao manually
+            const [rows] = await pool.query('SELECT COALESCE(MAX(id_reuniao), 0) + 1 AS nextId FROM projetos_reunioes');
+            const nextId = rows[0].nextId;
+
+            const query = `
+                INSERT INTO projetos_reunioes (id_projeto, id_reuniao, data, descricao_resolvido, participantes)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+            await pool.query(query, [projId, nextId, data, descricao_resolvido.trim(), participantes.trim()]);
+            res.json({ success: true, id_reuniao: nextId });
+        }
+    } catch (err) {
+        console.error('[API ERROR] POST /api/projetos/reunioes/save:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// DELETE: Delete project meeting
+app.delete('/api/projetos/reunioes/:id_reuniao', async (req, res) => {
+    const { id_reuniao } = req.params;
+    try {
+        await pool.query('DELETE FROM projetos_reunioes WHERE id_reuniao = ?', [id_reuniao]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] DELETE /api/projetos/reunioes/:id_reuniao:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- ROTAS PARA EQUIPE DE PROJETOS ---
+
+// GET: List team members for a specific project
+app.get('/api/projetos/:id/equipe', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT pe.id_projeto, pe.id_colaborador, c.nome_colaborador, c.apelido_colaborador, c.email, c.telefone, c.status, c.cidade, e.sigla_estado
+            FROM projetos_equipes pe
+            LEFT JOIN colaboradores c ON pe.id_colaborador = c.id_colaborador
+            LEFT JOIN estados e ON c.id_estado = e.id_estado
+            WHERE pe.id_projeto = ?
+            ORDER BY c.nome_colaborador ASC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/projetos/:id/equipe:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST: Save project team members (bulk replacement)
+app.post('/api/projetos/:id/equipe', async (req, res) => {
+    console.log(`POST /api/projetos/${req.params.id}/equipe - Body:`, req.body);
+    const { id } = req.params;
+    const { colaboradores } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ success: false, error: 'ID do projeto é obrigatório.' });
+    }
+    if (!colaboradores || !Array.isArray(colaboradores)) {
+        return res.status(400).json({ success: false, error: 'Lista de colaboradores é obrigatória.' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Delete all existing team members for this project
+        await connection.query('DELETE FROM projetos_equipes WHERE id_projeto = ?', [parseInt(id, 10)]);
+
+        // 2. Insert the selected collaborators
+        if (colaboradores.length > 0) {
+            const values = colaboradores.map(colabId => [parseInt(id, 10), parseInt(colabId, 10)]);
+            await connection.query('INSERT INTO projetos_equipes (id_projeto, id_colaborador) VALUES ?', [values]);
+        }
+
+        await connection.commit();
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] POST /api/projetos/:id/equipe:', err);
+        if (connection) await connection.rollback();
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// DELETE: Delete project team member
+app.delete('/api/projetos/equipe/:id_projeto/:id_colaborador', async (req, res) => {
+    const { id_projeto, id_colaborador } = req.params;
+    try {
+        await pool.query('DELETE FROM projetos_equipes WHERE id_projeto = ? AND id_colaborador = ?', [parseInt(id_projeto, 10), parseInt(id_colaborador, 10)]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] DELETE /api/projetos/equipe/:id_projeto/:id_colaborador:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Generic GET all for a table
 app.get('/api/:table', async (req, res) => {
     const { table } = req.params;
-    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'treinamento_instrutores'];
+    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'treinamento_instrutores', 'colaborador_lideranca'];
 
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Tabela não permitida' });
@@ -2432,6 +3218,29 @@ app.post('/api/treinamento_instrutores/save', async (req, res) => {
     if (!id_treinamento) {
         return res.status(400).json({ success: false, error: 'O ID do treinamento é obrigatório.' });
     }
+
+    try {
+        // Check if the collaborator is already a participant
+        const [participants] = await pool.query(
+            'SELECT 1 FROM treinamento_participantes WHERE id_treinamento = ? AND id_colaborador = ?',
+            [parseInt(id_treinamento), parseInt(id_colaborador)]
+        );
+        if (participants.length > 0) {
+            const [colabNameRows] = await pool.query(
+                'SELECT nome_colaborador FROM colaboradores WHERE id_colaborador = ?',
+                [parseInt(id_colaborador)]
+            );
+            const colabName = colabNameRows.length > 0 ? colabNameRows[0].nome_colaborador : id_colaborador;
+            return res.status(400).json({
+                success: false,
+                error: `O colaborador "${colabName}" já está cadastrado como PARTICIPANTE neste treinamento e não pode ser adicionado como INSTRUTOR.`
+            });
+        }
+    } catch (err) {
+        console.error('Erro ao validar conflito de participante/instrutor:', err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+
     if (!data || data.trim() === "") {
         return res.status(400).json({ success: false, error: 'A data do treinamento é obrigatória.' });
     }
@@ -2633,6 +3442,28 @@ app.post('/api/treinamentos/:id/participantes', async (req, res) => {
     }
 
     try {
+        // Get all instructors for this training
+        const [instructors] = await pool.query(
+            'SELECT DISTINCT id_colaborador FROM treinamento_instrutores WHERE id_treinamento = ?',
+            [parseInt(id)]
+        );
+        const instructorIds = instructors.map(ti => ti.id_colaborador);
+
+        // Check if any collaborator to be added is already an instructor
+        for (const colabId of colaboradores) {
+            if (instructorIds.includes(parseInt(colabId))) {
+                const [colabNameRows] = await pool.query(
+                    'SELECT nome_colaborador FROM colaboradores WHERE id_colaborador = ?',
+                    [parseInt(colabId)]
+                );
+                const colabName = colabNameRows.length > 0 ? colabNameRows[0].nome_colaborador : colabId;
+                return res.status(400).json({
+                    success: false,
+                    error: `O colaborador "${colabName}" já está cadastrado como INSTRUTOR neste treinamento e não pode ser adicionado como PARTICIPANTE.`
+                });
+            }
+        }
+
         for (const colabId of colaboradores) {
             await pool.query(
                 'INSERT IGNORE INTO treinamento_participantes (id_treinamento, id_colaborador) VALUES (?, ?)',
@@ -2665,14 +3496,14 @@ app.delete('/api/treinamentos/:id', async (req, res) => {
     console.log(`[API] DELETE /api/treinamentos/${id}`);
     try {
         // Validate if there are participants registered
-        const [linked] = await pool.query('SELECT id FROM treinamento_participantes WHERE id_treinamento = ? OR id_treinamento IS NULL AND 1=0 LIMIT 1'); // Let's check column name
-        // Wait, the table definition in init.sql:
-        // CONSTRAINT `treinamento_participantes_ibfk_1` FOREIGN KEY (`treinamento_id`) REFERENCES `treinamentos` (`id_treinamento`)
-        // So the column name is 'id_treinamento'. Let's write the query correctly:
         const [linkedParticipants] = await pool.query('SELECT id FROM treinamento_participantes WHERE id_treinamento = ? LIMIT 1', [id]);
         if (linkedParticipants.length > 0) {
             return res.status(400).json({ error: 'Não é possível excluir: existem colaboradores vinculados a este treinamento.' });
         }
+        // First delete any registered sessions / instructors for this training
+        await pool.query('DELETE FROM treinamento_instrutores WHERE id_treinamento = ?', [id]);
+
+        // Then delete the training
         await pool.query('DELETE FROM treinamentos WHERE id_treinamento = ?', [id]);
         res.json({ success: true });
     } catch (err) {
@@ -2854,6 +3685,348 @@ app.post('/api/colaboradores/save', async (req, res) => {
         }
     } catch (err) {
         console.error('Erro ao salvar colaborador:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+
+// --- Collaborator Leadership Routes ---
+
+// Route to get leadership history for a specific collaborator
+app.get('/api/colaboradores/:id/lideranca', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [rows] = await pool.query('SELECT * FROM colaborador_lideranca WHERE id_colaborador = ? ORDER BY data_inicio DESC', [id]);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get enum values for tipo_lideranca
+app.get('/api/colaborador_lideranca/tipos', async (req, res) => {
+    try {
+        const [rows] = await pool.query("SHOW COLUMNS FROM colaborador_lideranca LIKE 'tipo_lideranca'");
+        if (rows.length > 0) {
+            const type = rows[0].Type; // e.g. enum('Colaborador paroquial','Coordenador paroquial','Coordenador diocesano','Coordenador de missão')
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                const values = match[1].split(',').map(v => v.replace(/^'(.*)'$/, '$1'));
+                return res.json(values);
+            }
+        }
+        res.json([]);
+    } catch (err) {
+        console.error('Erro ao obter tipos de liderança de colaboradores:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save/update collaborator leadership
+app.post('/api/colaborador_lideranca/save', async (req, res) => {
+    const {
+        id_colaborador,
+        id_movimentacao,
+        tipo_lideranca,
+        data_inicio,
+        data_fim,
+        status,
+        observacao
+    } = req.body;
+
+    if (!id_colaborador || !tipo_lideranca || !data_inicio || !status) {
+        return res.status(400).json({ success: false, error: 'Campos obrigatórios ausentes' });
+    }
+
+    const formatDateToMySQL = (dateStr) => {
+        if (!dateStr || dateStr.trim() === '') return null;
+        if (dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return `${year}-${month}-${day}`;
+            }
+        }
+        return dateStr;
+    };
+
+    const formattedInicio = formatDateToMySQL(data_inicio);
+    const formattedFim = formatDateToMySQL(data_fim);
+
+    try {
+        if (id_movimentacao) {
+            // Update
+            const query = `
+                UPDATE colaborador_lideranca SET
+                    tipo_lideranca = ?,
+                    data_inicio = ?,
+                    data_fim = ?,
+                    status = ?,
+                    observacao = ?
+                WHERE id_movimentacao = ? AND id_colaborador = ?
+            `;
+            await pool.query(query, [
+                tipo_lideranca,
+                formattedInicio,
+                formattedFim,
+                status,
+                observacao || null,
+                id_movimentacao,
+                id_colaborador
+            ]);
+            res.json({ success: true, id: id_movimentacao });
+        } else {
+            // Insert - generate next ID
+            const [maxRows] = await pool.query('SELECT COALESCE(MAX(id_movimentacao), 0) + 1 AS nextId FROM colaborador_lideranca');
+            const nextId = maxRows[0].nextId;
+
+            const query = `
+                INSERT INTO colaborador_lideranca (
+                    id_colaborador,
+                    id_movimentacao,
+                    tipo_lideranca,
+                    data_inicio,
+                    data_fim,
+                    status,
+                    observacao
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
+            await pool.query(query, [
+                id_colaborador,
+                nextId,
+                tipo_lideranca,
+                formattedInicio,
+                formattedFim,
+                status,
+                observacao || null
+            ]);
+            res.json({ success: true, id: nextId });
+        }
+    } catch (err) {
+        console.error('Erro ao salvar liderança do colaborador:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a collaborator leadership record
+app.delete('/api/colaborador_lideranca/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM colaborador_lideranca WHERE id_movimentacao = ?', [id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+
+// --- User Satisfaction Survey (Pesquisa de Satisfação) Routes ---
+
+// Route to save survey responses
+// Route to save survey responses
+app.post('/api/pesquisa_satisfacao/save', async (req, res) => {
+    const {
+        id_colaborador,
+        funcao,
+        frequencia_uso,
+        nota_navegacao,
+        nota_visual,
+        nota_celular,
+        satisfacao_colaboradores,
+        satisfacao_projetos,
+        satisfacao_treinamentos,
+        satisfacao_aniversariantes,
+        frequencia_erros,
+        nps,
+        observacao,
+        recusado
+    } = req.body;
+
+    if (!id_colaborador) {
+        return res.status(400).json({ success: false, error: 'Identificação do colaborador é obrigatória. Pesquisas anônimas não são permitidas.' });
+    }
+
+    // Handle opt-out (user does not wish to respond)
+    if (recusado) {
+        try {
+            const query = `
+                INSERT INTO pesquisas_satisfacao (id_colaborador, recusado) 
+                VALUES (?, 1)
+            `;
+            const [result] = await pool.query(query, [parseInt(id_colaborador)]);
+            return res.json({ success: true, id: result.insertId });
+        } catch (err) {
+            console.error('Erro ao salvar recusa da pesquisa de satisfação:', err);
+            return res.status(500).json({ success: false, error: err.message });
+        }
+    }
+
+    if (!funcao || !frequencia_uso || !nota_navegacao || !nota_visual || !frequencia_erros || nps === undefined) {
+        return res.status(400).json({ success: false, error: 'Campos obrigatórios ausentes.' });
+    }
+
+    try {
+        const query = `
+            INSERT INTO pesquisas_satisfacao (
+                id_colaborador,
+                funcao,
+                frequencia_uso,
+                nota_navegacao,
+                nota_visual,
+                nota_celular,
+                satisfacao_colaboradores,
+                satisfacao_projetos,
+                satisfacao_treinamentos,
+                satisfacao_aniversariantes,
+                frequencia_erros,
+                nps,
+                observacao,
+                recusado
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        `;
+        const [result] = await pool.query(query, [
+            parseInt(id_colaborador),
+            funcao,
+            frequencia_uso,
+            parseInt(nota_navegacao),
+            parseInt(nota_visual),
+            nota_celular ? parseInt(nota_celular) : null,
+            satisfacao_colaboradores || null,
+            satisfacao_projetos || null,
+            satisfacao_treinamentos || null,
+            satisfacao_aniversariantes || null,
+            frequencia_erros,
+            parseInt(nps),
+            observacao || null
+        ]);
+
+        res.json({ success: true, id: result.insertId });
+    } catch (err) {
+        console.error('Erro ao salvar pesquisa de satisfação:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to get survey stats (averages, NPS, feature ratings)
+app.get('/api/pesquisa_satisfacao/stats', async (req, res) => {
+    try {
+        // 1. Total responses count (excluding opt-outs)
+        const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM pesquisas_satisfacao WHERE recusado = 0');
+
+        if (total === 0) {
+            return res.json({
+                total: 0,
+                avgNavegacao: 0,
+                avgVisual: 0,
+                avgCelular: 0,
+                npsScore: 0,
+                promotersPerc: 0,
+                passivesPerc: 0,
+                detractorsPerc: 0,
+                features: {}
+            });
+        }
+
+        // 2. Average scores (excluding opt-outs)
+        const [[averages]] = await pool.query(`
+            SELECT 
+                AVG(nota_navegacao) AS avgNavegacao,
+                AVG(nota_visual) AS avgVisual,
+                AVG(nota_celular) AS avgCelular
+            FROM pesquisas_satisfacao
+            WHERE recusado = 0
+        `);
+
+        // 3. NPS distribution (excluding opt-outs)
+        const [[npsCounts]] = await pool.query(`
+            SELECT 
+                COUNT(CASE WHEN nps >= 9 THEN 1 END) AS promoters,
+                COUNT(CASE WHEN nps >= 7 AND nps <= 8 THEN 1 END) AS passives,
+                COUNT(CASE WHEN nps <= 6 THEN 1 END) AS detractors
+            FROM pesquisas_satisfacao
+            WHERE recusado = 0
+        `);
+
+        const promotersPerc = Math.round((npsCounts.promoters / total) * 100);
+        const passivesPerc = Math.round((npsCounts.passives / total) * 100);
+        const detractorsPerc = Math.round((npsCounts.detractors / total) * 100);
+        const npsScore = promotersPerc - detractorsPerc;
+
+        // 4. Feature satisfaction stats (excluding opt-outs)
+        const getFeatureStats = async (column) => {
+            const [rows] = await pool.query(`
+                SELECT ${column} AS rating, COUNT(*) AS count 
+                FROM pesquisas_satisfacao 
+                WHERE ${column} IS NOT NULL AND recusado = 0
+                GROUP BY ${column}
+            `);
+            const stats = {};
+            rows.forEach(r => stats[r.rating] = r.count);
+            return stats;
+        };
+
+        const features = {
+            colaboradores: await getFeatureStats('satisfacao_colaboradores'),
+            projetos: await getFeatureStats('satisfacao_projetos'),
+            treinamentos: await getFeatureStats('satisfacao_treinamentos'),
+            aniversariantes: await getFeatureStats('satisfacao_aniversariantes')
+        };
+
+        res.json({
+            total,
+            avgNavegacao: parseFloat(averages.avgNavegacao || 0).toFixed(1),
+            avgVisual: parseFloat(averages.avgVisual || 0).toFixed(1),
+            avgCelular: parseFloat(averages.avgCelular || 0).toFixed(1),
+            npsScore,
+            promotersPerc,
+            passivesPerc,
+            detractorsPerc,
+            features
+        });
+    } catch (err) {
+        console.error('Erro ao calcular estatísticas da pesquisa:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get list of responses and comments (excluding opt-outs)
+app.get('/api/pesquisa_satisfacao/list', async (req, res) => {
+    try {
+        const query = `
+            SELECT p.*, c.nome_colaborador 
+            FROM pesquisas_satisfacao p
+            LEFT JOIN colaboradores c ON p.id_colaborador = c.id_colaborador
+            WHERE p.recusado = 0
+            ORDER BY p.criado_em DESC
+        `;
+        const [rows] = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar lista de pesquisas:', err);
+        res.status(500).json({ error: err.message });
+    }
+});// Route to check if a collaborator has already responded
+app.get('/api/pesquisa_satisfacao/status/:id_colaborador', async (req, res) => {
+    const { id_colaborador } = req.params;
+    if (!id_colaborador) {
+        return res.status(400).json({ success: false, error: 'ID do colaborador ausente.' });
+    }
+    
+    if (id_colaborador === 'null' || id_colaborador === 'undefined' || id_colaborador === '') {
+        return res.json({ success: true, responded: false });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            'SELECT COUNT(*) AS count FROM pesquisas_satisfacao WHERE id_colaborador = ?',
+            [parseInt(id_colaborador)]
+        );
+        const responded = rows[0].count > 0;
+        res.json({ success: true, responded });
+    } catch (err) {
+        console.error('Erro ao verificar status da pesquisa:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

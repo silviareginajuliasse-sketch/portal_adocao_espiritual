@@ -66,29 +66,40 @@ CREATE TABLE IF NOT EXISTS colaboradores (
 
 -- Tabela de Treinamentos
 CREATE TABLE IF NOT EXISTS treinamentos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_treinamento INT AUTO_INCREMENT PRIMARY KEY,
+    forma_treinamento ENUM('Presencial', 'On-line') DEFAULT NULL,
     titulo VARCHAR(255) NOT NULL,
-    descricao TEXT,
+    obs_treinamento VARCHAR(150) NOT NULL,
     qualifica_para ENUM('Colaborador Adoção Espiritual', 'Coordenador Paroquial', 'Coordenador Regional') NOT NULL,
-    data_inicio DATE,
-    data_fim DATE,
-    local VARCHAR(255),
-    max_participantes INT,
+    local VARCHAR(255) DEFAULT NULL,
     status ENUM('agendado', 'em_andamento', 'concluido', 'cancelado') DEFAULT 'agendado',
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id_colaborador_atualiza INT DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabela de Instrutores de Treinamentos (Agenda)
+CREATE TABLE IF NOT EXISTS treinamento_instrutores (
+    id_agenda_treinamento INT PRIMARY KEY,
+    id_treinamento INT NOT NULL,
+    data DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fim TIME NOT NULL,
+    pauta VARCHAR(100) NOT NULL,
+    id_colaborador INT NOT NULL,
+    FOREIGN KEY (id_treinamento) REFERENCES treinamentos(id_treinamento) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabela de Participantes de Treinamentos
 CREATE TABLE IF NOT EXISTS treinamento_participantes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    treinamento_id INT NOT NULL,
-    colaborador_id INT NOT NULL,
-    presenca BOOLEAN DEFAULT FALSE,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (treinamento_id) REFERENCES treinamentos(id) ON DELETE CASCADE,
-    FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_participante (treinamento_id, colaborador_id)
+    id_treinamento INT NOT NULL,
+    id_colaborador INT NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    presenca ENUM('Concluído', 'Não concluído', 'Não participou') DEFAULT NULL,
+    UNIQUE KEY unique_participante (id_treinamento, id_colaborador),
+    FOREIGN KEY (id_treinamento) REFERENCES treinamentos(id_treinamento) ON DELETE CASCADE,
+    FOREIGN KEY (id_colaborador) REFERENCES colaboradores(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabela de Atividades Realizadas
@@ -131,6 +142,38 @@ CREATE TABLE IF NOT EXISTS usuarios (
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabela de Histórico de Liderança de Colaboradores
+CREATE TABLE IF NOT EXISTS colaborador_lideranca (
+    id_colaborador INT NOT NULL,
+    id_movimentacao INT NOT NULL,
+    tipo_lideranca ENUM('Colaborador paroquial', 'Coordenador paroquial', 'Coordenador diocesano', 'Coordenador de missão') NOT NULL,
+    data_inicio DATE NOT NULL,
+    data_fim DATE DEFAULT NULL,
+    status ENUM('Ativo', 'Inativo') NOT NULL DEFAULT 'Ativo',
+    observacao VARCHAR(255) DEFAULT NULL,
+    PRIMARY KEY (id_colaborador, id_movimentacao)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pesquisas_satisfacao (
+    id_pesquisa INT AUTO_INCREMENT PRIMARY KEY,
+    id_colaborador INT NULL,
+    funcao VARCHAR(100) NULL,
+    frequencia_uso VARCHAR(100) NULL,
+    nota_navegacao INT NULL,
+    nota_visual INT NULL,
+    nota_celular INT NULL,
+    satisfacao_colaboradores VARCHAR(50) DEFAULT NULL,
+    satisfacao_projetos VARCHAR(50) DEFAULT NULL,
+    satisfacao_treinamentos VARCHAR(50) DEFAULT NULL,
+    satisfacao_aniversariantes VARCHAR(50) DEFAULT NULL,
+    frequencia_erros VARCHAR(100) NULL,
+    nps INT NULL,
+    observacao VARCHAR(500) DEFAULT NULL,
+    recusado TINYINT(1) DEFAULT 0,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_colaborador) REFERENCES colaboradores(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
