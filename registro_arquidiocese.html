@@ -1506,22 +1506,18 @@
                 arcebispo: bishop,
                 status: status,
                 id_colaborador_atualiza: idColaborador ? parseInt(idColaborador) : null,
-                socialMedia: socialMedia
+                socialMedia: socialMedia,
+                endereco: address,
+                cep: cep,
+                site: website
             };
 
             try {
                 const result = await postData('arquidioceses/save', data);
                 if (result.success) {
-                    // Save mock fields to localStorage
                     const savedId = result.id || id;
                     if (savedId) {
-                        const tempLiderancas = JSON.parse(localStorage.getItem('temp_arquidiocese_lideranca') || '[]');
-                        localStorage.setItem(`arq_mock_${savedId}`, JSON.stringify({
-                            endereco: address,
-                            cep: cep,
-                            site: website,
-                            lideranca: tempLiderancas
-                        }));
+                        localStorage.removeItem(`arq_mock_${savedId}`);
                     }
                     // Clean temp
                     localStorage.removeItem('temp_arquidiocese_lideranca');
@@ -1613,6 +1609,9 @@
                 document.getElementById('name-input').value = arq.nome_arquidiocese || '';
                 document.getElementById('bishop-input').value = arq.arcebispo || '';
                 document.getElementById('status-select').value = arq.status || '';
+                document.getElementById('address-input').value = arq.endereco || '';
+                document.getElementById('cep-input').value = arq.cep || '';
+                document.getElementById('website-input').value = arq.site || '';
 
                 if (arq.id_pais) {
                     document.getElementById('country-select').value = arq.id_pais;
@@ -1637,16 +1636,18 @@
                     });
                 }
 
-                // Load mock fields
-                const mockDataStr = localStorage.getItem(`arq_mock_${id}`);
-                if (mockDataStr) {
-                    try {
-                        const mock = JSON.parse(mockDataStr);
-                        document.getElementById('address-input').value = mock.endereco || '';
-                        document.getElementById('cep-input').value = mock.cep || '';
-                        document.getElementById('website-input').value = mock.site || '';
-                    } catch (e) {
-                        console.warn("Erro ao analisar dados mockados:", e);
+                // Fallback: Load mock fields from localStorage if database columns are empty
+                if (!arq.endereco || arq.endereco.trim() === '') {
+                    const mockDataStr = localStorage.getItem(`arq_mock_${id}`);
+                    if (mockDataStr) {
+                        try {
+                            const mock = JSON.parse(mockDataStr);
+                            document.getElementById('address-input').value = mock.endereco || '';
+                            document.getElementById('cep-input').value = mock.cep || '';
+                            document.getElementById('website-input').value = mock.site || '';
+                        } catch (e) {
+                            console.warn("Erro ao analisar dados mockados:", e);
+                        }
                     }
                 }
 

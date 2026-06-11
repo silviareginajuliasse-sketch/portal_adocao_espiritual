@@ -11,6 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js CDN for beautiful interactive charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet CSS and JS for Brazilian Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         :root {
             --primary-maroon: #7b0000;
@@ -992,6 +995,9 @@
                     <button class="dashboard-tab active" data-tab="colaboradores" onclick="switchTab('colaboradores')">
                         <i class="fa-solid fa-users"></i> Colaboradores
                     </button>
+                    <button class="dashboard-tab" data-tab="paroquias" onclick="switchTab('paroquias')">
+                        <i class="fa-solid fa-church"></i> Paróquias
+                    </button>
                     <button class="dashboard-tab" data-tab="treinamentos" onclick="switchTab('treinamentos')">
                         <i class="fa-solid fa-chalkboard-user"></i> Treinamentos
                     </button>
@@ -1080,6 +1086,99 @@
                                 <tbody id="recent-colabs-tbody">
                                     <tr>
                                         <td colspan="6" style="text-align: center; padding: 20px; color: #718096;">Carregando colaboradores...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paróquias Tab Panel -->
+                <div class="tab-panel" id="panel-paroquias">
+                    
+                    <!-- KPI Cards Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-title">Total de Paróquias / Comunidades</div>
+                            <div class="stat-card-value" id="paroquia-total">0</div>
+                            <div class="stat-card-subtext">Cadastradas no portal</div>
+                            <i class="fa-solid fa-church card-icon bg-maroon"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Paróquias Ativas</div>
+                            <div class="stat-card-value" id="paroquia-ativas">0</div>
+                            <div class="stat-card-subtext" id="paroquia-ativas-pct">0% do total</div>
+                            <i class="fa-solid fa-check-double card-icon bg-green"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Total Arquidioceses</div>
+                            <div class="stat-card-value" id="paroquia-arquidioceses">0</div>
+                            <div class="stat-card-subtext">Parcerias integradas</div>
+                            <i class="fa-solid fa-hotel card-icon bg-orange"></i>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Total Regionais / Regiões</div>
+                            <div class="stat-card-value" id="paroquia-regionais">0</div>
+                            <div class="stat-card-subtext">Divisão geográfica</div>
+                            <i class="fa-solid fa-globe card-icon bg-red"></i>
+                        </div>
+                    </div>
+
+                    <!-- Map Section Row -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card col-8">
+                            <div class="dashboard-card-title">Distribuição Geográfica de Paróquias no Brasil</div>
+                            <div id="map-paroquias" style="height: 480px; border-radius: 12px; border: 1px solid #edf2f7; box-shadow: var(--card-shadow); z-index: 1;"></div>
+                        </div>
+                        <div class="dashboard-card col-4">
+                            <div class="dashboard-card-title">Paróquias Sem GPS por Estado</div>
+                            <div style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; max-height: 480px; padding-right: 5px;">
+                                <p style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 15px; line-height: 1.4;">
+                                    As paróquias sem coordenadas de latitude e longitude cadastradas estão representadas no mapa por círculos proporcionais nas capitais de seus respectivos estados.
+                                </p>
+                                <div id="state-non-gps-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <!-- Dynamic list of non-gps parishes per state -->
+                                    <div style="text-align: center; color: var(--text-gray); font-size: 0.85rem; padding: 20px;">Carregando dados geográficos...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card col-8">
+                            <div class="dashboard-card-title">Paróquias por Regional</div>
+                            <div class="chart-container">
+                                <canvas id="chart-paroquias-regionais"></canvas>
+                            </div>
+                        </div>
+                        <div class="dashboard-card col-4">
+                            <div class="dashboard-card-title">Tipo de Organização</div>
+                            <div class="chart-container">
+                                <canvas id="chart-paroquias-tipos"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- General Table -->
+                    <div class="dashboard-card col-12">
+                        <div class="dashboard-card-title">Lista Geral de Paróquias e Comunidades</div>
+                        <div class="table-responsive">
+                            <table class="recent-table">
+                                <thead>
+                                    <tr>
+                                        <th>Paróquia / Comunidade</th>
+                                        <th>Tipo</th>
+                                        <th>Cidade / Estado</th>
+                                        <th>Arquidiocese</th>
+                                        <th>Regional</th>
+                                        <th>GPS</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paroquias-tbody">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 20px; color: #718096;">Carregando paróquias...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1249,11 +1348,19 @@
         
         let allCollaborators = [];
         let allProjects = [];
+        let allParishes = [];
+        let allArchdioceses = [];
+        let allRegionals = [];
+        
         let chartEstadosInstance = null;
         let chartPerfisInstance = null;
         let chartEvolucaoInstance = null;
         let chartProjAreasInstance = null;
         let chartProjStatusInstance = null;
+        let chartParRegionaisInstance = null;
+        let chartParTiposInstance = null;
+        let mapParoquiasInstance = null;
+        let mapParoquiasMarkers = [];
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -1293,6 +1400,8 @@
                 renderCharts(allCollaborators);
             } else if (tabName === 'projetos' && allProjects.length > 0) {
                 renderProjectsCharts(allProjects);
+            } else if (tabName === 'paroquias') {
+                renderParoquiasTab();
             }
         }
 
@@ -1769,10 +1878,396 @@
             }).join('');
         }
 
+        // Dictionary of coordinates for Brazilian states
+        const ESTADO_COORDINATES = {
+            'AC': [-9.97499, -67.8076],
+            'AL': [-9.66599, -35.735],
+            'AM': [-3.10194, -60.025],
+            'AP': [0.034944, -51.0694],
+            'BA': [-12.9718, -38.5012],
+            'CE': [-3.72753, -38.5275],
+            'DF': [-15.7797, -47.9297],
+            'ES': [-20.3155, -40.3128],
+            'GO': [-16.6864, -49.2643],
+            'MA': [-2.53874, -44.2825],
+            'MG': [-19.9227, -43.9451],
+            'MS': [-20.4486, -54.6295],
+            'MT': [-15.601, -56.0974],
+            'PA': [-1.45502, -48.4902],
+            'PB': [-7.12, -34.88],
+            'PE': [-8.05428, -34.8813],
+            'PI': [-5.09494, -42.8034],
+            'PR': [-25.4296, -49.2711],
+            'RJ': [-22.9083, -43.1964],
+            'RN': [-5.79357, -35.2119],
+            'RO': [-8.76194, -63.9039],
+            'RR': [2.82384, -60.6758],
+            'RS': [-30.0318, -51.2065],
+            'SC': [-27.5969, -48.5495],
+            'SE': [-10.9091, -37.0717],
+            'SP': [-23.5505, -46.6333],
+            'TO': [-10.2453, -48.3277]
+        };
+
+        const ESTADO_NAMES = {
+            'AC': 'Acre', 'AL': 'Alagoas', 'AM': 'Amazonas', 'AP': 'Amapá', 'BA': 'Bahia',
+            'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo', 'GO': 'Goiás',
+            'MA': 'Maranhão', 'MG': 'Minas Gerais', 'MS': 'Mato Grosso do Sul', 'MT': 'Mato Grosso',
+            'PA': 'Pará', 'PB': 'Paraíba', 'PE': 'Pernambuco', 'PI': 'Piauí', 'PR': 'Paraná',
+            'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte', 'RO': 'Rondônia', 'RR': 'Roraima',
+            'RS': 'Rio Grande do Sul', 'SC': 'Santa Catarina', 'SE': 'Sergipe', 'SP': 'São Paulo',
+            'TO': 'Tocantins'
+        };
+
+        // Fetch paróquias, arquidioceses, and regionais data upfront
+        async function loadParoquiasDashboardInitialData() {
+            try {
+                // Fetch Paróquias Details
+                const resPar = await fetch(`${API_URL}/paroquias/detalhes`);
+                if (!resPar.ok) throw new Error('Erro ao listar paróquias.');
+                allParishes = await resPar.json();
+
+                // Fetch Arquidioceses Details
+                const resArq = await fetch(`${API_URL}/arquidioceses/detalhes`);
+                if (resArq.ok) {
+                    allArchdioceses = await resArq.json();
+                }
+
+                // Fetch Regionais Details
+                const resReg = await fetch(`${API_URL}/regionais/detalhes`);
+                if (resReg.ok) {
+                    const regData = await resReg.json();
+                    // Get unique regional IDs/Names
+                    const uniqueRegs = {};
+                    regData.forEach(r => {
+                        if (r.id_regional) {
+                            uniqueRegs[r.id_regional] = r.nome_regional;
+                        }
+                    });
+                    allRegionals = Object.keys(uniqueRegs);
+                }
+
+                // If currently on Paróquias tab, render immediately
+                const activeTab = document.querySelector('.dashboard-tab.active');
+                if (activeTab && activeTab.getAttribute('data-tab') === 'paroquias') {
+                    renderParoquiasTab();
+                }
+            } catch (err) {
+                console.error(err);
+                const tbody = document.getElementById('paroquias-tbody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px; color: var(--accent-red); font-weight: 600;">
+                                <i class="fa-solid fa-circle-exclamation"></i> Erro ao carregar dados de paróquias: ${err.message}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        // Render Paróquias Dashboard elements (KPIs, Map, Charts, Table)
+        function renderParoquiasTab() {
+            if (allParishes.length === 0) return;
+
+            // 1. UPDATE KPIs
+            const total = allParishes.length;
+            const ativos = allParishes.filter(p => p.status === 'ativo' || p.status === 'Ativo').length;
+            
+            // Format status and type strings to bypass encoding issues
+            const getCleanType = (tipo) => {
+                if (!tipo) return 'Paróquia';
+                return tipo.includes('Par') || tipo.includes('par') ? 'Paróquia' : 'Comunidade';
+            };
+
+            const getCleanStatus = (status) => {
+                if (!status) return 'Ativo';
+                const s = status.toLowerCase();
+                if (s.includes('pros')) return 'Em Prospecção';
+                if (s.includes('inativo')) return 'Inativo';
+                return 'Ativo';
+            };
+
+            document.getElementById('paroquia-total').innerText = total;
+            document.getElementById('paroquia-ativas').innerText = ativos;
+            document.getElementById('paroquia-ativas-pct').innerText = total > 0 
+                ? `${((ativos / total) * 100).toFixed(1)}% do total` 
+                : '0% do total';
+            document.getElementById('paroquia-arquidioceses').innerText = allArchdioceses.length || 7;
+            document.getElementById('paroquia-regionais').innerText = allRegionals.length || 21;
+
+            // 2. RENDER MAP
+            initParoquiasMap();
+
+            // 3. RENDER CHARTS
+            renderParoquiasCharts();
+
+            // 4. POPULATE TABLE
+            const tbody = document.getElementById('paroquias-tbody');
+            if (tbody) {
+                tbody.innerHTML = allParishes.map(p => {
+                    // Check GPS status
+                    const hasGPS = p.latitude !== null && p.longitude !== null;
+                    const gpsBadge = hasGPS
+                        ? `<span class="badge" style="background-color: #e6fffa; border: 1px solid #b2f5ea; color: #234e52;"><i class="fa-solid fa-location-crosshairs"></i> Mapeado</span>`
+                        : `<span class="badge" style="background-color: #f7fafc; border: 1px solid #edf2f7; color: #718096;"><i class="fa-solid fa-location-arrow"></i> Não Mapeado</span>`;
+
+                    // Status badge class
+                    const cleanStatus = getCleanStatus(p.status);
+                    let statusClass = 'badge-active';
+                    if (cleanStatus === 'Em Prospecção') statusClass = 'badge-pending';
+                    else if (cleanStatus === 'Inativo') statusClass = 'badge-inactive';
+
+                    return `
+                        <tr>
+                            <td style="font-weight: 600; color: var(--text-dark);">${p.nome_paroquia}</td>
+                            <td>${getCleanType(p.tipo)}</td>
+                            <td>${p.cidade || 'Não informada'} / ${p.sigla_estado || '-'}</td>
+                            <td>${p.nome_arquidiocese || 'Não Informada'}</td>
+                            <td>${p.nome_regional || 'Não Informado'}</td>
+                            <td>${gpsBadge}</td>
+                            <td><span class="badge ${statusClass}">${cleanStatus}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Initialize and update the Leaflet Map
+        function initParoquiasMap() {
+            const mapContainer = document.getElementById('map-paroquias');
+            if (!mapContainer) return;
+
+            // Create map instance if it doesn't exist
+            if (!mapParoquiasInstance) {
+                mapParoquiasInstance = L.map('map-paroquias', {
+                    center: [-15.7801, -47.9292], // Center of Brazil
+                    zoom: 4,
+                    minZoom: 3,
+                    maxZoom: 18
+                });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(mapParoquiasInstance);
+            }
+
+            // Clear existing markers/layers
+            mapParoquiasMarkers.forEach(m => m.remove());
+            mapParoquiasMarkers = [];
+
+            // Group parishes without GPS coordinates by state
+            const stateNonGPS = {};
+            const stateNonGPSList = {};
+
+            allParishes.forEach(p => {
+                const hasGPS = p.latitude !== null && p.longitude !== null;
+                const state = p.sigla_estado || 'RJ';
+
+                if (hasGPS) {
+                    // Correct negative longitude common typo for Brazil (e.g. +43.46 -> -43.46)
+                    let lat = parseFloat(p.latitude);
+                    let lng = parseFloat(p.longitude);
+                    if (lng > 0 && lng < 100) {
+                        lng = -lng;
+                    }
+
+                    // Create marker for parish with GPS
+                    const marker = L.marker([lat, lng])
+                        .addTo(mapParoquiasInstance)
+                        .bindPopup(`
+                            <div style="font-family: 'Outfit', sans-serif; min-width: 200px;">
+                                <h4 style="margin: 0 0 5px 0; color: #7b0000; font-size: 14px; font-weight: 700;">${p.nome_paroquia}</h4>
+                                <span style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background-color: #fcebeb; color: #7b0000; margin-bottom: 8px;">
+                                    ${p.tipo === 'Comunidade' ? 'Comunidade' : 'Paróquia'}
+                                </span>
+                                <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-location-dot" style="margin-right: 5px; color: #7b0000;"></i>${p.cidade} - ${state}</p>
+                                <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-hotel" style="margin-right: 5px; color: #7b0000;"></i>${p.nome_arquidiocese || '-'}</p>
+                                <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-globe" style="margin-right: 5px; color: #7b0000;"></i>${p.nome_regional || '-'}</p>
+                                <p style="margin: 0; font-size: 10px; color: #a0aec0;">Coordenadas: ${lat.toFixed(5)}, ${lng.toFixed(5)}</p>
+                            </div>
+                        `);
+                    mapParoquiasMarkers.push(marker);
+                } else {
+                    // Accumulate non-GPS count by state
+                    stateNonGPS[state] = (stateNonGPS[state] || 0) + 1;
+                    if (!stateNonGPSList[state]) {
+                        stateNonGPSList[state] = [];
+                    }
+                    stateNonGPSList[state].push(p.nome_paroquia);
+                }
+            });
+
+            // Plot circle markers for states with non-GPS parishes
+            Object.entries(stateNonGPS).forEach(([state, count]) => {
+                const coords = ESTADO_COORDINATES[state];
+                if (coords) {
+                    const stateName = ESTADO_NAMES[state] || state;
+                    const parishNames = stateNonGPSList[state] || [];
+                    
+                    const circleRadius = 10 + (count * 2); // size proportional to count
+                    const circle = L.circleMarker(coords, {
+                        radius: circleRadius,
+                        fillColor: '#7b0000',
+                        color: '#f1c40f', // gold border
+                        weight: 2,
+                        opacity: 0.8,
+                        fillOpacity: 0.4
+                    })
+                    .addTo(mapParoquiasInstance)
+                    .bindPopup(`
+                        <div style="font-family: 'Outfit', sans-serif; min-width: 220px; max-width: 280px;">
+                            <h4 style="margin: 0 0 5px 0; color: #7b0000; font-size: 13px; font-weight: 700;">${stateName} (${state})</h4>
+                            <p style="margin: 0 0 8px 0; font-size: 11px; color: #4a5568; line-height: 1.3;">
+                                <strong>${count}</strong> paróquia(s) sem coordenadas de satélite cadastradas estão associadas a este estado:
+                            </p>
+                            <ul style="max-height: 120px; overflow-y: auto; font-size: 11px; padding-left: 15px; margin: 0; color: #2d3748;">
+                                ${parishNames.map(name => `<li style="margin-bottom: 3px;">${name}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `);
+                    mapParoquiasMarkers.push(circle);
+                }
+            });
+
+            // Populate the non-GPS side panel list
+            const listContainer = document.getElementById('state-non-gps-list');
+            if (listContainer) {
+                if (Object.keys(stateNonGPS).length === 0) {
+                    listContainer.innerHTML = `
+                        <div style="text-align: center; color: var(--accent-green); font-size: 0.85rem; padding: 25px; font-weight: 600;">
+                            <i class="fa-solid fa-circle-check"></i> Todas as paróquias estão mapeadas com GPS!
+                        </div>
+                    `;
+                } else {
+                    listContainer.innerHTML = Object.entries(stateNonGPS).map(([state, count]) => {
+                        const stateName = ESTADO_NAMES[state] || state;
+                        return `
+                            <div onclick="focusOnState('${state}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background-color: #f7fafc; border: 1px solid #edf2f7; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#7b0000'; this.style.backgroundColor='#fff';" onmouseout="this.style.borderColor='#edf2f7'; this.style.backgroundColor='#f7fafc';">
+                                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-dark);">${stateName} (${state})</span>
+                                <span style="background-color: var(--primary-maroon); color: white; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">${count}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Smoothly invalidate size to trigger Leaflet layout recalculation when visible
+            setTimeout(() => {
+                if (mapParoquiasInstance) {
+                    mapParoquiasInstance.invalidateSize(true);
+                }
+            }, 100);
+        }
+
+        // Focus map zoom on state coordinates when side panel list item is clicked
+        window.focusOnState = function(state) {
+            const coords = ESTADO_COORDINATES[state];
+            if (coords && mapParoquiasInstance) {
+                mapParoquiasInstance.setView(coords, 6, { animate: true, duration: 1.0 });
+                // Find and trigger popup on the circle marker for this state
+                mapParoquiasMarkers.forEach(layer => {
+                    if (layer instanceof L.CircleMarker) {
+                        const latLng = layer.getLatLng();
+                        if (latLng.lat === coords[0] && latLng.lng === coords[1]) {
+                            setTimeout(() => {
+                                layer.openPopup();
+                            }, 1000);
+                        }
+                    }
+                });
+            }
+        };
+
+        // Render Paróquias Chart.js charts
+        function renderParoquiasCharts() {
+            // Destroy existing instances to avoid canvas overlap warnings
+            if (chartParRegionaisInstance) chartParRegionaisInstance.destroy();
+            if (chartParTiposInstance) chartParTiposInstance.destroy();
+
+            // 1. Regional distribution data aggregation
+            const regionalCounts = {};
+            allParishes.forEach(p => {
+                const reg = p.nome_regional || 'Sem Regional';
+                regionalCounts[reg] = (regionalCounts[reg] || 0) + 1;
+            });
+            const sortedRegionals = Object.entries(regionalCounts)
+                .sort((a, b) => b[1] - a[1]);
+
+            const regLabels = sortedRegionals.map(item => item[0]);
+            const regValues = sortedRegionals.map(item => item[1]);
+
+            // 2. Type distribution data aggregation
+            const typeCounts = { 'Paróquia': 0, 'Comunidade': 0 };
+            allParishes.forEach(p => {
+                const cleanType = (p.tipo && (p.tipo.includes('Com') || p.tipo.includes('com'))) ? 'Comunidade' : 'Paróquia';
+                typeCounts[cleanType]++;
+            });
+
+            const typeLabels = Object.keys(typeCounts);
+            const typeValues = Object.values(typeCounts);
+
+            // Render Regional Bar Chart
+            const ctxReg = document.getElementById('chart-paroquias-regionais').getContext('2d');
+            chartParRegionaisInstance = new Chart(ctxReg, {
+                type: 'bar',
+                data: {
+                    labels: regLabels,
+                    datasets: [{
+                        label: 'Paróquias / Comunidades',
+                        data: regValues,
+                        backgroundColor: '#7b0000',
+                        borderRadius: 5,
+                        maxBarThickness: 45
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 }
+                        }
+                    }
+                }
+            });
+
+            // Render Type Doughnut Chart
+            const ctxTip = document.getElementById('chart-paroquias-tipos').getContext('2d');
+            chartParTiposInstance = new Chart(ctxTip, {
+                type: 'doughnut',
+                data: {
+                    labels: typeLabels,
+                    datasets: [{
+                        data: typeValues,
+                        backgroundColor: ['#7b0000', '#f1c40f'], // Maroon vs Gold
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { family: 'Outfit', size: 11 } }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadMenuGerencial();
             loadDashboardData();
             loadProjectsData();
+            loadParoquiasDashboardInitialData();
         });
     </script>
 </body>

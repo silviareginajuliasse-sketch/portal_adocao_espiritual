@@ -41,52 +41,123 @@ const dbConfig = {
 let pool;
 
 async function connectDB() {
-    try {
-        pool = mysql.createPool(dbConfig);
-        console.log('Conectado ao MySQL!');
+    const maxRetries = 10;
+    const retryDelay = 3000; // 3 seconds
+    let attempts = 0;
 
-        // Check if criado_em in table treinamentos has implicit "on update CURRENT_TIMESTAMP"
-        const [columns] = await pool.query(`
-            SELECT EXTRA 
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE TABLE_SCHEMA = DATABASE() 
-              AND TABLE_NAME = 'treinamentos' 
-              AND COLUMN_NAME = 'criado_em'
-        `);
-        if (columns.length > 0 && columns[0].EXTRA.toLowerCase().includes('on update')) {
-            console.log('Corrigindo coluna criado_em da tabela treinamentos (removendo ON UPDATE)...');
-            await pool.query(`
-                ALTER TABLE treinamentos 
-                MODIFY COLUMN criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-            `);
-            console.log('Coluna criado_em corrigida com sucesso.');
-        }
+    while (attempts < maxRetries) {
+        try {
+            pool = mysql.createPool(dbConfig);
+            // Executa uma query simples de teste para validar a conexão
+            await pool.query('SELECT 1');
+            console.log('Conectado ao MySQL!');
 
-        // Check if recusado column exists in table pesquisas_satisfacao
-        const [psColumns] = await pool.query(`
-            SELECT COLUMN_NAME 
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE TABLE_SCHEMA = DATABASE() 
-              AND TABLE_NAME = 'pesquisas_satisfacao' 
-              AND COLUMN_NAME = 'recusado'
-        `);
-        if (psColumns.length === 0) {
-            console.log('Atualizando a tabela pesquisas_satisfacao para suportar recusa e campos nulos...');
-            await pool.query(`
-                ALTER TABLE pesquisas_satisfacao 
-                ADD COLUMN recusado TINYINT(1) DEFAULT 0,
-                MODIFY COLUMN funcao VARCHAR(100) NULL,
-                MODIFY COLUMN frequencia_uso VARCHAR(100) NULL,
-                MODIFY COLUMN nota_navegacao INT NULL,
-                MODIFY COLUMN nota_visual INT NULL,
-                MODIFY COLUMN frequencia_erros VARCHAR(100) NULL,
-                MODIFY COLUMN nps INT NULL
+            // Check if criado_em in table treinamentos has implicit "on update CURRENT_TIMESTAMP"
+            const [columns] = await pool.query(`
+                SELECT EXTRA 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'treinamentos' 
+                  AND COLUMN_NAME = 'criado_em'
             `);
-            console.log('Tabela pesquisas_satisfacao atualizada com sucesso.');
+            if (columns.length > 0 && columns[0].EXTRA.toLowerCase().includes('on update')) {
+                console.log('Corrigindo coluna criado_em da tabela treinamentos (removendo ON UPDATE)...');
+                await pool.query(`
+                    ALTER TABLE treinamentos 
+                    MODIFY COLUMN criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                `);
+                console.log('Coluna criado_em corrigida com sucesso.');
+            }
+
+            // Check if recusado column exists in table pesquisas_satisfacao
+            const [psColumns] = await pool.query(`
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'pesquisas_satisfacao' 
+                  AND COLUMN_NAME = 'recusado'
+            `);
+            if (psColumns.length === 0) {
+                console.log('Atualizando a tabela pesquisas_satisfacao para suportar recusa e campos nulos...');
+                await pool.query(`
+                    ALTER TABLE pesquisas_satisfacao 
+                    ADD COLUMN recusado TINYINT(1) DEFAULT 0,
+                    MODIFY COLUMN funcao VARCHAR(100) NULL,
+                    MODIFY COLUMN frequencia_uso VARCHAR(100) NULL,
+                    MODIFY COLUMN nota_navegacao INT NULL,
+                    MODIFY COLUMN nota_visual INT NULL,
+                    MODIFY COLUMN frequencia_erros VARCHAR(100) NULL,
+                    MODIFY COLUMN nps INT NULL
+                `);
+                console.log('Tabela pesquisas_satisfacao atualizada com sucesso.');
+            }
+
+            // Migrate table arquidioceses to add endereco, cep, site dynamically
+            const [columnsList] = await pool.query(`
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'arquidioceses'
+            `);
+            const columnNames = columnsList.map(c => c.COLUMN_NAME.toLowerCase());
+
+            if (!columnNames.includes('endereco')) {
+                console.log('Adicionando coluna endereco na tabela arquidioceses...');
+                await pool.query('ALTER TABLE arquidioceses ADD COLUMN endereco VARCHAR(255) NULL');
+            } else {
+                console.log('Ajustando coluna endereco na tabela arquidioceses...');
+                await pool.query('ALTER TABLE arquidioceses MODIFY COLUMN endereco VARCHAR(255) NULL');
+            }
+
+            if (!columnNames.includes('cep')) {
+                console.log('Adicionando coluna cep na tabela arquidioceses...');
+                await pool.query('ALTER TABLE arquidioceses ADD COLUMN cep VARCHAR(10) NULL');
+            }
+
+            if (!columnNames.includes('site')) {
+                console.log('Adicionando coluna site na tabela arquidioceses...');
+                await pool.query('ALTER TABLE arquidioceses ADD COLUMN site VARCHAR(255) NULL');
+            }
+
+            // Seed default addresses for archdioceses if currently empty
+            const seedAddresses = [
+                { id: 5, endereco: 'Palácio do Carmo – Praça Dom Adauto, s/n, Centro', cep: '58010-670', site: 'arquidiocesepb.org.br' },
+                { id: 6, endereco: 'Rua Campo Verde, nº 103 - Bairro Juliana', cep: '31744-513', site: 'arquidiocesebh.org.br' },
+                { id: 7, endereco: 'Av. Governador Pedro de Toledo, 969 - Bonfim', cep: '13070-751', site: 'arquidiocesecampinas.com' },
+                { id: 8, endereco: 'Rua Sao Pedro de Alcantara, 12 - Centro', cep: '25685-300', site: 'diocesepetropolis.com.br' },
+                { id: 9, endereco: 'Rua Ten Benévolo, 201 - Centro', cep: '60160-040', site: 'https://www.arquidiocesedefortaleza.org.br' },
+                { id: 10, endereco: 'Praça Dom Germano, 660 - Centro', cep: '75800-035', site: 'http://diocesedejatai.org' }
+            ];
+
+            for (const item of seedAddresses) {
+                const [checkRows] = await pool.query('SELECT endereco FROM arquidioceses WHERE id_arquidiocese = ?', [item.id]);
+                if (checkRows.length > 0) {
+                    const currentAddress = checkRows[0].endereco;
+                    if (!currentAddress || currentAddress.trim() === '' || currentAddress === 'Endereço não informado') {
+                        console.log(`Semeando endereço padrão para arquidiocese ID ${item.id}...`);
+                        await pool.query(
+                            'UPDATE arquidioceses SET endereco = ?, cep = ?, site = ? WHERE id_arquidiocese = ?',
+                            [item.endereco, item.cep, item.site, item.id]
+                        );
+                    }
+                }
+            }
+
+            return; // Conectado com sucesso
+        } catch (err) {
+            attempts++;
+            console.error(`Tentativa ${attempts} de ${maxRetries} falhou ao conectar ao MySQL:`, err.message);
+            if (pool) {
+                try {
+                    await pool.end();
+                } catch (_) {}
+            }
+            if (attempts >= maxRetries) {
+                console.error('Número máximo de tentativas de conexão com o banco excedido. Encerrando...');
+                process.exit(1);
+            }
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
-    } catch (err) {
-        console.error('Erro ao conectar ao MySQL:', err);
-        process.exit(1);
     }
 }
 
@@ -264,10 +335,12 @@ app.get('/api/arquidiocese/regional/:id_regional', async (req, res) => {
 
 // Route to list all collaborators with state, country, and profile info
 app.get('/api/colaboradores', async (req, res) => {
+    const isLight = req.query.light === 'true';
     try {
+        const photoField = isLight ? '' : 'c.foto_colaborador,';
         const query = `
              SELECT c.id_colaborador, c.nome_colaborador, c.cidade, c.telefone, c.email,
-                    c.foto_colaborador, e.nome_estado, e.sigla_estado, p.nome_pais, c.perfil AS nome_perfil,
+                    ${photoField} e.nome_estado, e.sigla_estado, p.nome_pais, c.perfil AS nome_perfil,
                     c.atualizado_em, c.criado_em, c.status, c.perfil AS id_perfil, pa.nome_paroquia
              FROM colaboradores c
              LEFT JOIN estados e ON c.id_estado = e.id_estado
@@ -277,32 +350,34 @@ app.get('/api/colaboradores', async (req, res) => {
         `;
         const [rows] = await pool.query(query);
 
-        // Convert photo Buffer/Base64 to standard data URL for frontend display
-        for (const colaborador of rows) {
-            if (colaborador.foto_colaborador && colaborador.foto_colaborador.length > 0) {
-                let fotoBuffer = colaborador.foto_colaborador;
-                if (Buffer.isBuffer(fotoBuffer)) {
-                    const prefix = fotoBuffer.subarray(0, 11).toString('utf-8');
-                    if (prefix === 'data:image/') {
-                        // It is already a base64 Data URL string stored as bytes
-                        colaborador.foto_colaborador = fotoBuffer.toString('utf-8').replace(/[\r\n\s]+/g, '');
-                    } else {
-                        // It is raw binary data, convert it to base64 Data URL
-                        const base64 = fotoBuffer.toString('base64');
-                        const isPng = fotoBuffer.length >= 2 && fotoBuffer[0] === 0x89 && fotoBuffer[1] === 0x50;
-                        const mime = isPng ? 'image/png' : 'image/jpeg';
-                        colaborador.foto_colaborador = `data:${mime};base64,${base64}`;
+        if (!isLight) {
+            // Convert photo Buffer/Base64 to standard data URL for frontend display
+            for (const colaborador of rows) {
+                if (colaborador.foto_colaborador && colaborador.foto_colaborador.length > 0) {
+                    let fotoBuffer = colaborador.foto_colaborador;
+                    if (Buffer.isBuffer(fotoBuffer)) {
+                        const prefix = fotoBuffer.subarray(0, 11).toString('utf-8');
+                        if (prefix === 'data:image/') {
+                            // It is already a base64 Data URL string stored as bytes
+                            colaborador.foto_colaborador = fotoBuffer.toString('utf-8').replace(/[\r\n\s]+/g, '');
+                        } else {
+                            // It is raw binary data, convert it to base64 Data URL
+                            const base64 = fotoBuffer.toString('base64');
+                            const isPng = fotoBuffer.length >= 2 && fotoBuffer[0] === 0x89 && fotoBuffer[1] === 0x50;
+                            const mime = isPng ? 'image/png' : 'image/jpeg';
+                            colaborador.foto_colaborador = `data:${mime};base64,${base64}`;
+                        }
+                    } else if (typeof fotoBuffer === 'string') {
+                        if (!fotoBuffer.startsWith('data:image/')) {
+                            // Raw base64 string, wrap it
+                            colaborador.foto_colaborador = `data:image/jpeg;base64,${fotoBuffer.replace(/[\r\n\s]+/g, '')}`;
+                        } else {
+                            colaborador.foto_colaborador = fotoBuffer.replace(/[\r\n\s]+/g, '');
+                        }
                     }
-                } else if (typeof fotoBuffer === 'string') {
-                    if (!fotoBuffer.startsWith('data:image/')) {
-                        // Raw base64 string, wrap it
-                        colaborador.foto_colaborador = `data:image/jpeg;base64,${fotoBuffer.replace(/[\r\n\s]+/g, '')}`;
-                    } else {
-                        colaborador.foto_colaborador = fotoBuffer.replace(/[\r\n\s]+/g, '');
-                    }
+                } else {
+                    colaborador.foto_colaborador = null;
                 }
-            } else {
-                colaborador.foto_colaborador = null;
             }
         }
 
@@ -1690,21 +1765,21 @@ app.post('/api/regionais/save', async (req, res) => {
 // Specific route to save/update Arquidiocese
 app.post('/api/arquidioceses/save', async (req, res) => {
     console.log('POST /api/arquidioceses/save - Body:', req.body);
-    const { id_arquidiocese, nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza, socialMedia } = req.body;
+    const { id_arquidiocese, nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza, socialMedia, endereco, cep, site } = req.body;
 
     try {
         let savedId = id_arquidiocese;
         if (id_arquidiocese) {
             // Update
             await pool.query(
-                'UPDATE arquidioceses SET nome_arquidiocese = ?, id_pais = ?, id_estado = ?, id_regional = ?, cidade = ?, arcebispo = ?, status = ?, id_colaborador_atualiza = ?, atualizado_em = NOW() WHERE id_arquidiocese = ?',
-                [nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza || null, id_arquidiocese]
+                'UPDATE arquidioceses SET nome_arquidiocese = ?, id_pais = ?, id_estado = ?, id_regional = ?, cidade = ?, arcebispo = ?, status = ?, id_colaborador_atualiza = ?, atualizado_em = NOW(), endereco = ?, cep = ?, site = ? WHERE id_arquidiocese = ?',
+                [nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza || null, endereco || null, cep || null, site || null, id_arquidiocese]
             );
         } else {
             // Insert
             const [result] = await pool.query(
-                'INSERT INTO arquidioceses (nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())',
-                [nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza || null]
+                'INSERT INTO arquidioceses (nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza, criado_em, endereco, cep, site) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?)',
+                [nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza || null, endereco || null, cep || null, site || null]
             );
             savedId = result.insertId;
         }
@@ -1741,6 +1816,27 @@ app.get('/api/arquidioceses/detalhes', async (req, res) => {
             ORDER BY a.criado_em DESC
         `;
         const [rows] = await pool.query(query);
+
+        // Fetch all leadership records
+        const [liderancas] = await pool.query('SELECT * FROM arquidiocese_lideranca');
+
+        // Map leadership and addresses to each archdiocese
+        for (const arq of rows) {
+            const arqLiderancas = liderancas.filter(l => l.id_arquidiocese === arq.id_arquidiocese);
+            
+            // Extract leader names
+            const names = arqLiderancas.map(l => l.nome_lider).filter(Boolean);
+            if (names.length > 0) {
+                arq.lideres = names.join(', ');
+            } else {
+                arq.lideres = arq.arcebispo || 'Nenhum líder registrado';
+            }
+
+            // Extract leader's address as fallback (do not overwrite arq.endereco)
+            const firstAddress = arqLiderancas.map(l => l.endereco_completo).find(addr => addr && addr.trim().length > 0);
+            arq.endereco_lider = firstAddress || 'Endereço não informado';
+        }
+
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1829,7 +1925,7 @@ app.delete('/api/paroquias/:id', async (req, res) => {
     }
 });
 
-// Specific route to get Paroquias with details (Country, Regional, State and Arquidiocese names)
+// Specific route to get Paroquias with details (Country, Regional, State and Archdiocese names)
 app.get('/api/paroquias/detalhes', async (req, res) => {
     try {
         const query = `
@@ -1839,6 +1935,9 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
                 p.cidade,
                 p.endereco,
                 p.status,
+                p.tipo,
+                p.latitude,
+                p.longitude,
                 a.nome_arquidiocese,
                 r.nome_regional,
                 e.sigla_estado,

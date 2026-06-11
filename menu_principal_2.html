@@ -187,7 +187,7 @@
 
         /* Left Panel - Founder Info */
         .left-panel {
-            flex: 0 0 35%;
+            flex: 1;
             background-color: var(--primary-maroon);
             background-image:
                 radial-gradient(circle at center 180px, rgba(255, 255, 255, 0.1) 0%, transparent 70%),
@@ -195,7 +195,7 @@
                 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path d="M20 0l20 20-20 20L0 20z" fill="rgba(0,0,0,0.05)"/></svg>');
             background-size: 100% 100%, 100% 100%, 40px 40px;
             color: white;
-            padding: 40px;
+            padding: 40px 40px 100px 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -461,34 +461,7 @@
             background-color: #f5f5f5;
         }
 
-        @media (max-width: 1024px) {
-            .menu-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .left-panel {
-                flex: 0 0 40%;
-            }
-        }
-
         @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-            }
-
-            .left-panel {
-                flex: 0 0 auto;
-                padding: 30px;
-            }
-
-            .right-panel {
-                padding: 30px 20px;
-            }
-
-            .menu-grid {
-                grid-template-columns: 1fr;
-            }
-
             .portrait-container {
                 width: 180px;
                 height: 180px;
@@ -706,108 +679,22 @@
             </p>
         </aside>
 
-        <!-- Right Panel -->
-        <main class="right-panel">
-            <div class="menu-grid-container">
-                <div class="menu-grid">
-                    <!-- Row 1 -->
-                    <a href="#" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-cake-candles"></i></div>
-                        <div class="card-divider divider-green"></div>
-                        <div class="card-text">Aniversariantes</div>
-                    </a>
-                    <a href="arquidioceses.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-church"></i></div>
-                        <div class="card-divider divider-purple"></div>
-                        <div class="card-text">Arquidioceses</div>
-                    </a>
-                    <a href="lista_regionais.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-globe"></i></div>
-                        <div class="card-divider divider-pink"></div>
-                        <div class="card-text">Regionais</div>
-                    </a>
+    </div>
 
-                    <!-- Row 2 -->
-                    <a href="colaboradores.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-users"></i></div>
-                        <div class="card-divider divider-red"></div>
-                        <div class="card-text">Colaboradores</div>
-                    </a>
-                    <a href="paroquias.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-house-chimney-window"></i></div>
-                        <div class="card-divider divider-green"></div>
-                        <div class="card-text">Paróquias e Instituições Pró-Vida</div>
-                    </a>
-                    <a href="#" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-diagram-project"></i></div>
-                        <div class="card-divider divider-blue"></div>
-                        <div class="card-text">Estrutura Organizacional</div>
-                    </a>
-
-                    <!-- Row 3 -->
-                    <a href="treinamentos.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-chalkboard-user"></i></div>
-                        <div class="card-divider divider-blue"></div>
-                        <div class="card-text">Treinamentos</div>
-                    </a>
-                    <a href="Lista_atividades_realizadas.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-clipboard-list"></i></div>
-                        <div class="card-divider divider-orange"></div>
-                        <div class="card-text">Registro de Atividades</div>
-                    </a>
-                    <a href="#" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-key"></i></div>
-                        <div class="card-divider divider-blue"></div>
-                        <div class="card-text">Senhas de Mídias</div>
-                    </a>
-
-                    <!-- Row 4 -->
-                    <a href="calendario.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-calendar-days"></i></div>
-                        <div class="card-divider divider-green"></div>
-                        <div class="card-text">Calendário de Atividades</div>
-                    </a>
-                    <a href="Banner_aniversario.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-image"></i></div>
-                        <div class="card-divider divider-pink"></div>
-                        <div class="card-text">Banner Aniversariantes</div>
-                    </a>
-                    <a href="#" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-images"></i></div>
-                        <div class="card-divider divider-pink"></div>
-                        <div class="card-text">Carrousel Site Adoção</div>
-                    </a>
-
-                    <!-- Row 5 -->
-                    <a href="#" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-chart-line"></i></div>
-                        <div class="card-divider divider-green"></div>
-                        <div class="card-text">Dashboards</div>
-                    </a>
-                    <a href="pesquisa_satisfacao.html" class="menu-card">
-                        <div class="card-icon-box"><i class="fa-solid fa-square-poll-vertical"></i></div>
-                        <div class="card-divider divider-purple"></div>
-                        <div class="card-text">Pesquisa de Satisfação</div>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Footer Area -->
-            <div class="footer-container">
-                <!-- SVG Wave effect -->
-                <svg class="wave-svg" viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="#f39c12" fill-opacity="0.2"
-                        d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,165.3C960,181,1056,171,1152,149.3C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
-                    </path>
-                    <path fill="#f39c12" fill-opacity="0.4"
-                        d="M0,128L48,138.7C96,149,192,171,288,160C384,149,480,107,576,106.7C672,107,768,149,864,181.3C960,213,1056,235,1152,218.7C1248,203,1344,149,1392,122.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
-                    </path>
-                </svg>
-                <div class="footer-bar">
-                    O conteúdo deste site não deve ser divulgado para fins ....
-                </div>
-            </div>
-        </main>
+    <!-- Footer Area -->
+    <div class="footer-container">
+        <!-- SVG Wave effect -->
+        <svg class="wave-svg" viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#f39c12" fill-opacity="0.2"
+                d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,165.3C960,181,1056,171,1152,149.3C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
+            </path>
+            <path fill="#f39c12" fill-opacity="0.4"
+                d="M0,128L48,138.7C96,149,192,171,288,160C384,149,480,107,576,106.7C672,107,768,149,864,181.3C960,213,1056,235,1152,218.7C1248,203,1344,149,1392,122.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
+            </path>
+        </svg>
+        <div class="footer-bar">
+            O conteúdo deste site não deve ser divulgado para fins ....
+        </div>
     </div>
 
     <!-- Sidebar Overlay -->

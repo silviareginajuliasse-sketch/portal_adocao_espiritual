@@ -358,14 +358,6 @@
             }
             
             // Validate dates
-            if (inicioInput.validity.badInput) {
-                alert('Por favor, insira uma data de início prevista válida.');
-                return;
-            }
-            if (fimInput.validity.badInput) {
-                alert('Por favor, insira uma data de fim prevista válida.');
-                return;
-            }
             if (inicioInput.value && fimInput.value && inicioInput.value > fimInput.value) {
                 alert('A data de início previsto não pode ser posterior à data de fim previsto.');
                 return;

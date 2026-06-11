@@ -1285,7 +1285,7 @@
                 if (resParoquias.ok) allParishes = await resParoquias.json();
 
                 // Fetch colaboradores
-                const resColab = await fetch(`${API_URL}/colaboradores`);
+                const resColab = await fetch(`${API_URL}/colaboradores?light=true`);
                 if (resColab.ok) allCollaborators = await resColab.json();
 
                 // Fetch treinamentos

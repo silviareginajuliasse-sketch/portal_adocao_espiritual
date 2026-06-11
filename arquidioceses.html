@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -460,6 +460,33 @@
             flex-grow: 1;
         }
 
+        .archdiocese-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-grow: 1;
+        }
+
+        .archdiocese-main-row {
+            color: #333;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .archdiocese-main-row strong {
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .archdiocese-lideres {
+            color: #555;
+        }
+
+        .archdiocese-sub-row {
+            color: #718096;
+            font-size: 0.85rem;
+        }
+
         /* Pagination & Footer Actions */
         .list-footer {
             display: flex;
@@ -888,10 +915,76 @@
                 allArquidioceses = data;
                 filteredArquidioceses = [...allArquidioceses];
                 renderList();
+                
+                // Automatically migrate local storage mock data to the database
+                migrateLocalStorageData(allArquidioceses);
             } catch (error) {
                 console.error("Erro ao carregar arquidioceses:", error);
                 document.getElementById('arquidioceses-list-container').innerHTML = 
                     '<div style="padding: 20px; text-align: center; color: #8b1e1e;">Erro ao carregar dados.</div>';
+            }
+        }
+
+        async function migrateLocalStorageData(arquidioceses) {
+            let changes = false;
+            for (const arq of arquidioceses) {
+                const mockKey = `arq_mock_${arq.id_arquidiocese}`;
+                const mockDataStr = localStorage.getItem(mockKey);
+                if (mockDataStr) {
+                    try {
+                        const mock = JSON.parse(mockDataStr);
+                        // Check if we actually need to migrate
+                        const hasDbAddress = arq.endereco && arq.endereco !== 'Endereço não informado' && arq.endereco.trim() !== '';
+                        const needsMigration = mock.endereco && !hasDbAddress;
+                        
+                        if (needsMigration) {
+                            console.log(`Migrando dados locais para arquidiocese ${arq.nome_arquidiocese}...`);
+                            
+                            // Fetch full details of the archdiocese
+                            const fullData = await fetchData(`arquidioceses/${arq.id_arquidiocese}`);
+                            if (fullData) {
+                                const payload = {
+                                    id_arquidiocese: fullData.id_arquidiocese,
+                                    nome_arquidiocese: fullData.nome_arquidiocese,
+                                    id_pais: fullData.id_pais,
+                                    id_estado: fullData.id_estado,
+                                    id_regional: fullData.id_regional,
+                                    cidade: fullData.cidade,
+                                    arcebispo: fullData.arcebispo,
+                                    status: fullData.status,
+                                    id_colaborador_atualiza: fullData.id_colaborador_atualiza || 2,
+                                    endereco: mock.endereco,
+                                    cep: mock.cep,
+                                    site: mock.site,
+                                    socialMedia: {}
+                                };
+                                
+                                // Map social media
+                                if (fullData.midias && Array.isArray(fullData.midias)) {
+                                    fullData.midias.forEach(m => {
+                                        payload.socialMedia[m.id_rede_social] = m.nome_midia_arquidiocese || '';
+                                    });
+                                }
+                                
+                                const result = await postData('arquidioceses/save', payload);
+                                if (result.success) {
+                                    console.log(`Arquidiocese ${arq.nome_arquidiocese} migrada com sucesso.`);
+                                    localStorage.removeItem(mockKey);
+                                    arq.endereco = mock.endereco;
+                                    changes = true;
+                                }
+                            }
+                        } else {
+                            console.log(`Chave mock ${mockKey} já existe no banco ou vazia. Removendo do localStorage.`);
+                            localStorage.removeItem(mockKey);
+                        }
+                    } catch (e) {
+                        console.error(`Erro ao migrar local storage para arquidiocese ${arq.id_arquidiocese}:`, e);
+                    }
+                }
+            }
+            if (changes) {
+                renderList();
             }
         }
 
@@ -920,17 +1013,36 @@
                 item.className = 'list-item';
                 item.onclick = () => goToRegistro('edit', arq.id_arquidiocese);
                 
-                const pais = arq.nome_pais || 'N/A';
-                const regional = arq.nome_regional || 'N/A';
                 const arquidiocese = arq.nome_arquidiocese || 'N/A';
-                const arcebispo = arq.arcebispo || 'N/A';
-                const status = arq.status ? arq.status.toUpperCase() : 'N/A';
+                const lideres = arq.lideres || 'Nenhum líder registrado';
+                
+                // Use the database archdiocese address, fallback to leadership address fallback
+                let endereco = arq.endereco || arq.endereco_lider || 'Endereço não informado';
+                const mockDataStr = localStorage.getItem(`arq_mock_${arq.id_arquidiocese}`);
+                if (mockDataStr) {
+                    try {
+                        const mock = JSON.parse(mockDataStr);
+                        if (mock.endereco && mock.endereco.trim().length > 0) {
+                            endereco = mock.endereco;
+                        }
+                    } catch (e) {
+                        console.warn("Erro ao analisar dados mockados:", e);
+                    }
+                }
+                
+                const cidade = arq.cidade || 'Cidade não informada';
+                const regional = arq.nome_regional || 'Região não informada';
 
                 item.innerHTML = `
                     <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation(); deleteArquidiocese(${arq.id_arquidiocese}, '${arq.nome_arquidiocese}')"></i>
-                    <span class="archdiocese-name">
-                        ${pais} - ${regional} - ${arquidiocese} - ${arcebispo} - ${status}
-                    </span>
+                    <div class="archdiocese-info">
+                        <div class="archdiocese-main-row">
+                            <strong>${arquidiocese}</strong> - <span class="archdiocese-lideres">${lideres}</span>
+                        </div>
+                        <div class="archdiocese-sub-row">
+                            ${endereco} | ${cidade} | ${regional}
+                        </div>
+                    </div>
                 `;
                 container.appendChild(item);
             });
