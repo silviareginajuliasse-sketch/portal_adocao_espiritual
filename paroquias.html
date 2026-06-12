@@ -340,45 +340,107 @@
             }
         }
 
-        /* Instructions Sidebar Styles */
+        /* Instructions Sidebar Styles (Hidden to expand list to full width) */
         .instructions-sidebar {
-            flex: 0 0 380px;
-            font-size: 0.95rem;
-            color: #333;
-            line-height: 1.5;
-        }
-
-        .instructions-sidebar-title {
-            font-size: 1.1rem;
-            color: #444;
-            font-weight: 500;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #ccc;
-            margin-bottom: 20px;
-        }
-
-        .instructions-sidebar-text {
-            margin-bottom: 20px;
-        }
-
-        .instructions-sidebar-text i,
-        .instructions-sidebar-text img {
-            margin: 0 5px;
-            vertical-align: middle;
-        }
-
-        .instructions-sidebar-tip {
-            font-style: italic;
-            border-top: 1px solid #ccc;
-            padding-top: 15px;
-            margin-top: 20px;
-            color: #555;
-            font-size: 0.9rem;
+            display: none !important;
         }
 
         .main-content {
             flex: 1;
             width: 100%;
+        }
+
+        /* Help Icon Styles */
+        .help-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+
+        .help-icon-container:hover {
+            transform: scale(1.05);
+        }
+
+        .help-icon-circle {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            color: #3498db;
+            background-color: white;
+            font-weight: 500;
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Help Modal Overlay */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        .help-card {
+            background: white;
+            width: 95%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border-top: 4px solid var(--primary-red);
+        }
+
+        .help-card-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: #777;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .help-card-close:hover {
+            color: var(--primary-red);
+        }
+
+        .help-card-title {
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .help-card-content {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
         }
 
         /* Search & Subtitle Row */
@@ -752,37 +814,6 @@
     <main class="main-container">
 
         <div class="layout-split">
-            <!-- Left Side: Instructions -->
-            <aside class="instructions-sidebar">
-                <h2 class="instructions-sidebar-title">Orientações de uso</h2>
-
-                <div class="instructions-sidebar-text">
-                    Nessa página são listadas todas as paróquias cadastradas.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Ao clicar sobre o ícone lixeira, <i class="fa-regular fa-trash-can"></i> a paróquia será excluída
-                    definitivamente.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Ao clicar sobre o ícone de inclusão <img src="./arquidioceses-header-icon.png" style="width: 18px;">
-                    o usuário é direcionado para a página de inclusão de Paróquias. Apenas usuários com o perfil
-                    Coordenador Nacional poderão realizar inclusões de paróquias.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Na lista de Paróquias, ao clicar sobre o nome da paróquia o sistema apresentará todos os dados do
-                    cadastro, para que os dados sejam alterados se necessário. Apenas usuários com o perfil Coordenador
-                    Nacional poderão realizar inclusões de paróquias.
-                </div>
-
-                <div class="instructions-sidebar-tip">
-                    Dica: Utilize o campo busca, localizado acima da lista para exibir na lista apenas paróquias que
-                    contenham no nome parte de uma expressão, como exemplo São Sebastião
-                </div>
-            </aside>
-
             <!-- Right Side: Existing Content -->
             <div class="main-content">
                 <!-- Search Header -->
@@ -791,15 +822,29 @@
                         <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
                         Lista de Paróquias e Comunidades
                     </div>
-                    <div class="search-container">
-                        <input type="text" id="search-input" class="search-input" placeholder="busca"
-                            oninput="filterList()">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div class="search-container">
+                            <input type="text" id="search-input" class="search-input" placeholder="busca"
+                                oninput="filterList()">
+                        </div>
+                        <div class="help-icon-container" onclick="toggleHelp()">
+                            <div class="help-icon-circle">?</div>
+                            <span class="help-text">Ajuda</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- The List -->
-                <div class="list-container" id="paroquias-list">
-                    <div style="padding: 20px; text-align: center; color: #777;">Carregando paróquias...</div>
+                <div class="list-container">
+                    <div class="list-header" style="display: flex; align-items: center; padding: 12px 15px; background-color: #f7f9fa; font-weight: bold; border-bottom: 1px solid #e2e8f0; gap: 15px; color: #4a5568; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <div style="width: 50px; flex-shrink: 0; text-align: center;"></div>
+                        <div style="flex: 1 1 45%; min-width: 200px;">Paróquia / Comunidade</div>
+                        <div style="flex: 0 0 180px; min-width: 130px;">Tipo</div>
+                        <div style="flex: 0 0 150px; min-width: 120px;">GPS</div>
+                    </div>
+                    <div id="paroquias-list">
+                        <div style="padding: 20px; text-align: center; color: #777;">Carregando paróquias...</div>
+                    </div>
                 </div>
 
                 <!-- List Footer -->
@@ -1005,17 +1050,25 @@
                 data.forEach(paroquia => {
                     const item = document.createElement('div');
                     item.className = 'list-item';
+                    item.style.display = 'flex';
+                    item.style.alignItems = 'center';
+                    item.style.gap = '15px';
                     item.onclick = () => goToRegistro('edit', paroquia.id_paroquia);
                     
                     const trashIcon = document.createElement('i');
                     trashIcon.className = 'fa-regular fa-trash-can trash-icon';
+                    trashIcon.style.width = '50px';
+                    trashIcon.style.flexShrink = '0';
+                    trashIcon.style.textAlign = 'center';
                     trashIcon.onclick = (e) => {
                         e.stopPropagation();
                         deleteParoquia(paroquia.id_paroquia, paroquia.nome_paroquia);
                     };
                     
+                    // Column 1: Paróquia / Comunidade (Name + Address details)
                     const detailsDiv = document.createElement('div');
-                    detailsDiv.style.flexGrow = '1';
+                    detailsDiv.style.flex = '1 1 45%';
+                    detailsDiv.style.minWidth = '200px';
                     detailsDiv.style.display = 'flex';
                     detailsDiv.style.flexDirection = 'column';
                     
@@ -1034,14 +1087,56 @@
                     const cidade = paroquia.cidade || 'Não informada';
                     const estado = paroquia.sigla_estado || 'N/A';
                     const arquidiocese = paroquia.nome_arquidiocese || 'N/A';
-                    
                     extraSpan.textContent = `Endereço: ${endereco} | Cidade: ${cidade} - ${estado} | Arquidiocese: ${arquidiocese}`;
                     
                     detailsDiv.appendChild(nameSpan);
                     detailsDiv.appendChild(extraSpan);
                     
+                    // Column 2: Tipo (Paróquia or Comunidade)
+                    const tipoDiv = document.createElement('div');
+                    tipoDiv.style.flex = '0 0 180px';
+                    tipoDiv.style.minWidth = '130px';
+                    tipoDiv.style.fontWeight = '500';
+                    tipoDiv.style.color = '#444';
+                    
+                    // Format type string safely to avoid encoding glitches
+                    const rawTipo = paroquia.tipo || 'Paróquia';
+                    const cleanTipo = (rawTipo.includes('Par') || rawTipo.includes('par')) ? 'Paróquia' : 'Comunidade';
+                    tipoDiv.textContent = cleanTipo;
+                    
+                    // Column 3: GPS Status Badge
+                    const gpsDiv = document.createElement('div');
+                    gpsDiv.style.flex = '0 0 150px';
+                    gpsDiv.style.minWidth = '120px';
+                    
+                    const hasGPS = paroquia.latitude !== null && paroquia.longitude !== null;
+                    const gpsBadge = document.createElement('span');
+                    gpsBadge.className = 'badge';
+                    gpsBadge.style.fontSize = '0.75rem';
+                    gpsBadge.style.padding = '2px 8px';
+                    gpsBadge.style.borderRadius = '12px';
+                    gpsBadge.style.display = 'inline-flex';
+                    gpsBadge.style.alignItems = 'center';
+                    gpsBadge.style.gap = '4px';
+                    
+                    if (hasGPS) {
+                        gpsBadge.style.backgroundColor = '#e6fffa';
+                        gpsBadge.style.border = '1px solid #b2f5ea';
+                        gpsBadge.style.color = '#234e52';
+                        gpsBadge.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Mapeado';
+                    } else {
+                        gpsBadge.style.backgroundColor = '#f7fafc';
+                        gpsBadge.style.border = '1px solid #edf2f7';
+                        gpsBadge.style.color = '#718096';
+                        gpsBadge.innerHTML = '<i class="fa-solid fa-location-arrow"></i> Não Mapeado';
+                    }
+                    gpsDiv.appendChild(gpsBadge);
+                    
                     item.appendChild(trashIcon);
                     item.appendChild(detailsDiv);
+                    item.appendChild(tipoDiv);
+                    item.appendChild(gpsDiv);
+                    
                     listContainer.appendChild(item);
                 });
             } catch (err) {
@@ -1070,11 +1165,27 @@
             }
         }
 
+        function toggleHelp() {
+            document.getElementById('help-overlay').classList.toggle('active');
+        }
+
         window.onload = () => {
             updateUserName();
             loadParoquias();
         };
     </script>
+    <div class="help-overlay" id="help-overlay">
+        <div class="help-card">
+            <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
+            <h2 class="help-card-title">Orientações de uso</h2>
+            <div class="help-card-content">
+                <p style="margin-bottom: 15px;">Nessa página são listadas todas as paróquias cadastradas.</p>
+                <p style="margin-bottom: 15px;">Ao clicar sobre o ícone lixeira <i class="fa-regular fa-trash-can"></i>, a paróquia será excluída definitivamente.</p>
+                <p style="margin-bottom: 15px;">Ao clicar sobre o ícone de inclusão <img src="./arquidioceses-header-icon.png" style="width: 18px; vertical-align: middle;">, o usuário é direcionado para a página de inclusão de Paróquias. Apenas usuários com o perfil Coordenador Nacional poderão realizar inclusões de paróquias.</p>
+                <p style="margin-bottom: 15px;">Na lista de Paróquias, ao clicar sobre o nome da paróquia o sistema apresentará todos os dados do cadastro, para que os dados sejam alterados se necessário.</p>
+                <p style="border-top: 1px solid #eee; padding-top: 15px; font-style: italic; color: #777;">Dica: Utilize o campo busca, localizado acima da lista para exibir na lista apenas paróquias que contenham no nome parte de uma expressão, como exemplo "São Sebastião".</p>
+            </div>
+        </div>
+    </div>
 </body>
-
 </html>

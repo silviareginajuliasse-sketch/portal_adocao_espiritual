@@ -1105,10 +1105,10 @@
                             <i class="fa-solid fa-church card-icon bg-maroon"></i>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-title">Paróquias Ativas</div>
-                            <div class="stat-card-value" id="paroquia-ativas">0</div>
-                            <div class="stat-card-subtext" id="paroquia-ativas-pct">0% do total</div>
-                            <i class="fa-solid fa-check-double card-icon bg-green"></i>
+                            <div class="stat-card-title">Paróquias Parceiras</div>
+                            <div class="stat-card-value" id="paroquia-parceiras">0</div>
+                            <div class="stat-card-subtext" id="paroquia-parceiras-pct">0% do total</div>
+                            <i class="fa-solid fa-handshake card-icon bg-green"></i>
                         </div>
                         <div class="stat-card">
                             <div class="stat-card-title">Total Arquidioceses</div>
@@ -1162,7 +1162,7 @@
 
                     <!-- General Table -->
                     <div class="dashboard-card col-12">
-                        <div class="dashboard-card-title">Lista Geral de Paróquias e Comunidades</div>
+                        <div class="dashboard-card-title">Paróquias e Comunidades Parceiras</div>
                         <div class="table-responsive">
                             <table class="recent-table">
                                 <thead>
@@ -1973,7 +1973,7 @@
 
             // 1. UPDATE KPIs
             const total = allParishes.length;
-            const ativos = allParishes.filter(p => p.status === 'ativo' || p.status === 'Ativo').length;
+            const parceiras = allParishes.filter(p => p.parceira === 'Sim' || p.parceira === 'sim').length;
             
             // Format status and type strings to bypass encoding issues
             const getCleanType = (tipo) => {
@@ -1990,9 +1990,9 @@
             };
 
             document.getElementById('paroquia-total').innerText = total;
-            document.getElementById('paroquia-ativas').innerText = ativos;
-            document.getElementById('paroquia-ativas-pct').innerText = total > 0 
-                ? `${((ativos / total) * 100).toFixed(1)}% do total` 
+            document.getElementById('paroquia-parceiras').innerText = parceiras;
+            document.getElementById('paroquia-parceiras-pct').innerText = total > 0 
+                ? `${((parceiras / total) * 100).toFixed(1)}% do total` 
                 : '0% do total';
             document.getElementById('paroquia-arquidioceses').innerText = allArchdioceses.length || 7;
             document.getElementById('paroquia-regionais').innerText = allRegionals.length || 21;
@@ -2006,7 +2006,20 @@
             // 4. POPULATE TABLE
             const tbody = document.getElementById('paroquias-tbody');
             if (tbody) {
-                tbody.innerHTML = allParishes.map(p => {
+                const getLatestDate = (p) => {
+                    const created = p.criado_em ? new Date(p.criado_em).getTime() : 0;
+                    const updated = p.atualizado_em ? new Date(p.atualizado_em).getTime() : 0;
+                    const tCreated = isNaN(created) ? 0 : created;
+                    const tUpdated = isNaN(updated) ? 0 : updated;
+                    return Math.max(tCreated, tUpdated);
+                };
+
+                const filteredParishes = allParishes
+                    .filter(p => p.parceira === 'Sim' || p.parceira === 'sim')
+                    .sort((a, b) => getLatestDate(b) - getLatestDate(a))
+                    .slice(0, 5);
+
+                tbody.innerHTML = filteredParishes.map(p => {
                     // Check GPS status
                     const hasGPS = p.latitude !== null && p.longitude !== null;
                     const gpsBadge = hasGPS

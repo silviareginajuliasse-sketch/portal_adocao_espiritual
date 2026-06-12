@@ -724,7 +724,10 @@
                 flex: 0 0 130px !important;
             }
             .col-tipo {
-                flex: 0 0 350px !important;
+                flex: 0 0 250px !important;
+            }
+            .col-parceira {
+                flex: 0 0 250px !important;
             }
         }
 
@@ -767,7 +770,8 @@
                 gap: 15px;
             }
             .form-group.col-status,
-            .form-group.col-tipo {
+            .form-group.col-tipo,
+            .form-group.col-parceira {
                 width: 100% !important;
                 flex: 1 1 100% !important;
             }
@@ -1297,6 +1301,15 @@
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
                                 </div>
+                                <div class="form-group col-parceira">
+                                    <label class="form-label">Parceira Adoção <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="select-parceira" required>
+                                            <!-- Dynamically populated -->
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
                                 <div class="metadata-container" id="metadata-container" style="display: none;">
                                     <div class="metadata-group">
                                         <label class="form-label">Incluído em</label>
@@ -1646,6 +1659,7 @@
             const id_arquidiocese = document.getElementById('select-arquidiocese').value;
             const id_divisao_arquidiocesana = document.getElementById('select-divisao').value;
             const tipo = document.getElementById('select-tipo').value;
+            const parceira = document.getElementById('select-parceira').value;
             
             const nome_paroquia = document.getElementById('input-nome').value.trim();
             const enderecoBase = document.getElementById('input-endereco').value.trim();
@@ -1657,7 +1671,7 @@
             const longitude = document.getElementById('input-longitude').value.trim();
             const observacoes = document.getElementById('textarea-observacoes')?.value.trim() || null;
 
-            if (!id_pais || !id_estado || !id_regional || !id_arquidiocese || !id_divisao_arquidiocesana || !nome_paroquia || !enderecoBase || !cidade || !tipo) {
+            if (!id_pais || !id_estado || !id_regional || !id_arquidiocese || !id_divisao_arquidiocesana || !nome_paroquia || !enderecoBase || !cidade || !tipo || !parceira) {
                 alert('Por favor, preencha todos os campos obrigatórios (*).');
                 return;
             }
@@ -1678,6 +1692,7 @@
                 id_estado,
                 status: status.toLowerCase(),
                 tipo,
+                parceira,
                 latitude: latitude ? parseFloat(latitude.replace(',', '.')) : null,
                 longitude: longitude ? parseFloat(longitude.replace(',', '.')) : null,
                 site: site || '',
@@ -1743,6 +1758,25 @@
                 });
             } catch (err) {
                 console.error("Erro ao carregar tipos de paróquia:", err);
+            }
+        }
+
+        async function loadParceiraOptions() {
+            try {
+                const response = await fetch(`${API_URL}/paroquias/parceiras`);
+                if (!response.ok) throw new Error('Falha ao buscar opções de parceira');
+                const options = await response.json();
+                const select = document.getElementById('select-parceira');
+                if (!select) return;
+                select.innerHTML = '';
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.text = opt;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error("Erro ao carregar opções de parceira:", err);
             }
         }
 
@@ -1830,6 +1864,9 @@
                 document.getElementById('select-status').value = paroquia.status === 'inativo' ? 'Inativo' : 'Ativo';
                 if (paroquia.tipo) {
                     document.getElementById('select-tipo').value = paroquia.tipo;
+                }
+                if (paroquia.parceira) {
+                    document.getElementById('select-parceira').value = paroquia.parceira;
                 }
                 document.getElementById('input-nome').value = paroquia.nome_paroquia || '';
                 document.getElementById('input-cidade').value = paroquia.cidade || '';
@@ -2160,6 +2197,7 @@
             const state = {
                 status: document.getElementById('select-status').value,
                 tipo: document.getElementById('select-tipo').value,
+                parceira: document.getElementById('select-parceira').value,
                 countryId: document.getElementById('select-pais').value,
                 stateId: document.getElementById('select-estado').value,
                 regionalId: document.getElementById('select-regional').value,
@@ -2189,6 +2227,9 @@
                     const state = JSON.parse(stateStr);
                     document.getElementById('select-status').value = state.status || 'Ativo';
                     document.getElementById('select-tipo').value = state.tipo || 'Paróquia';
+                    if (state.parceira) {
+                        document.getElementById('select-parceira').value = state.parceira;
+                    }
                     
                     if (state.countryId) {
                         document.getElementById('select-pais').value = state.countryId;
@@ -2393,6 +2434,7 @@
             await loadSocialMediaTypes();
             await loadCountries();
             await loadParoquiaTipos();
+            await loadParceiraOptions();
 
             // Update sidebar links with current params
             updateSidebarLinks();

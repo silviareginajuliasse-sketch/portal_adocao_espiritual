@@ -1862,26 +1862,46 @@ app.get('/api/paroquias/tipos', async (req, res) => {
     }
 });
 
+// Route to get enum partners of paroquias
+app.get('/api/paroquias/parceiras', async (req, res) => {
+    try {
+        const [rows] = await pool.query("SHOW COLUMNS FROM paroquias LIKE 'parceira'");
+        if (rows.length > 0) {
+            const type = rows[0].Type; // e.g. enum('Sim','Não','Em prospecção')
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                const values = match[1].split(',').map(v => v.replace(/^'(.*)'$/, '$1'));
+                return res.json(values);
+            }
+        }
+        res.json([]);
+    } catch (err) {
+        console.error('Erro ao obter opções de parceira:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Specific route to save/update Paroquia
 app.post('/api/paroquias/save', async (req, res) => {
     console.log('POST /api/paroquias/save - Body:', req.body);
-    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, latitude, longitude, site, observacoes, socialMedia, id_colaborador_atualiza } = req.body;
+    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, socialMedia, id_colaborador_atualiza } = req.body;
 
     try {
         let savedId = id_paroquia;
         const colabId = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza) : null;
+        const partnerVal = parceira || 'Não';
 
         if (id_paroquia) {
             // Update
             await pool.query(
-                'UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ? WHERE id_paroquia = ?',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, latitude, longitude, site || '', observacoes || null, colabId, id_paroquia]
+                'UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, parceira = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ? WHERE id_paroquia = ?',
+                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId, id_paroquia]
             );
         } else {
             // Insert
             const [result] = await pool.query(
-                'INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?)',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, latitude, longitude, site || '', observacoes || null, colabId]
+                'INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?)',
+                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId]
             );
             savedId = result.insertId;
         }
@@ -1936,8 +1956,11 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
                 p.endereco,
                 p.status,
                 p.tipo,
+                p.parceira,
                 p.latitude,
                 p.longitude,
+                p.criado_em,
+                p.atualizado_em,
                 a.nome_arquidiocese,
                 r.nome_regional,
                 e.sigla_estado,
