@@ -975,11 +975,11 @@
         }
 
         function stringToDbInt(str) {
-            const parts = str.split('/');
+            const parts = str.split('/').map(p => p.trim());
             if (parts.length < 2) return null;
             const day = parts[0].padStart(2, '0');
             const month = parts[1].padStart(2, '0');
-            if (parts.length >= 3 && parts[2].trim().length > 0) {
+            if (parts.length >= 3 && parts[2].length > 0) {
                 const year = parts[2].padStart(4, '0');
                 return parseInt(`${year}${month}${day}`, 10);
             } else {
@@ -1077,25 +1077,58 @@
                 return;
             }
 
-            const parts = val.split('/');
-            if (parts.length >= 2) {
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10);
-                let year = null;
-                if (parts.length >= 3 && parts[2].trim().length > 0) {
-                    year = parseInt(parts[2], 10);
-                }
+            const dateStrings = val.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+            if (dateStrings.length === 0) {
+                weekdayPreview.innerText = '';
+                return;
+            }
 
-                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-                    const y = year || new Date().getFullYear();
-                    const testDate = new Date(y, month - 1, day);
-                    if (testDate.getDate() === day && testDate.getMonth() === month - 1) {
-                        const weekday = weekdays[testDate.getDay()];
-                        const yearDisplay = year ? '' : ` (${y} - ano corrente)`;
-                        weekdayPreview.innerHTML = `<i class="fa-solid fa-calendar-check" style="color: #27ae60; margin-right: 5px;"></i> Dia da semana: <strong>${weekday}</strong>${yearDisplay}`;
-                        return;
+            if (dateStrings.length === 1) {
+                const parts = dateStrings[0].split('/');
+                if (parts.length >= 2) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10);
+                    let year = null;
+                    if (parts.length >= 3 && parts[2].trim().length > 0) {
+                        year = parseInt(parts[2], 10);
+                    }
+
+                    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                        const y = year || new Date().getFullYear();
+                        const testDate = new Date(y, month - 1, day);
+                        if (testDate.getDate() === day && testDate.getMonth() === month - 1) {
+                            const weekday = weekdays[testDate.getDay()];
+                            const yearDisplay = year ? '' : ` (${y} - ano corrente)`;
+                            weekdayPreview.innerHTML = `<i class="fa-solid fa-calendar-check" style="color: #27ae60; margin-right: 5px;"></i> Dia da semana: <strong>${weekday}</strong>${yearDisplay}`;
+                            return;
+                        }
                     }
                 }
+            } else {
+                let validCount = 0;
+                let invalidCount = 0;
+                dateStrings.forEach(dStr => {
+                    const parts = dStr.split('/');
+                    if (parts.length >= 2) {
+                        const day = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10);
+                        let year = null;
+                        if (parts.length >= 3 && parts[2].trim().length > 0) {
+                            year = parseInt(parts[2], 10);
+                        }
+                        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                            const y = year || new Date().getFullYear();
+                            const testDate = new Date(y, month - 1, day);
+                            if (testDate.getDate() === day && testDate.getMonth() === month - 1) {
+                                validCount++;
+                                return;
+                            }
+                        }
+                    }
+                    invalidCount++;
+                });
+                weekdayPreview.innerHTML = `<i class="fa-solid fa-calendar-days" style="color: #3498db; margin-right: 5px;"></i> ${validCount} data(s) válida(s)` + (invalidCount > 0 ? `, <span style="color: #e74c3c;">${invalidCount} inválida(s)</span>` : '');
+                return;
             }
             weekdayPreview.innerText = '';
         });
@@ -1108,59 +1141,80 @@
                 return;
             }
 
-            const parts = val.split('/');
-            if (parts.length >= 2) {
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10);
-                let year = null;
-                if (parts.length >= 3 && parts[2].trim().length > 0) {
-                    year = parseInt(parts[2], 10);
+            const dateStrings = val.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+            let addedCount = 0;
+            let invalidDates = [];
+
+            for (const dStr of dateStrings) {
+                const parts = dStr.split('/');
+                let isValid = false;
+                let dbInt = null;
+
+                if (parts.length >= 2) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10);
+                    let year = null;
+                    if (parts.length >= 3 && parts[2].trim().length > 0) {
+                        year = parseInt(parts[2], 10);
+                    }
+
+                    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                        const y = year || new Date().getFullYear();
+                        const testDate = new Date(y, month - 1, day);
+                        if (testDate.getDate() === day && testDate.getMonth() === month - 1) {
+                            dbInt = stringToDbInt(dStr);
+                            if (dbInt) {
+                                isValid = true;
+                            }
+                        }
+                    }
                 }
 
-                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-                    const y = year || new Date().getFullYear();
-                    const testDate = new Date(y, month - 1, day);
-                    if (testDate.getDate() === day && testDate.getMonth() === month - 1) {
-                        const dbInt = stringToDbInt(val);
-                        if (dbInt && !selectedDates.includes(dbInt)) {
-                            // If in edit mode, save the date immediately to the database
-                            if (eventMode === 'edit' && eventId) {
-                                try {
-                                    const saveRes = await fetch(`${API_URL}/calendario/${eventId}/data`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ data: dbInt })
-                                    });
-                                    const saveResult = await saveRes.json();
-                                    if (!saveRes.ok || !saveResult.success) {
-                                        throw new Error(saveResult.error || 'Erro ao salvar data.');
-                                    }
-                                } catch (saveErr) {
-                                    console.error(saveErr);
-                                    alert('Erro ao salvar data no banco de dados: ' + saveErr.message);
-                                    return;
+                if (isValid && dbInt) {
+                    if (!selectedDates.includes(dbInt)) {
+                        // If in edit mode, save the date immediately to the database
+                        if (eventMode === 'edit' && eventId) {
+                            try {
+                                const saveRes = await fetch(`${API_URL}/calendario/${eventId}/data`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ data: dbInt })
+                                });
+                                const saveResult = await saveRes.json();
+                                if (!saveRes.ok || !saveResult.success) {
+                                    throw new Error(saveResult.error || 'Erro ao salvar data.');
                                 }
+                            } catch (saveErr) {
+                                console.error(saveErr);
+                                alert('Erro ao salvar data no banco de dados: ' + saveErr.message);
+                                return;
                             }
-                            selectedDates.push(dbInt);
                         }
-                        
-                        const recorrente = document.getElementById('recorrente').value;
-                        if (recorrente === 'Sim') {
-                            dateInput.value = '';
-                            weekdayPreview.innerText = '';
-                            dateInput.focus();
-                        } else {
-                            closeDateModal();
-                        }
-                        
-                        renderDates();
-                        return;
+                        selectedDates.push(dbInt);
+                        addedCount++;
                     }
+                } else {
+                    invalidDates.push(dStr);
                 }
             }
 
-            dateError.innerText = 'Formato inválido ou data incorreta.';
-            dateError.style.display = 'block';
+            if (invalidDates.length > 0) {
+                dateError.innerText = 'As seguintes datas são inválidas: ' + invalidDates.join(', ');
+                dateError.style.display = 'block';
+                renderDates();
+                return;
+            }
+
+            const recorrente = document.getElementById('recorrente').value;
+            if (recorrente === 'Sim' && dateStrings.length === 1) {
+                dateInput.value = '';
+                weekdayPreview.innerText = '';
+                dateInput.focus();
+            } else {
+                closeDateModal();
+            }
+            
+            renderDates();
         }
 
         let allParoquias = [];
