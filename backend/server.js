@@ -119,6 +119,56 @@ async function connectDB() {
                 await pool.query('ALTER TABLE arquidioceses ADD COLUMN site VARCHAR(255) NULL');
             }
 
+            // Migrate table paroquias to add cep dynamically
+            const [paroquiasColumnsList] = await pool.query(`
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'paroquias'
+            `);
+            const paroquiasColumnNames = paroquiasColumnsList.map(c => c.COLUMN_NAME.toLowerCase());
+
+            if (!paroquiasColumnNames.includes('cep')) {
+                console.log('Adicionando coluna cep na tabela paroquias...');
+                await pool.query('ALTER TABLE paroquias ADD COLUMN cep VARCHAR(10) NULL');
+            }
+
+            if (!paroquiasColumnNames.includes('bairro')) {
+                console.log('Adicionando coluna bairro na tabela paroquias...');
+                await pool.query('ALTER TABLE paroquias ADD COLUMN bairro VARCHAR(50) NULL');
+            }
+
+            // Migrate existing legacy paroquia records to separate address and neighborhood
+            try {
+                const [legacyParoquias] = await pool.query(`
+                    SELECT id_paroquia, endereco 
+                    FROM paroquias 
+                    WHERE (bairro IS NULL OR TRIM(bairro) = '') 
+                      AND endereco LIKE '%,%'
+                `);
+                if (legacyParoquias.length > 0) {
+                    console.log(`Encontradas ${legacyParoquias.length} paróquias antigas para separar endereço e bairro...`);
+                    for (const p of legacyParoquias) {
+                        const rawEndereco = p.endereco || '';
+                        const lastCommaIndex = rawEndereco.lastIndexOf(',');
+                        if (lastCommaIndex !== -1) {
+                            const newEndereco = rawEndereco.substring(0, lastCommaIndex).trim();
+                            const newBairro = rawEndereco.substring(lastCommaIndex + 1).trim();
+                            if (newBairro && newEndereco) {
+                                console.log(`Atualizando paróquia ID ${p.id_paroquia}: "${newEndereco}" / "${newBairro}"`);
+                                await pool.query(
+                                    'UPDATE paroquias SET endereco = ?, bairro = ? WHERE id_paroquia = ?',
+                                    [newEndereco, newBairro, p.id_paroquia]
+                                );
+                            }
+                        }
+                    }
+                    console.log('Correção de registros legados de paróquias concluída.');
+                }
+            } catch (migrationErr) {
+                console.error('Erro ao migrar dados de paróquias existentes:', migrationErr.message);
+            }
+
             // Seed default addresses for archdioceses if currently empty
             const seedAddresses = [
                 { id: 5, endereco: 'Palácio do Carmo – Praça Dom Adauto, s/n, Centro', cep: '58010-670', site: 'arquidiocesepb.org.br' },
@@ -141,6 +191,42 @@ async function connectDB() {
                         );
                     }
                 }
+            }
+
+            // Migrate table divisao_arquidiocesana:
+            // 1. Drop unique constraint id_arquidiocese if it is unique
+            try {
+                const [divisaoIndexes] = await pool.query(`
+                    SELECT NON_UNIQUE 
+                    FROM INFORMATION_SCHEMA.STATISTICS 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                      AND TABLE_NAME = 'divisao_arquidiocesana' 
+                      AND INDEX_NAME = 'id_arquidiocese'
+                `);
+                if (divisaoIndexes.length > 0 && divisaoIndexes[0].NON_UNIQUE === 0) {
+                    console.log('Removendo índice único id_arquidiocese e adicionando índice comum na tabela divisao_arquidiocesana...');
+                    await pool.query('ALTER TABLE divisao_arquidiocesana DROP INDEX id_arquidiocese');
+                    await pool.query('ALTER TABLE divisao_arquidiocesana ADD INDEX idx_id_arquidiocese (id_arquidiocese)');
+                }
+            } catch (indexErr) {
+                console.error('Erro ao verificar ou migrar índice da tabela divisao_arquidiocesana:', indexErr.message);
+            }
+
+            // 2. Make id_colaborador_atualiza nullable in divisao_arquidiocesana
+            try {
+                const [divisaoCols] = await pool.query(`
+                    SELECT IS_NULLABLE 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                      AND TABLE_NAME = 'divisao_arquidiocesana' 
+                      AND COLUMN_NAME = 'id_colaborador_atualiza'
+                `);
+                if (divisaoCols.length > 0 && divisaoCols[0].IS_NULLABLE === 'NO') {
+                    console.log('Tornando a coluna id_colaborador_atualiza nula na tabela divisao_arquidiocesana...');
+                    await pool.query('ALTER TABLE divisao_arquidiocesana MODIFY COLUMN id_colaborador_atualiza INT NULL');
+                }
+            } catch (colErr) {
+                console.error('Erro ao verificar ou migrar coluna id_colaborador_atualiza da tabela divisao_arquidiocesana:', colErr.message);
             }
 
             return; // Conectado com sucesso
@@ -262,6 +348,49 @@ app.get('/api/colaboradores/aniversariantes/:mes', async (req, res) => {
     }
 });
 
+// Route to search active archdiocese leaders by name across all birth months (global lookup)
+app.get('/api/arquidioceses/liderancas/aniversariantes/busca', async (req, res) => {
+    const { termo } = req.query;
+    console.log(`GET /api/arquidioceses/liderancas/aniversariantes/busca - Termo: ${termo}`);
+    try {
+        const query = `
+            SELECT al.titulo, al.nome_lider, al.data_aniv_natalicio, a.nome_arquidiocese, a.cidade,
+                   DAY(al.data_aniv_natalicio) AS dia_nascimento, MONTH(al.data_aniv_natalicio) AS mes_nascimento
+            FROM arquidiocese_lideranca al
+            INNER JOIN arquidioceses a ON al.id_arquidiocese = a.id_arquidiocese
+            WHERE al.nome_lider LIKE ? AND a.status = 'ativo' AND al.data_aniv_natalicio IS NOT NULL
+            ORDER BY MONTH(al.data_aniv_natalicio) ASC, DAY(al.data_aniv_natalicio) ASC
+            LIMIT 50
+        `;
+        const [rows] = await pool.query(query, [`%${termo || ''}%`]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar arquidioceses lideres aniversariantes por termo:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get archdiocese leaders whose birthday is in the specified month
+app.get('/api/arquidioceses/liderancas/aniversariantes/:mes', async (req, res) => {
+    const { mes } = req.params;
+    console.log(`GET /api/arquidioceses/liderancas/aniversariantes/${mes}`);
+    try {
+        const query = `
+            SELECT al.titulo, al.nome_lider, al.data_aniv_natalicio, a.nome_arquidiocese, a.cidade,
+                   DAY(al.data_aniv_natalicio) AS dia_nascimento, MONTH(al.data_aniv_natalicio) AS mes_nascimento
+            FROM arquidiocese_lideranca al
+            INNER JOIN arquidioceses a ON al.id_arquidiocese = a.id_arquidiocese
+            WHERE MONTH(al.data_aniv_natalicio) = ? AND a.status = 'ativo' AND al.data_aniv_natalicio IS NOT NULL
+            ORDER BY DAY(al.data_aniv_natalicio) ASC, al.nome_lider ASC
+        `;
+        const [rows] = await pool.query(query, [parseInt(mes, 10)]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar arquidioceses lideres aniversariantes:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Specific route: Regionais with States (must come BEFORE generic route)
 app.get('/api/regionais/detalhes', async (req, res) => {
     try {
@@ -339,9 +468,10 @@ app.get('/api/colaboradores', async (req, res) => {
     try {
         const photoField = isLight ? '' : 'c.foto_colaborador,';
         const query = `
-             SELECT c.id_colaborador, c.nome_colaborador, c.cidade, c.telefone, c.email,
+             SELECT c.id_colaborador, c.nome_colaborador, c.apelido_colaborador, c.cidade, c.telefone, c.email,
                     ${photoField} e.nome_estado, e.sigla_estado, p.nome_pais, c.perfil AS nome_perfil,
-                    c.atualizado_em, c.criado_em, c.status, c.perfil AS id_perfil, pa.nome_paroquia
+                    c.atualizado_em, c.criado_em, c.status, c.perfil AS id_perfil, pa.nome_paroquia,
+                    c.selo_colaborador
              FROM colaboradores c
              LEFT JOIN estados e ON c.id_estado = e.id_estado
              LEFT JOIN pais p ON e.id_pais = p.id_pais
@@ -1762,12 +1892,26 @@ app.post('/api/regionais/save', async (req, res) => {
     }
 });
 
-// Specific route to save/update Arquidiocese
 app.post('/api/arquidioceses/save', async (req, res) => {
     console.log('POST /api/arquidioceses/save - Body:', req.body);
     const { id_arquidiocese, nome_arquidiocese, id_pais, id_estado, id_regional, cidade, arcebispo, status, id_colaborador_atualiza, socialMedia, endereco, cep, site } = req.body;
 
     try {
+        if (!nome_arquidiocese || nome_arquidiocese.trim() === '') {
+            return res.status(400).json({ success: false, error: 'O nome da arquidiocese é obrigatório.' });
+        }
+
+        const [duplicateCheck] = await pool.query(
+            id_arquidiocese 
+                ? 'SELECT id_arquidiocese FROM arquidioceses WHERE LOWER(TRIM(nome_arquidiocese)) = LOWER(TRIM(?)) AND id_arquidiocese != ?'
+                : 'SELECT id_arquidiocese FROM arquidioceses WHERE LOWER(TRIM(nome_arquidiocese)) = LOWER(TRIM(?))',
+            id_arquidiocese ? [nome_arquidiocese, id_arquidiocese] : [nome_arquidiocese]
+        );
+
+        if (duplicateCheck.length > 0) {
+            return res.status(400).json({ success: false, error: 'Já existe uma arquidiocese cadastrada com este nome.' });
+        }
+
         let savedId = id_arquidiocese;
         if (id_arquidiocese) {
             // Update
@@ -1825,7 +1969,7 @@ app.get('/api/arquidioceses/detalhes', async (req, res) => {
             const arqLiderancas = liderancas.filter(l => l.id_arquidiocese === arq.id_arquidiocese);
             
             // Extract leader names
-            const names = arqLiderancas.map(l => l.nome_lider).filter(Boolean);
+            const names = arqLiderancas.map(l => l.titulo ? `${l.titulo} ${l.nome_lider}` : l.nome_lider).filter(Boolean);
             if (names.length > 0) {
                 arq.lideres = names.join(', ');
             } else {
@@ -1884,7 +2028,7 @@ app.get('/api/paroquias/parceiras', async (req, res) => {
 // Specific route to save/update Paroquia
 app.post('/api/paroquias/save', async (req, res) => {
     console.log('POST /api/paroquias/save - Body:', req.body);
-    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, socialMedia, id_colaborador_atualiza } = req.body;
+    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, bairro, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, socialMedia, id_colaborador_atualiza, cep } = req.body;
 
     try {
         let savedId = id_paroquia;
@@ -1894,14 +2038,14 @@ app.post('/api/paroquias/save', async (req, res) => {
         if (id_paroquia) {
             // Update
             await pool.query(
-                'UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, parceira = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ? WHERE id_paroquia = ?',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId, id_paroquia]
+                'UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, bairro = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, parceira = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ?, cep = ? WHERE id_paroquia = ?',
+                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId, cep || null, id_paroquia]
             );
         } else {
             // Insert
             const [result] = await pool.query(
-                'INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?)',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId]
+                'INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, bairro, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza, cep) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?)',
+                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId, cep || null]
             );
             savedId = result.insertId;
         }
@@ -1953,6 +2097,7 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
                 p.id_paroquia,
                 p.nome_paroquia,
                 p.cidade,
+                p.bairro,
                 p.endereco,
                 p.status,
                 p.tipo,
@@ -1964,12 +2109,14 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
                 a.nome_arquidiocese,
                 r.nome_regional,
                 e.sigla_estado,
-                pa.nome_pais
+                pa.nome_pais,
+                da.nome_divisao_arquidiocesana
             FROM paroquias p
             LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
             LEFT JOIN regional r ON a.id_regional = r.id_regional
             LEFT JOIN estados e ON p.id_estado = e.id_estado
             LEFT JOIN pais pa ON a.id_pais = pa.id_pais
+            LEFT JOIN divisao_arquidiocesana da ON p.id_arquidiocese = da.id_arquidiocese AND p.id_divisao_arquidiocesana = da.id_divisao_arquidiocesana
             ORDER BY p.criado_em DESC
         `;
         const [rows] = await pool.query(query);

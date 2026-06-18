@@ -552,7 +552,7 @@
             gap: 30px;
             padding: 30px;
             flex: 1;
-            align-items: flex-start;
+            align-items: stretch;
         }
 
         /* Left Column: Calendar */
@@ -779,9 +779,11 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-height: 520px;
+            flex: 1;
+            min-height: 0;
             overflow-y: auto;
             padding-right: 8px;
+            padding-bottom: 20px;
         }
 
         .events-list::-webkit-scrollbar {
@@ -810,6 +812,7 @@
             flex-direction: column;
             gap: 12px;
             transition: all 0.25s ease;
+            flex-shrink: 0;
         }
 
         .event-card::before {
@@ -833,7 +836,8 @@
 
         /* Treinamento Card styling */
         .event-card.treinamento::before {
-            background-color: var(--accent-gold);
+            background-color: #ecc94b;
+            width: 6px;
         }
 
         .event-card-header {
@@ -865,9 +869,10 @@
         }
 
         .event-card.treinamento .event-type-badge {
-            background-color: #fefaf0;
+            background-color: #fffdf5;
             color: #b7791f;
-            border: 1px solid #fef3c7;
+            border: 1px solid #fde047;
+            letter-spacing: 0.5px;
         }
 
         .event-details-grid {
@@ -896,8 +901,47 @@
             color: #feb2b2;
         }
 
+        .event-card.treinamento .event-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.4;
+        }
+
+        .event-card.treinamento .qualification-text {
+            color: #718096;
+            font-weight: 400;
+            font-size: 0.92rem;
+        }
+
+        .event-card.treinamento .event-details-grid {
+            grid-template-columns: 1.5fr 1fr;
+            border-bottom: none;
+            padding-bottom: 0;
+            gap: 10px 20px;
+        }
+
+        .event-card.treinamento .event-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .event-card.treinamento .event-detail-item i {
-            color: #fde047;
+            color: #ecc94b;
+            width: 16px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .event-card.treinamento .event-detail-item span {
+            color: #718096;
+            font-size: 0.88rem;
+        }
+
+        .event-card.treinamento .event-detail-item strong {
+            color: #2d3748;
+            font-weight: 600;
         }
 
         .event-observations {
@@ -1281,23 +1325,23 @@
         async function fetchPipeline() {
             try {
                 // Fetch paroquias
-                const resParoquias = await fetch(`${API_URL}/paroquias/detalhes`);
+                const resParoquias = await fetch(`${API_URL}/paroquias/detalhes`, { cache: 'no-store' });
                 if (resParoquias.ok) allParishes = await resParoquias.json();
 
                 // Fetch colaboradores
-                const resColab = await fetch(`${API_URL}/colaboradores?light=true`);
+                const resColab = await fetch(`${API_URL}/colaboradores?light=true`, { cache: 'no-store' });
                 if (resColab.ok) allCollaborators = await resColab.json();
 
                 // Fetch treinamentos
-                const resTrain = await fetch(`${API_URL}/treinamentos`);
+                const resTrain = await fetch(`${API_URL}/treinamentos`, { cache: 'no-store' });
                 if (resTrain.ok) allTrainings = await resTrain.json();
 
                 // Fetch treinamento instrutores (agenda)
-                const resSessions = await fetch(`${API_URL}/treinamento_instrutores`);
+                const resSessions = await fetch(`${API_URL}/treinamento_instrutores`, { cache: 'no-store' });
                 if (resSessions.ok) allTrainingSessions = await resSessions.json();
 
                 // Fetch calendario events
-                const resCal = await fetch(`${API_URL}/calendario`);
+                const resCal = await fetch(`${API_URL}/calendario`, { cache: 'no-store' });
                 if (resCal.ok) allCalendarEvents = await resCal.json();
 
                 buildUnifiedEvents();
@@ -1361,7 +1405,7 @@
                     pauta: session.pauta,
                     hora_inicio: session.hora_inicio ? session.hora_inicio.substring(0, 5) : '',
                     hora_fim: session.hora_fim ? session.hora_fim.substring(0, 5) : '',
-                    nome_instrutor: trainer ? trainer.nome_colaborador : 'Instrutor não especificado',
+                    nome_instrutor: trainer ? (trainer.apelido_colaborador || trainer.nome_colaborador) : 'Instrutor não especificado',
                     day: dateParsed.day,
                     month: dateParsed.month,
                     year: dateParsed.year
@@ -1547,7 +1591,7 @@
                 const card = document.createElement('div');
                 card.className = `event-card ${e.tipo}`;
 
-                const dateStr = `${String(e.day).padStart(2, '0')}/${String(e.month).padStart(2, '0')}${e.year ? `/${e.year}` : ' (Anual)'}`;
+                const dateStr = `${String(e.day).padStart(2, '0')}/${String(e.month).padStart(2, '0')}${e.year ? `/${e.year}` : (e.tipo === 'atividade' ? '' : ' (Anual)')}`;
                 const dateObj = new Date(e.year || currentYear, e.month - 1, e.day);
                 const weekday = weekdays[dateObj.getDay()];
 
@@ -1574,32 +1618,43 @@
                         ${e.observacoes ? `<div class="event-observations">${e.observacoes}</div>` : ''}
                     `;
                 } else if (e.tipo === 'treinamento') {
+                    const formatOrLocalInfo = e.forma_treinamento === 'Presencial' 
+                        ? `<div class="event-detail-item">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>Local: <strong>${e.local || 'Não informado'}</strong></span>
+                           </div>`
+                        : `<div class="event-detail-item">
+                            <i class="fa-solid fa-desktop"></i>
+                            <span>Formato: <strong>On-line</strong></span>
+                           </div>`;
+
                     const timeInfo = (e.hora_inicio && e.hora_fim) 
-                        ? `<div class="event-detail-item"><i class="fa-regular fa-clock"></i> Horário: <strong>${e.hora_inicio} às ${e.hora_fim}</strong></div>`
+                        ? `<div class="event-detail-item">
+                            <i class="fa-regular fa-clock"></i>
+                            <span>Horário: <strong>${e.hora_inicio} às ${e.hora_fim}</strong></span>
+                           </div>`
                         : '';
-                    const localInfo = e.forma_treinamento === 'Presencial' 
-                        ? `<div class="event-detail-item"><i class="fa-solid fa-location-dot"></i> Local: <strong>${e.local || 'Local não informado'}</strong></div>`
-                        : `<div class="event-detail-item"><i class="fa-solid fa-laptop"></i> Formato: <strong>On-line</strong></div>`;
 
                     card.innerHTML = `
                         <div class="event-card-header">
-                            <span class="event-title">${e.titulo} <small style="color: #718096; font-weight: 500;">(${e.qualifica_para})</small></span>
+                            <span class="event-title">
+                                ${e.titulo}
+                            </span>
                             <span class="event-type-badge">Treinamento</span>
                         </div>
                         <div class="event-details-grid">
                             <div class="event-detail-item">
-                                <i class="fa-solid fa-calendar-day"></i> Data: <strong>${dateStr} - ${weekday}</strong>
+                                <i class="fa-solid fa-calendar-day"></i>
+                                <span>Data: <strong>${dateStr} - ${weekday}</strong></span>
                             </div>
-                            ${localInfo}
                             ${timeInfo}
                             <div class="event-detail-item">
-                                <i class="fa-solid fa-user-tie"></i> Instrutor: <strong>${e.nome_instrutor}</strong>
+                                <i class="fa-solid fa-user"></i>
+                                <span>Instrutor: <strong>${e.nome_instrutor}</strong></span>
                             </div>
-                            <div class="event-detail-item">
-                                <i class="fa-solid fa-circle-info"></i> Status: <span style="font-weight: 700; text-transform: uppercase; color: ${e.status === 'concluido' ? '#2e7d32' : '#dd6b20'};">${e.status}</span>
-                            </div>
+                            ${formatOrLocalInfo}
                         </div>
-                        ${e.pauta ? `<div class="event-observations"><strong>Pauta:</strong> ${e.pauta}</div>` : ''}
+                        ${e.pauta ? `<div class="event-observations" style="margin-top: 10px;"><strong>Pauta:</strong> ${e.pauta}</div>` : ''}
                     `;
                 }
 

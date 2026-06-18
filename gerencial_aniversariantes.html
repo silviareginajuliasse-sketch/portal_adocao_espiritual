@@ -997,7 +997,7 @@
                 <section class="birthdays-panel">
                     <div class="birthdays-list-header">
                         <h2 class="panel-section-title" id="birthdays-title-text">
-                            <i class="fa-solid fa-cake-candles"></i> Lista de Aniversariantes
+                            <i class="fa-solid fa-cake-candles"></i> Lista de Colaboradores Aniversariantes
                         </h2>
                         <span id="birthdays-count" class="birthdays-count-badge">0 aniversariantes</span>
                     </div>
@@ -1006,6 +1006,21 @@
                         <div style="text-align: center; padding: 40px; color: #718096; background: #fff; border-radius: 12px; border: 1px solid #edf2f7;">
                             <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
                             <p>Carregando aniversariantes...</p>
+                        </div>
+                    </div>
+
+                    <!-- Leaders Section -->
+                    <div class="birthdays-list-header" style="margin-top: 30px;">
+                        <h2 class="panel-section-title" id="leaders-title-text">
+                            <i class="fa-solid fa-church"></i> Lista de lideres Arqui(diocesanos) aniversariantes
+                        </h2>
+                        <span id="leaders-count" class="birthdays-count-badge">0 líderes</span>
+                    </div>
+                    <div id="leaders-render-area" class="birthdays-scroll-area">
+                        <!-- Loaded dynamically -->
+                        <div style="text-align: center; padding: 40px; color: #718096; background: #fff; border-radius: 12px; border: 1px solid #edf2f7;">
+                            <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                            <p>Carregando líderes...</p>
                         </div>
                     </div>
                 </section>
@@ -1033,9 +1048,12 @@
         const bannerRenderArea = document.getElementById('banner-render-area');
         const birthdaysRenderArea = document.getElementById('birthdays-render-area');
         const birthdaysCountBadge = document.getElementById('birthdays-count');
+        const leadersRenderArea = document.getElementById('leaders-render-area');
+        const leadersCountBadge = document.getElementById('leaders-count');
 
         // Dynamic State
         let currentCollaborators = [];
+        let currentLeaders = [];
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -1247,7 +1265,7 @@
                 if (isGlobalSearch) {
                     birthdaysTitle.innerHTML = '<i class="fa-solid fa-earth-americas"></i> Todos os Meses (Pesquisa Geral)';
                 } else {
-                    birthdaysTitle.innerHTML = '<i class="fa-solid fa-cake-candles"></i> Lista de Aniversariantes';
+                    birthdaysTitle.innerHTML = '<i class="fa-solid fa-cake-candles"></i> Lista de Colaboradores Aniversariantes';
                 }
             }
 
@@ -1288,6 +1306,107 @@
             }).join('');
         }
 
+        // Fetch and load leaders list
+        async function fetchLeaders() {
+            const selectedMonth = mesSelect.value;
+            const isGlobalSearch = buscarTodosMesesChk.checked;
+
+            leadersRenderArea.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #718096; background: #fff; border-radius: 12px; border: 1px solid #edf2f7;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                    <p>Buscando líderes...</p>
+                </div>
+            `;
+
+            try {
+                let url = `${API_URL}/arquidioceses/liderancas/aniversariantes/${selectedMonth}`;
+                if (isGlobalSearch) {
+                    const query = buscarInput.value.trim();
+                    url = `${API_URL}/arquidioceses/liderancas/aniversariantes/busca?termo=${encodeURIComponent(query)}`;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Erro ao buscar líderes aniversariantes');
+                currentLeaders = await response.json();
+
+                filterAndRenderLeaders();
+            } catch (err) {
+                console.error(err);
+                leadersRenderArea.innerHTML = `
+                    <div class="empty-birthdays">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #e53e3e;"></i>
+                        <div class="empty-birthdays-title">Erro de Conexão</div>
+                        <div class="empty-birthdays-text">Não foi possível carregar a lista de líderes aniversariantes.</div>
+                    </div>
+                `;
+                leadersCountBadge.textContent = '0 líderes';
+            }
+        }
+
+        // Filter leaders list locally and render
+        function filterAndRenderLeaders() {
+            const isGlobalSearch = buscarTodosMesesChk.checked;
+            let filtered = currentLeaders;
+
+            // If local monthly list, apply local filtering on current month list
+            if (!isGlobalSearch) {
+                const query = buscarInput.value.toLowerCase().trim();
+                filtered = currentLeaders.filter(leader => {
+                    const nameMatch = leader.nome_lider.toLowerCase().includes(query);
+                    const titleMatch = leader.titulo ? leader.titulo.toLowerCase().includes(query) : false;
+                    const arqMatch = leader.nome_arquidiocese ? leader.nome_arquidiocese.toLowerCase().includes(query) : false;
+                    const cityMatch = leader.cidade ? leader.cidade.toLowerCase().includes(query) : false;
+                    return nameMatch || titleMatch || arqMatch || cityMatch;
+                });
+            }
+
+            // Update panel title dynamically
+            const leadersTitle = document.getElementById('leaders-title-text');
+            if (leadersTitle) {
+                if (isGlobalSearch) {
+                    leadersTitle.innerHTML = '<i class="fa-solid fa-church"></i> Lista de lideres Arqui(diocesanos) aniversariantes (Pesquisa Geral)';
+                } else {
+                    leadersTitle.innerHTML = '<i class="fa-solid fa-church"></i> Lista de lideres Arqui(diocesanos) aniversariantes';
+                }
+            }
+
+            // Update badge
+            leadersCountBadge.textContent = `${filtered.length} líder${filtered.length !== 1 ? 'es' : ''}`;
+
+            if (filtered.length === 0) {
+                const query = buscarInput.value.trim();
+                leadersRenderArea.innerHTML = `
+                    <div class="empty-birthdays">
+                        <i class="fa-solid fa-church"></i>
+                        <div class="empty-birthdays-title">Nenhum Líder</div>
+                        <div class="empty-birthdays-text">${query ? 'Nenhum resultado encontrado para a busca.' : (isGlobalSearch ? 'Digite um nome para pesquisar em outros meses.' : 'Não há líderes aniversariantes cadastrados neste mês.')}</div>
+                    </div>
+                `;
+                return;
+            }
+
+            leadersRenderArea.innerHTML = filtered.map(leader => {
+                const dateLabel = formatBirthday(leader.dia_nascimento, leader.mes_nascimento);
+                const locationLabel = leader.nome_arquidiocese && leader.cidade
+                    ? `${leader.nome_arquidiocese} - ${leader.cidade}`
+                    : (leader.nome_arquidiocese || leader.cidade || 'Não informada');
+
+                return `
+                    <div class="birthday-card">
+                        <div class="birthday-info-left">
+                            <span class="birthday-colab-name">${leader.nome_lider} (${leader.titulo})</span>
+                            <span class="birthday-location">
+                                <i class="fa-solid fa-church"></i> ${locationLabel}
+                            </span>
+                        </div>
+                        <div class="birthday-badge-right">
+                            <i class="fa-solid fa-gift"></i> ${dateLabel}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Event Listeners
         function setupEventListeners() {
             // Dropdown updates
@@ -1296,6 +1415,7 @@
                 // Only fetch monthly list if not in global search mode
                 if (!buscarTodosMesesChk.checked) {
                     fetchBirthdays();
+                    fetchLeaders();
                 }
             });
 
@@ -1310,15 +1430,18 @@
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(() => {
                         fetchBirthdays();
+                        fetchLeaders();
                     }, 400); // Debounce to avoid heavy API querying
                 } else {
                     filterAndRenderBirthdays();
+                    filterAndRenderLeaders();
                 }
             });
 
             // Mode switch listener
             buscarTodosMesesChk.addEventListener('change', () => {
                 fetchBirthdays();
+                fetchLeaders();
             });
         }
 
@@ -1331,6 +1454,7 @@
             // Initial data load
             fetchCampaignBanner();
             fetchBirthdays();
+            fetchLeaders();
         });
     </script>
 </body>

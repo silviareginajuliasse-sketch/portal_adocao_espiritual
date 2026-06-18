@@ -1019,15 +1019,15 @@
                     <!-- KPI Cards Grid -->
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-card-title">Total Colaboradores</div>
+                            <div class="stat-card-title">Total Usuários</div>
                             <div class="stat-card-value" id="colab-total">0</div>
                             <div class="stat-card-subtext">Cadastrados no portal</div>
                             <i class="fa-solid fa-users card-icon bg-maroon"></i>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-title">Colaboradores Ativos</div>
-                            <div class="stat-card-value" id="colab-ativos">0</div>
-                            <div class="stat-card-subtext" id="colab-ativos-pct">0% do total</div>
+                            <div class="stat-card-title">Colaboradores A.E.</div>
+                            <div class="stat-card-value" id="colab-ae">0</div>
+                            <div class="stat-card-subtext" id="colab-ae-pct">0% do total</div>
                             <i class="fa-solid fa-user-check card-icon bg-green"></i>
                         </div>
                         <div class="stat-card">
@@ -1128,7 +1128,42 @@
                     <div class="dashboard-grid">
                         <div class="dashboard-card col-8">
                             <div class="dashboard-card-title">Distribuição Geográfica de Paróquias no Brasil</div>
-                            <div id="map-paroquias" style="height: 480px; border-radius: 12px; border: 1px solid #edf2f7; box-shadow: var(--card-shadow); z-index: 1;"></div>
+                            <div style="position: relative; width: 100%;">
+                                <div id="map-paroquias" style="height: 480px; border-radius: 12px; border: 1px solid #edf2f7; box-shadow: var(--card-shadow); z-index: 1;"></div>
+                                <!-- Legend overlay -->
+                                <div class="map-legend" style="
+                                    position: absolute;
+                                    bottom: 15px;
+                                    left: 15px;
+                                    background: rgba(255, 255, 255, 0.95);
+                                    padding: 10px 14px;
+                                    border-radius: 8px;
+                                    border: 1px solid #edf2f7;
+                                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+                                    z-index: 999;
+                                    font-family: var(--font-family);
+                                    font-size: 0.85rem;
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 8px;
+                                    pointer-events: auto;
+                                    min-width: 200px;
+                                ">
+                                    <div style="font-weight: 700; color: #1a202c; border-bottom: 1px solid #edf2f7; padding-bottom: 6px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem;">
+                                        LEGENDA
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 18px; height: 24px;">
+                                            <svg width="16" height="22" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12C2 19.5 12 30 12 30C12 30 22 19.5 22 12C22 6.48 17.52 2 12 2Z" fill="#ff0000" stroke="#0055ff" stroke-width="2.2" stroke-linejoin="round"/>
+                                                <circle cx="12" cy="12" r="4.5" fill="#ffffff"/>
+                                                <circle cx="12" cy="12" r="1.8" fill="#ff0000"/>
+                                            </svg>
+                                        </div>
+                                        <span style="color: #2d3748; font-weight: 600;">Paróquia / Comunidade Parceira</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="dashboard-card col-4">
                             <div class="dashboard-card-title">Paróquias Sem GPS por Estado</div>
@@ -1456,14 +1491,14 @@
                 allCollaborators = await res.json();
 
                 const total = allCollaborators.length;
-                const ativos = allCollaborators.filter(c => c.status === 'Ativo').length;
+                const ae = allCollaborators.filter(c => c.selo_colaborador !== null && c.selo_colaborador !== undefined && c.selo_colaborador !== '').length;
                 const analise = allCollaborators.filter(c => c.status === 'Em analise').length;
                 const inativos = allCollaborators.filter(c => c.status === 'Inativo').length;
 
                 // Update KPI values
                 document.getElementById('colab-total').innerText = total;
-                document.getElementById('colab-ativos').innerText = ativos;
-                document.getElementById('colab-ativos-pct').innerText = total > 0 ? `${((ativos / total) * 100).toFixed(1)}% do total` : '0% do total';
+                document.getElementById('colab-ae').innerText = ae;
+                document.getElementById('colab-ae-pct').innerText = total > 0 ? `${((ae / total) * 100).toFixed(1)}% do total` : '0% do total';
                 
                 document.getElementById('colab-analise').innerText = analise;
                 document.getElementById('colab-analise-pct').innerText = total > 0 ? `${((analise / total) * 100).toFixed(1)}% do total` : '0% do total';
@@ -2058,12 +2093,11 @@
                     center: [-15.7801, -47.9292], // Center of Brazil
                     zoom: 4,
                     minZoom: 3,
-                    maxZoom: 18
+                    maxZoom: 18,
+                    attributionControl: false
                 });
 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                }).addTo(mapParoquiasInstance);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapParoquiasInstance);
             }
 
             // Clear existing markers/layers
@@ -2072,11 +2106,13 @@
 
             // Group parishes without GPS coordinates by state
             const stateNonGPS = {};
+            const stateNonGPSParceiras = {};
             const stateNonGPSList = {};
 
             allParishes.forEach(p => {
                 const hasGPS = p.latitude !== null && p.longitude !== null;
                 const state = p.sigla_estado || 'RJ';
+                const isParceira = p.parceira !== null && p.parceira !== undefined && p.parceira !== '' && p.parceira.toLowerCase() !== 'nao' && p.parceira.toLowerCase() !== 'não';
 
                 if (hasGPS) {
                     // Correct negative longitude common typo for Brazil (e.g. +43.46 -> -43.46)
@@ -2087,14 +2123,46 @@
                     }
 
                     // Create marker for parish with GPS
-                    const marker = L.marker([lat, lng])
+                    const markerOptions = {};
+                    if (isParceira) {
+                        // Custom SVG red pin matching the user mockup
+                        markerOptions.icon = L.divIcon({
+                            html: `<svg width="24" height="32" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 19.5 12 30 12 30C12 30 22 19.5 22 12C22 6.48 17.52 2 12 2Z" fill="#ff0000" stroke="#0055ff" stroke-width="2" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="4.5" fill="#ffffff"/>
+                                <circle cx="12" cy="12" r="1.8" fill="#ff0000"/>
+                            </svg>`,
+                            className: '',
+                            iconSize: [24, 32],
+                            iconAnchor: [12, 32],
+                            popupAnchor: [0, -32]
+                        });
+                    } else {
+                        // Custom SVG blue pin for normal parishes
+                        markerOptions.icon = L.divIcon({
+                            html: `<svg width="24" height="32" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 19.5 12 30 12 30C12 30 22 19.5 22 12C22 6.48 17.52 2 12 2Z" fill="#3182ce" stroke="#1a365d" stroke-width="2" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+                                <circle cx="12" cy="12" r="1.5" fill="#3182ce"/>
+                            </svg>`,
+                            className: '',
+                            iconSize: [24, 32],
+                            iconAnchor: [12, 32],
+                            popupAnchor: [0, -32]
+                        });
+                    }
+
+                    const marker = L.marker([lat, lng], markerOptions)
                         .addTo(mapParoquiasInstance)
                         .bindPopup(`
                             <div style="font-family: 'Outfit', sans-serif; min-width: 200px;">
                                 <h4 style="margin: 0 0 5px 0; color: #7b0000; font-size: 14px; font-weight: 700;">${p.nome_paroquia}</h4>
-                                <span style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background-color: #fcebeb; color: #7b0000; margin-bottom: 8px;">
-                                    ${p.tipo === 'Comunidade' ? 'Comunidade' : 'Paróquia'}
-                                </span>
+                                <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+                                    <span style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background-color: #fcebeb; color: #7b0000;">
+                                        ${p.tipo === 'Comunidade' ? 'Comunidade' : 'Paróquia'}
+                                    </span>
+                                    ${isParceira ? '<span style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030;">Parceira</span>' : ''}
+                                </div>
                                 <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-location-dot" style="margin-right: 5px; color: #7b0000;"></i>${p.cidade} - ${state}</p>
                                 <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-hotel" style="margin-right: 5px; color: #7b0000;"></i>${p.nome_arquidiocese || '-'}</p>
                                 <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-globe" style="margin-right: 5px; color: #7b0000;"></i>${p.nome_regional || '-'}</p>
@@ -2105,10 +2173,13 @@
                 } else {
                     // Accumulate non-GPS count by state
                     stateNonGPS[state] = (stateNonGPS[state] || 0) + 1;
+                    if (isParceira) {
+                        stateNonGPSParceiras[state] = (stateNonGPSParceiras[state] || 0) + 1;
+                    }
                     if (!stateNonGPSList[state]) {
                         stateNonGPSList[state] = [];
                     }
-                    stateNonGPSList[state].push(p.nome_paroquia);
+                    stateNonGPSList[state].push({ nome: p.nome_paroquia, parceira: isParceira });
                 }
             });
 
@@ -2130,13 +2201,22 @@
                     })
                     .addTo(mapParoquiasInstance)
                     .bindPopup(`
-                        <div style="font-family: 'Outfit', sans-serif; min-width: 220px; max-width: 280px;">
+                        <div style="font-family: 'Outfit', sans-serif; min-width: 240px; max-width: 300px;">
                             <h4 style="margin: 0 0 5px 0; color: #7b0000; font-size: 13px; font-weight: 700;">${stateName} (${state})</h4>
                             <p style="margin: 0 0 8px 0; font-size: 11px; color: #4a5568; line-height: 1.3;">
                                 <strong>${count}</strong> paróquia(s) sem coordenadas de satélite cadastradas estão associadas a este estado:
                             </p>
-                            <ul style="max-height: 120px; overflow-y: auto; font-size: 11px; padding-left: 15px; margin: 0; color: #2d3748;">
-                                ${parishNames.map(name => `<li style="margin-bottom: 3px;">${name}</li>`).join('')}
+                            <ul style="max-height: 150px; overflow-y: auto; font-size: 11px; padding-left: 0; margin: 0; color: #2d3748; list-style-type: none;">
+                                ${parishNames.map(item => `
+                                    <li style="margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px dashed #edf2f7; padding-bottom: 4px;">
+                                        <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;" title="${item.nome}">${item.nome}</span>
+                                        ${item.parceira ? `
+                                            <span style="display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 9px; font-weight: 700; background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030; flex-shrink: 0;">
+                                                Parceira
+                                            </span>
+                                        ` : ''}
+                                    </li>
+                                `).join('')}
                             </ul>
                         </div>
                     `);
@@ -2156,10 +2236,17 @@
                 } else {
                     listContainer.innerHTML = Object.entries(stateNonGPS).map(([state, count]) => {
                         const stateName = ESTADO_NAMES[state] || state;
+                        const parceirasCount = stateNonGPSParceiras[state] || 0;
+                        const partnerBadge = parceirasCount > 0 
+                            ? `<span style="background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; display: inline-flex; align-items: center; gap: 2px; margin-right: 4px;" title="${parceirasCount} paróquia(s) parceira(s)"><i class="fa-solid fa-handshake"></i> ${parceirasCount}</span>`
+                            : '';
                         return `
                             <div onclick="focusOnState('${state}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background-color: #f7fafc; border: 1px solid #edf2f7; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#7b0000'; this.style.backgroundColor='#fff';" onmouseout="this.style.borderColor='#edf2f7'; this.style.backgroundColor='#f7fafc';">
                                 <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-dark);">${stateName} (${state})</span>
-                                <span style="background-color: var(--primary-maroon); color: white; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">${count}</span>
+                                <div style="display: flex; align-items: center; gap: 2px;">
+                                    ${partnerBadge}
+                                    <span style="background-color: var(--primary-maroon); color: white; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;" title="Total sem GPS">${count}</span>
+                                </div>
                             </div>
                         `;
                     }).join('');
@@ -2268,7 +2355,43 @@
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { boxWidth: 12, font: { family: 'Outfit', size: 11 } }
+                            labels: {
+                                boxWidth: 12,
+                                font: { family: 'Outfit', size: 11 },
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const dataset = data.datasets[0];
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return data.labels.map((label, i) => {
+                                            const value = dataset.data[i];
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : '0.00';
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+                                            return {
+                                                text: `${label}: ${value} (${percentage}%)`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                hidden: !chart.getDataVisibility(i),
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : '0.00';
+                                    return ` ${label}: ${value} (${percentage}%)`;
+                                }
+                            }
                         }
                     },
                     cutout: '65%'

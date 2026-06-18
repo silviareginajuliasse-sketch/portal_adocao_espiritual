@@ -754,6 +754,51 @@
                 toggleIcon.classList.remove('active');
             }
         }
+
+        // Speech Synthesis Greeting (Bom dia / Boa tarde / Boa noite + Apelido + Paz e Bem!)
+        window.addEventListener('DOMContentLoaded', () => {
+            // Speak only once per login session
+            if (!sessionStorage.getItem('user_greeted')) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const nomeParam = urlParams.get('nome');
+                const userNickname = nomeParam || localStorage.getItem('user_nome') || '';
+
+                if (userNickname) {
+                    const hour = new Date().getHours();
+                    let greeting = 'Bom dia';
+                    if (hour >= 12 && hour < 18) {
+                        greeting = 'Boa tarde';
+                    } else if (hour >= 18 || hour < 5) {
+                        greeting = 'Boa noite';
+                    }
+
+                    const message = `${greeting}, ${userNickname}. Paz e Bem!`;
+
+                    const speakMessage = () => {
+                        if (sessionStorage.getItem('user_greeted')) return;
+                        const utterance = new SpeechSynthesisUtterance(message);
+                        utterance.lang = 'pt-BR';
+                        utterance.rate = 0.95;
+                        window.speechSynthesis.speak(utterance);
+                        sessionStorage.setItem('user_greeted', 'true');
+                    };
+
+                    if (window.speechSynthesis) {
+                        // Attempt to speak immediately
+                        speakMessage();
+
+                        // Fallback: speak on first user interaction if blocked by browser autoplay policy
+                        const triggerOnInteraction = () => {
+                            speakMessage();
+                            document.body.removeEventListener('click', triggerOnInteraction);
+                            document.body.removeEventListener('touchstart', triggerOnInteraction);
+                        };
+                        document.body.addEventListener('click', triggerOnInteraction);
+                        document.body.addEventListener('touchstart', triggerOnInteraction);
+                    }
+                }
+            }
+        });
     </script>
 </body>
 

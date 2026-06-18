@@ -1492,6 +1492,21 @@
                 return;
             }
 
+            // Check for duplicate name
+            try {
+                const existing = await fetchData('arquidioceses/detalhes');
+                const isDuplicate = existing.some(arq => 
+                    arq.nome_arquidiocese.trim().toLowerCase() === name.toLowerCase() && 
+                    arq.id_arquidiocese !== (id ? parseInt(id) : null)
+                );
+                if (isDuplicate) {
+                    alert("Erro ao salvar: Já existe uma arquidiocese cadastrada com este nome.");
+                    return;
+                }
+            } catch (err) {
+                console.error("Erro ao verificar duplicidade:", err);
+            }
+
             const nomeUser = urlParams.get('nome') || '';
             const cpfUser = urlParams.get('cpf') || '';
             const idColaborador = localStorage.getItem('user_id_colaborador') || null;
@@ -1522,7 +1537,11 @@
                     // Clean temp
                     localStorage.removeItem('temp_arquidiocese_lideranca');
                     alert("Arquidiocese salva com sucesso!");
-                    window.location.href = `arquidioceses.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}`;
+                    if (!id) {
+                        window.location.href = `registro_arquidiocese.html?id=${savedId}&mode=edit&nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}&tab=lideranca`;
+                    } else {
+                        window.location.href = `arquidioceses.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}`;
+                    }
                 } else {
                     alert("Erro ao salvar: " + (result.error || "Erro desconhecido"));
                 }
@@ -1938,11 +1957,15 @@
                 }
                 displayLiderancas();
             }
-
             if (returning) {
                 restoreParentFormState();
                 displayLiderancas();
                 switchTab(null, 'tab-lideranca');
+            } else {
+                const tabParam = urlParams.get('tab');
+                if (tabParam === 'lideranca') {
+                    switchTab(null, 'tab-lideranca');
+                }
             }
         };
     </script>

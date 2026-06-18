@@ -1453,6 +1453,8 @@
                 await restoreParentFormState();
                 displayLiderancas();
                 switchTab(null, 'tab-lideranca');
+            } else if (urlParams.get('tab') === 'lideranca') {
+                switchTab(null, 'tab-lideranca');
             }
         };
 
@@ -1588,7 +1590,13 @@
                 if (response.success) {
                     localStorage.removeItem('temp_arquidiocese_lideranca');
                     alert("Divisão salva com sucesso!");
-                    goBack();
+                    if (!id) {
+                        const nomeUser = urlParams.get('nome') || '';
+                        const cpfUser = urlParams.get('cpf') || '';
+                        window.location.href = `registro_divisao_arquidiocesana.html?id=${response.id}&mode=edit&nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}&tab=lideranca`;
+                    } else {
+                        goBack();
+                    }
                 } else {
                     alert("Erro ao salvar: " + (response.error || "Erro desconhecido"));
                 }

@@ -1,8 +1,168 @@
 (function() {
+    function rebuildDropdown() {
+        const dropdown = document.getElementById('dropdown-menu');
+        if (!dropdown || dropdown.getAttribute('data-rebuilt')) return;
+
+        dropdown.setAttribute('data-rebuilt', 'true');
+        dropdown.innerHTML = `
+            <div class="dropdown-header">
+                <span>Minha Conta</span>
+                <a href="identificacao.html" class="logout-link">
+                    Sair <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+            <div class="dropdown-body">
+                <div class="user-profile-row">
+                    <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                        <div id="avatar-content">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="camera-badge">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*">
+                    <div class="profile-info">
+                        <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                        <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                    </div>
+                </div>
+                <div class="user-role regular">
+                    Seu perfil é <strong>Coordenador Nacional</strong>
+                </div>
+                <div class="decorative-divider">
+                    <span></span><span></span><span></span>
+                </div>
+                <div id="dropdown-selos-section" style="display: none;">
+                    <div style="font-style: italic; font-size: 14px; color: #555; margin-bottom: 8px;">Selos</div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <img src="./logo_circular.png" alt="Selo" style="width: 45px; height: 45px; object-fit: contain;">
+                    </div>
+                    <div class="decorative-divider blue-divider">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+                <a href="registro_colaboradores.html" class="btn-update-profile update-link">Atualizar cadastro</a>
+            </div>
+        `;
+
+        const fileInput = document.getElementById('hidden-photo-input');
+        if (fileInput) {
+            fileInput.addEventListener('change', handlePhotoUpload);
+        }
+
+        if (!document.getElementById('dropdown-override-styles')) {
+            const style = document.createElement('style');
+            style.id = 'dropdown-override-styles';
+            style.textContent = `
+                .dropdown-menu {
+                    border-radius: 8px !important;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+                    width: 290px !important;
+                }
+                .dropdown-header {
+                    border-bottom: 1px solid #eee !important;
+                    padding: 12px 15px !important;
+                }
+                .dropdown-header span {
+                    font-size: 15px !important;
+                    font-weight: 600 !important;
+                    color: #555 !important;
+                }
+                .logout-link {
+                    color: #1652b4 !important;
+                    font-size: 14px !important;
+                    font-weight: 600 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 6px !important;
+                    text-decoration: none !important;
+                }
+                .logout-link:hover {
+                    text-decoration: underline !important;
+                }
+                .dropdown-body {
+                    padding: 15px !important;
+                }
+                .user-profile-row {
+                    margin-bottom: 15px !important;
+                }
+                .profile-info .full-name {
+                    font-size: 14px !important;
+                    font-weight: 700 !important;
+                    color: #333 !important;
+                    text-transform: uppercase !important;
+                }
+                .profile-info .id-number {
+                    font-size: 12px !important;
+                    color: #666 !important;
+                    margin-top: 2px !important;
+                }
+                .user-role {
+                    font-size: 14px !important;
+                    color: #555 !important;
+                    font-style: italic !important;
+                    margin-bottom: 12px !important;
+                }
+                .decorative-divider {
+                    display: flex !important;
+                    gap: 6px !important;
+                    margin-bottom: 12px !important;
+                }
+                .decorative-divider span {
+                    flex: 1 !important;
+                    height: 4px !important;
+                    background-color: #f1c40f !important;
+                    border-radius: 2px !important;
+                }
+                .decorative-divider.blue-divider span {
+                    background-color: #0c3c60 !important;
+                }
+                .btn-update-profile {
+                    display: block !important;
+                    background-color: #c53030 !important;
+                    color: white !important;
+                    border: none !important;
+                    border-radius: 20px !important;
+                    padding: 10px 15px !important;
+                    font-size: 14px !important;
+                    font-weight: 700 !important;
+                    text-align: center !important;
+                    text-decoration: none !important;
+                    cursor: pointer !important;
+                    transition: background-color 0.2s ease !important;
+                    margin-top: 15px !important;
+                    box-shadow: 0 4px 8px rgba(197, 48, 48, 0.2) !important;
+                }
+                .btn-update-profile:hover {
+                    background-color: #a62626 !important;
+                    color: white !important;
+                    text-decoration: none !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    function updateDropdownSeal() {
+        const selosSection = document.getElementById('dropdown-selos-section');
+        if (selosSection) {
+            const hasSelo = localStorage.getItem('adocao_user_selo');
+            if (hasSelo && hasSelo !== 'null' && hasSelo !== 'undefined' && hasSelo !== '') {
+                selosSection.style.display = 'block';
+            } else {
+                selosSection.style.display = 'none';
+            }
+        }
+    }
+
     function updateUserName() {
         const urlParams = new URLSearchParams(window.location.search);
         let nome = urlParams.get('nome');
         let id_colab = urlParams.get('id_colaborador') || urlParams.get('cpf');
+
+        // Rebuild dropdown HTML first so elements exist
+        rebuildDropdown();
 
         // If found in URL, save to localStorage
         if (nome) {
@@ -26,8 +186,8 @@
         // Dropdown Update
         const dropdownName = document.getElementById('dropdown-full-name');
         const dropdownId = document.getElementById('dropdown-id');
-        if (dropdownName) dropdownName.innerText = nome;
-        if (dropdownId) dropdownId.innerText = id_colab;
+        if (dropdownName) dropdownName.innerText = nome.toUpperCase();
+        if (dropdownId) dropdownId.innerText = "Código de usuário: " + id_colab;
 
         // Profile Display Update
         const userRoles = document.querySelectorAll('.user-role strong');
@@ -62,27 +222,39 @@
                 userInitials.innerHTML = `<span style="font-weight: 700; color: #557db5;">${initials || '??'}</span>`;
                 const avatarContent = document.getElementById('avatar-content');
                 if (avatarContent) avatarContent.innerHTML = `<i class="fa-solid fa-user"></i>`;
-                
-                // Fetch dynamically from DB since it is not in localStorage
-                if (id_colab) {
-                    const apiUrl = window.location.protocol === 'file:' 
-                        ? `http://${window.location.hostname || 'localhost'}:3000/api/colaboradores/${id_colab}`
-                        : `/api/colaboradores/${id_colab}`;
-                    
-                    fetch(apiUrl)
-                        .then(res => res.ok ? res.json() : null)
-                        .then(colab => {
-                            if (colab && colab.foto_colaborador) {
-                                localStorage.setItem('adocao_user_photo', colab.foto_colaborador);
-                                userInitials.innerHTML = `<img src="${colab.foto_colaborador}" style="width: 100%; height: 100%; object-fit: cover;" alt="User">`;
-                                const avatarContentInner = document.getElementById('avatar-content');
-                                if (avatarContentInner) avatarContentInner.innerHTML = `<img src="${colab.foto_colaborador}" class="user-photo" alt="Profile">`;
-                            }
-                        })
-                        .catch(err => console.warn('Could not fetch user photo:', err));
-                }
             }
         }
+
+        // Fetch dynamically from DB to stay up to date and load the seal
+        if (id_colab) {
+            const apiUrl = window.location.protocol === 'file:' 
+                ? `http://${window.location.hostname || 'localhost'}:3000/api/colaboradores/${id_colab}`
+                : `/api/colaboradores/${id_colab}`;
+            
+            fetch(apiUrl)
+                .then(res => res.ok ? res.json() : null)
+                .then(colab => {
+                    if (colab) {
+                        if (colab.foto_colaborador) {
+                            localStorage.setItem('adocao_user_photo', colab.foto_colaborador);
+                            if (userInitials) {
+                                userInitials.innerHTML = `<img src="${colab.foto_colaborador}" style="width: 100%; height: 100%; object-fit: cover;" alt="User">`;
+                            }
+                            const avatarContentInner = document.getElementById('avatar-content');
+                            if (avatarContentInner) avatarContentInner.innerHTML = `<img src="${colab.foto_colaborador}" class="user-photo" alt="Profile">`;
+                        }
+                        if (colab.selo_colaborador !== null && colab.selo_colaborador !== undefined && colab.selo_colaborador !== '') {
+                            localStorage.setItem('adocao_user_selo', colab.selo_colaborador);
+                        } else {
+                            localStorage.removeItem('adocao_user_selo');
+                        }
+                        updateDropdownSeal();
+                    }
+                })
+                .catch(err => console.warn('Could not fetch user details:', err));
+        }
+
+        updateDropdownSeal();
     }
 
     function handlePhotoUpload(event) {

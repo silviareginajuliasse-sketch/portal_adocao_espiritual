@@ -838,6 +838,7 @@
                 <div class="list-container">
                     <div class="list-header" style="display: flex; align-items: center; padding: 12px 15px; background-color: #f7f9fa; font-weight: bold; border-bottom: 1px solid #e2e8f0; gap: 15px; color: #4a5568; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
                         <div style="width: 50px; flex-shrink: 0; text-align: center;"></div>
+                        <div style="width: 36px; flex-shrink: 0; text-align: center;"></div>
                         <div style="flex: 1 1 45%; min-width: 200px;">Paróquia / Comunidade</div>
                         <div style="flex: 0 0 180px; min-width: 130px;">Tipo</div>
                         <div style="flex: 0 0 150px; min-width: 120px;">GPS</div>
@@ -1083,11 +1084,16 @@
                     extraSpan.style.color = '#666';
                     extraSpan.style.marginTop = '4px';
                     
-                    const endereco = paroquia.endereco || 'Não informado';
+                    const baseEndereco = paroquia.endereco || '';
+                    const bairro = paroquia.bairro || '';
+                    const endereco = (baseEndereco && bairro) 
+                        ? `${baseEndereco}, ${bairro}` 
+                        : (baseEndereco || bairro || 'Não informado');
                     const cidade = paroquia.cidade || 'Não informada';
                     const estado = paroquia.sigla_estado || 'N/A';
                     const arquidiocese = paroquia.nome_arquidiocese || 'N/A';
-                    extraSpan.textContent = `Endereço: ${endereco} | Cidade: ${cidade} - ${estado} | Arquidiocese: ${arquidiocese}`;
+                    const divisao = paroquia.nome_divisao_arquidiocesana || 'não cadastrada';
+                    extraSpan.textContent = `Endereço: ${endereco} | Cidade: ${cidade} - ${estado} | Arquidiocese: ${arquidiocese} | Divisão arquidiocesana: ${divisao}`;
                     
                     detailsDiv.appendChild(nameSpan);
                     detailsDiv.appendChild(extraSpan);
@@ -1132,7 +1138,27 @@
                     }
                     gpsDiv.appendChild(gpsBadge);
                     
+                    const hasSelo = paroquia.parceira !== null && paroquia.parceira !== undefined && paroquia.parceira !== '' && paroquia.parceira.toLowerCase() !== 'nao' && paroquia.parceira.toLowerCase() !== 'não';
+                    const seloDiv = document.createElement('div');
+                    seloDiv.style.width = '36px';
+                    seloDiv.style.flexShrink = '0';
+                    seloDiv.style.display = 'flex';
+                    seloDiv.style.justifyContent = 'center';
+                    seloDiv.style.alignItems = 'center';
+
+                    if (hasSelo) {
+                        const seloImg = document.createElement('img');
+                        seloImg.src = './logo_circular.png';
+                        seloImg.alt = 'Selo';
+                        seloImg.style.width = '30px';
+                        seloImg.style.height = '30px';
+                        seloImg.style.objectFit = 'contain';
+                        seloImg.title = 'Paróquia Parceira Adoção';
+                        seloDiv.appendChild(seloImg);
+                    }
+
                     item.appendChild(trashIcon);
+                    item.appendChild(seloDiv);
                     item.appendChild(detailsDiv);
                     item.appendChild(tipoDiv);
                     item.appendChild(gpsDiv);

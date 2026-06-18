@@ -724,10 +724,10 @@
                 flex: 0 0 130px !important;
             }
             .col-tipo {
-                flex: 0 0 250px !important;
+                flex: 0 0 180px !important;
             }
             .col-parceira {
-                flex: 0 0 250px !important;
+                flex: 0 0 160px !important;
             }
         }
 
@@ -747,10 +747,11 @@
         }
 
         .metadata-value {
+            color: #555;
             font-size: 0.95rem;
-            color: #333;
-            padding: 5px 0;
             font-weight: 400;
+            padding: 10px 0;
+            line-height: 1.2;
         }
 
         @media (max-width: 900px) {
@@ -1310,7 +1311,7 @@
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
                                     </div>
                                 </div>
-                                <div class="metadata-container" id="metadata-container" style="display: none;">
+                                <div class="metadata-container">
                                     <div class="metadata-group">
                                         <label class="form-label">Incluído em</label>
                                         <span class="metadata-value" id="metadata-criado">--</span>
@@ -1370,9 +1371,9 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">Divisão arquidiocesana <span>*</span></label>
+                                    <label class="form-label">Divisão arquidiocesana</label>
                                     <div class="input-wrapper">
-                                        <select class="select-field" id="select-divisao" required>
+                                        <select class="select-field" id="select-divisao">
                                             <option value="" disabled selected>Selecione a divisão</option>
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
@@ -1384,23 +1385,30 @@
                                     <input type="text" class="input-field" id="input-nome" required>
                                 </div>
 
-                                <!-- Row 3: Endereço, Bairro, Cidade -->
-                                <div class="form-group">
+                            </div> <!-- Close form-grid-3 -->
+
+                            <!-- Row 3: Endereço, Bairro, Cidade e CEP -->
+                            <div class="form-row" style="margin-top: 15px; margin-bottom: 15px;">
+                                <div class="form-group" style="flex: 2.5; min-width: 250px;">
                                     <label class="form-label">Endereço (rua e número) <span>*</span></label>
                                     <input type="text" class="input-field" id="input-endereco" required>
                                 </div>
-
-                                <div class="form-group">
+                                <div class="form-group" style="flex: 1.5; min-width: 150px;">
                                     <label class="form-label">Bairro <span>*</span></label>
                                     <input type="text" class="input-field" id="input-bairro" required>
                                 </div>
-
-                                <div class="form-group">
+                                <div class="form-group" style="flex: 1.5; min-width: 180px;">
                                     <label class="form-label">Cidade <span>*</span></label>
                                     <input type="text" class="input-field" id="input-cidade" required>
                                 </div>
+                                <div class="form-group" style="flex: 1.2; min-width: 120px;">
+                                    <label class="form-label" for="input-cep">CEP <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-cep" placeholder="00000-000" maxlength="9" oninput="maskCEP(this)" required>
+                                </div>
+                            </div>
 
-                                <!-- Row 4: Latitude, Longitude -->
+                            <div class="form-grid-3">
+                                <!-- Row 4: Latitude, Longitude, Site -->
                                 <div class="form-group">
                                     <label class="form-label">Latitude endereço</label>
                                     <input type="text" class="input-field" id="input-latitude">
@@ -1527,6 +1535,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
         const mode = urlParams.get('mode') || (id ? 'edit' : 'new');
+
+        function maskCEP(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 8);
+            if (value.length > 5) {
+                input.value = value.substring(0, 5) + '-' + value.substring(5);
+            } else {
+                input.value = value;
+            }
+        }
 
         async function loadCountries() {
             try {
@@ -1662,16 +1679,17 @@
             const parceira = document.getElementById('select-parceira').value;
             
             const nome_paroquia = document.getElementById('input-nome').value.trim();
-            const enderecoBase = document.getElementById('input-endereco').value.trim();
+            const endereco = document.getElementById('input-endereco').value.trim();
             const bairro = document.getElementById('input-bairro').value.trim();
-            const endereco = bairro ? `${enderecoBase}, ${bairro}` : enderecoBase;
             const cidade = document.getElementById('input-cidade').value.trim();
             const latitude = document.getElementById('input-latitude').value.trim();
             const site = document.getElementById('input-site').value.trim();
             const longitude = document.getElementById('input-longitude').value.trim();
             const observacoes = document.getElementById('textarea-observacoes')?.value.trim() || null;
 
-            if (!id_pais || !id_estado || !id_regional || !id_arquidiocese || !id_divisao_arquidiocesana || !nome_paroquia || !enderecoBase || !cidade || !tipo || !parceira) {
+            const cep = document.getElementById('input-cep').value.trim();
+
+            if (!id_pais || !id_estado || !id_regional || !id_arquidiocese || !nome_paroquia || !endereco || !cidade || !cep || !tipo || !parceira) {
                 alert('Por favor, preencha todos os campos obrigatórios (*).');
                 return;
             }
@@ -1686,8 +1704,9 @@
             const payload = {
                 nome_paroquia,
                 id_arquidiocese,
-                id_divisao_arquidiocesana: parseInt(id_divisao_arquidiocesana),
+                id_divisao_arquidiocesana: id_divisao_arquidiocesana ? parseInt(id_divisao_arquidiocesana) : null,
                 endereco,
+                bairro,
                 cidade,
                 id_estado,
                 status: status.toLowerCase(),
@@ -1698,7 +1717,8 @@
                 site: site || '',
                 observacoes,
                 socialMedia,
-                id_colaborador_atualiza: localStorage.getItem('user_id_colaborador') || null
+                id_colaborador_atualiza: localStorage.getItem('user_id_colaborador') || null,
+                cep: cep
             };
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -1775,6 +1795,7 @@
                     option.text = opt;
                     select.appendChild(option);
                 });
+                select.value = 'Não';
             } catch (err) {
                 console.error("Erro ao carregar opções de parceira:", err);
             }
@@ -1846,19 +1867,39 @@
                 if (!response.ok) throw new Error('Falha ao carregar dados da paróquia');
                 const paroquia = await response.json();
 
-                // Format dates to DD/MM/YYYY
-                const formatDate = (isoString) => {
-                    if (!isoString) return '--';
-                    const date = new Date(isoString);
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    return `${day}/${month}/${year}`;
-                };
+                // Format dates helpers
+                function formatDateTime(dateStr) {
+                    if (!dateStr || dateStr === 'Ativo' || dateStr === '--') return '--';
+                    try {
+                        if (dateStr.includes('T') || dateStr.includes(' ')) {
+                            const date = new Date(dateStr);
+                            if (isNaN(date.getTime())) return dateStr;
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const year = date.getFullYear();
+                            const hours = String(date.getHours()).padStart(2, '0');
+                            const minutes = String(date.getMinutes()).padStart(2, '0');
+                            return `${day}/${month}/${year} ${hours}:${minutes}`;
+                        }
+                        const parts = dateStr.split('-');
+                        if (parts.length === 3) {
+                            const year = parts[0];
+                            const month = parts[1];
+                            const day = parts[2].substring(0, 2);
+                            return `${day}/${month}/${year} 00:00`;
+                        }
+                        return dateStr;
+                    } catch (e) {
+                        return dateStr;
+                    }
+                }
 
-                document.getElementById('metadata-criado').innerText = formatDate(paroquia.criado_em);
-                document.getElementById('metadata-atualizado').innerText = formatDate(paroquia.atualizado_em);
-                document.getElementById('metadata-por').innerText = (paroquia.apelido_colaborador || '--').toUpperCase();
+                document.getElementById('metadata-criado').innerText = formatDateTime(paroquia.criado_em);
+                document.getElementById('metadata-atualizado').innerText = formatDateTime(paroquia.atualizado_em);
+                document.getElementById('metadata-por').innerText = paroquia.apelido_colaborador || '--';
+
+                // Populate CEP field
+                document.getElementById('input-cep').value = paroquia.cep || '';
 
                 // Populate basic fields
                 document.getElementById('select-status').value = paroquia.status === 'inativo' ? 'Inativo' : 'Ativo';
@@ -1871,13 +1912,15 @@
                 document.getElementById('input-nome').value = paroquia.nome_paroquia || '';
                 document.getElementById('input-cidade').value = paroquia.cidade || '';
 
-                // Address splitting
+                // Address & Bairro loading
                 let enderecoBase = paroquia.endereco || '';
-                let bairro = '';
-                const lastCommaIndex = enderecoBase.lastIndexOf(',');
-                if (lastCommaIndex !== -1) {
-                    enderecoBase = paroquia.endereco.substring(0, lastCommaIndex).trim();
-                    bairro = paroquia.endereco.substring(lastCommaIndex + 1).trim();
+                let bairro = paroquia.bairro || '';
+                if (!bairro && enderecoBase) {
+                    const lastCommaIndex = enderecoBase.lastIndexOf(',');
+                    if (lastCommaIndex !== -1) {
+                        bairro = enderecoBase.substring(lastCommaIndex + 1).trim();
+                        enderecoBase = enderecoBase.substring(0, lastCommaIndex).trim();
+                    }
                 }
                 document.getElementById('input-endereco').value = enderecoBase;
                 document.getElementById('input-bairro').value = bairro;
@@ -2207,6 +2250,7 @@
                 address: document.getElementById('input-endereco').value,
                 neighborhood: document.getElementById('input-bairro').value,
                 city: document.getElementById('input-cidade').value,
+                cep: document.getElementById('input-cep').value,
                 latitude: document.getElementById('input-latitude').value,
                 site: document.getElementById('input-site').value,
                 longitude: document.getElementById('input-longitude').value,
@@ -2255,6 +2299,7 @@
                     document.getElementById('input-endereco').value = state.address || '';
                     document.getElementById('input-bairro').value = state.neighborhood || '';
                     document.getElementById('input-cidade').value = state.city || '';
+                    document.getElementById('input-cep').value = state.cep || '';
                     document.getElementById('input-latitude').value = state.latitude || '';
                     document.getElementById('input-site').value = state.site || '';
                     document.getElementById('input-longitude').value = state.longitude || '';
@@ -2417,6 +2462,23 @@
             }
         }
 
+        function updateDivisaoRequirement() {
+            const selectTipo = document.getElementById('select-tipo');
+            const selectDivisao = document.getElementById('select-divisao');
+            if (!selectTipo || !selectDivisao) return;
+
+            const labelDivisao = selectDivisao.closest('.form-group').querySelector('.form-label');
+            const isParoquia = selectTipo.value.includes('Par') || selectTipo.value.includes('par');
+
+            if (isParoquia) {
+                selectDivisao.setAttribute('required', 'true');
+                labelDivisao.innerHTML = 'Divisão arquidiocesana <span>*</span>';
+            } else {
+                selectDivisao.removeAttribute('required');
+                labelDivisao.innerHTML = 'Divisão arquidiocesana';
+            }
+        }
+
         // On Load Logic
         window.addEventListener('DOMContentLoaded', async () => {
             // Update user name and avatar via header.js
@@ -2427,7 +2489,7 @@
             // Set initial metadata 'Por' value to currently logged in user
             const porElement = document.getElementById('metadata-por');
             if (porElement) {
-                porElement.innerText = (localStorage.getItem('user_nome') || '--').toUpperCase();
+                porElement.innerText = localStorage.getItem('user_nome') || '--';
             }
 
             // Initial Data Loads
@@ -2435,6 +2497,11 @@
             await loadCountries();
             await loadParoquiaTipos();
             await loadParceiraOptions();
+
+            const selectTipo = document.getElementById('select-tipo');
+            if (selectTipo) {
+                selectTipo.addEventListener('change', updateDivisaoRequirement);
+            }
 
             // Update sidebar links with current params
             updateSidebarLinks();
@@ -2446,13 +2513,11 @@
             const titleElement = document.getElementById('page-title-text');
             const submitBtn = document.getElementById('btn-save');
             const deleteBtn = document.getElementById('btn-delete');
-            const metadataContainer = document.getElementById('metadata-container');
 
             if (mode === 'new') {
                 if (titleElement) titleElement.innerText = 'Inclusão de Paróquias e Comunidades';
                 if (submitBtn) submitBtn.innerText = 'Salvar';
                 if (deleteBtn) deleteBtn.style.display = 'none';
-                if (metadataContainer) metadataContainer.style.display = 'none';
 
                 // Disable non-identification tabs for new records
                 ['tab-btn-lideranca', 'tab-btn-coordenadores', 'tab-btn-obs'].forEach(tabId => {
@@ -2475,7 +2540,6 @@
                 if (titleElement) titleElement.innerText = 'Paróquias e Comunidades';
                 if (submitBtn) submitBtn.innerText = 'Atualizar';
                 if (deleteBtn) deleteBtn.style.display = 'inline-block';
-                if (metadataContainer) metadataContainer.style.display = 'flex';
 
                 // Ensure non-identification tabs are enabled in edit mode
                 ['tab-btn-lideranca', 'tab-btn-coordenadores', 'tab-btn-obs'].forEach(tabId => {
@@ -2504,6 +2568,8 @@
                 switchTab(null, activeTab);
                 localStorage.removeItem('temp_paroquia_active_tab');
             }
+
+            updateDivisaoRequirement();
         });
         function toggleDropdown(event) {
             event.stopPropagation();
