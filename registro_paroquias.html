@@ -1303,7 +1303,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group col-parceira">
-                                    <label class="form-label">Parceira Adoção <span>*</span></label>
+                                    <label class="form-label">Implantada <span>*</span></label>
                                     <div class="input-wrapper">
                                         <select class="select-field" id="select-parceira" required>
                                             <!-- Dynamically populated -->
@@ -2463,20 +2463,12 @@
         }
 
         function updateDivisaoRequirement() {
-            const selectTipo = document.getElementById('select-tipo');
             const selectDivisao = document.getElementById('select-divisao');
-            if (!selectTipo || !selectDivisao) return;
+            if (!selectDivisao) return;
 
             const labelDivisao = selectDivisao.closest('.form-group').querySelector('.form-label');
-            const isParoquia = selectTipo.value.includes('Par') || selectTipo.value.includes('par');
-
-            if (isParoquia) {
-                selectDivisao.setAttribute('required', 'true');
-                labelDivisao.innerHTML = 'Divisão arquidiocesana <span>*</span>';
-            } else {
-                selectDivisao.removeAttribute('required');
-                labelDivisao.innerHTML = 'Divisão arquidiocesana';
-            }
+            selectDivisao.removeAttribute('required');
+            labelDivisao.innerHTML = 'Divisão arquidiocesana';
         }
 
         // On Load Logic

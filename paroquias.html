@@ -522,64 +522,6 @@
             flex-grow: 1;
         }
 
-        /* Pagination & Footer Actions */
-        .list-footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .export-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .excel-icon {
-            color: #1d6f42;
-            /* Excel Green */
-            font-size: 1.4rem;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .excel-icon:hover {
-            opacity: 0.8;
-        }
-
-        .export-separator {
-            width: 1px;
-            height: 24px;
-            background-color: var(--primary-red);
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.95rem;
-        }
-
-        .page-num {
-            color: #777;
-            padding: 2px 8px;
-            cursor: pointer;
-        }
-
-        .page-num.active {
-            color: #3498db;
-            border: 1px solid #3498db;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .next-link {
-            color: #777;
-            text-decoration: none;
-        }
 
         /* Desktop Media Query */
         @media (min-width: 768px) {
@@ -848,22 +790,6 @@
                     </div>
                 </div>
 
-                <!-- List Footer -->
-                <div class="list-footer">
-                    <div class="export-group">
-                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel"
-                            onclick="exportToExcel()"></i>
-                        <div class="export-separator"></div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="pagination">
-                        <span class="page-num active">1</span>
-                        <span class="page-num">2</span>
-                        <span class="page-num">3</span>
-                        <a href="#" class="next-link">Seguinte ></a>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -946,92 +872,6 @@
                 url += `&id=${id}`;
             }
             window.location.href = url;
-        }
-
-        function exportToExcel() {
-            const items = document.querySelectorAll('.list-item');
-            const timestamp = new Date().toISOString().slice(0, 10);
-            const fileName = `paroquias_${timestamp}.xls`;
-
-            // Estilos do Projeto
-            const headerBg = "#8b1e1e"; // Vermelho Primário
-            const headerTextColor = "#ffffff";
-
-            // Construção do conteúdo HTML que o Excel interpreta com estilos
-            let htmlContent = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head>
-                    <meta charset="utf-8">
-                    <!--[if gte mso 9]>
-                    <xml>
-                        <x:ExcelWorkbook>
-                            <x:ExcelWorksheets>
-                                <x:ExcelWorksheet>
-                                    <x:Name>Paróquias e Comunidades</x:Name>
-                                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-                                </x:ExcelWorksheet>
-                            </x:ExcelWorksheets>
-                        </x:ExcelWorkbook>
-                    </xml>
-                    <![endif]-->
-                    <style>
-                        table { border-collapse: collapse; }
-                        .header-row td {
-                            background-color: ${headerBg} !important;
-                            color: ${headerTextColor} !important;
-                            font-weight: bold;
-                            height: 30px;
-                            text-align: left;
-                            border: 0.5pt solid #000;
-                            padding: 5px;
-                        }
-                        .data-row td {
-                            border: 0.5pt solid #ccc;
-                            padding: 5px;
-                            color: #333;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <table>
-                        <tr class="header-row">
-                            <td>Lista de Paróquias e Comunidades</td>
-                        </tr>
-            `;
-
-            let count = 0;
-            items.forEach(item => {
-                if (window.getComputedStyle(item).display !== 'none') {
-                    const name = item.querySelector('.archdiocese-name').textContent;
-                    htmlContent += `
-                        <tr class="data-row">
-                            <td>${name}</td>
-                        </tr>
-                    `;
-                    count++;
-                }
-            });
-
-            htmlContent += `
-                    </table>
-                </body>
-                </html>
-            `;
-
-            if (count === 0) {
-                alert("Não há dados para exportar com o filtro atual.");
-                return;
-            }
-
-            // Download do arquivo formatado
-            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         async function loadParoquias() {
@@ -1148,7 +988,7 @@
 
                     if (hasSelo) {
                         const seloImg = document.createElement('img');
-                        seloImg.src = './logo_circular.png';
+                        seloImg.src = './logo_circular_vermelho.png';
                         seloImg.alt = 'Selo';
                         seloImg.style.width = '30px';
                         seloImg.style.height = '30px';

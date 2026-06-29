@@ -395,7 +395,7 @@ app.get('/api/arquidioceses/liderancas/aniversariantes/:mes', async (req, res) =
 app.get('/api/regionais/detalhes', async (req, res) => {
     try {
         const query = `
-            SELECT r.id_regional, r.nome_regional, e.nome_estado, p.nome_pais, re.id_estado
+            SELECT r.id_regional, r.nome_regional, e.nome_estado, e.sigla_estado, p.nome_pais, re.id_estado, r.ID_PAIS
             FROM regional r
             LEFT JOIN regional_estado re ON r.id_regional = re.id_regional
             LEFT JOIN estados e ON re.id_estado = e.id_estado
@@ -3787,6 +3787,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
     console.log('POST /api/colaboradores/save - Body:', { ...logBody, foto_base64: foto_base64 ? '[BASE64_IMAGE]' : null });
     const {
         id_colaborador,
+        cod_colaborador,
         nome_colaborador,
         apelido_colaborador,
         sexo,
@@ -3805,6 +3806,25 @@ app.post('/api/colaboradores/save', async (req, res) => {
         obs_colaborador,
         id_colaborador_atualiza
     } = req.body;
+
+    if (cod_colaborador === undefined || cod_colaborador === null || cod_colaborador === '' || isNaN(parseInt(cod_colaborador, 10))) {
+        return res.status(400).json({ success: false, error: 'O Código é obrigatório e deve ser numérico.' });
+    }
+
+    try {
+        // Uniqueness check for cod_colaborador
+        const [existing] = await pool.query(
+            'SELECT id_colaborador FROM colaboradores WHERE cod_colaborador = ? AND (? IS NULL OR id_colaborador <> ?)',
+            [parseInt(cod_colaborador, 10), id_colaborador || null, id_colaborador || null]
+        );
+        if (existing.length > 0) {
+            return res.status(400).json({ success: false, error: 'Já existe um colaborador cadastrado com este Código.' });
+        }
+    } catch (err) {
+        console.error('Erro ao validar unicidade do código:', err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+
     // Convert DD/MM/YYYY to YYYY-MM-DD and validate calendar values
     let formattedDate = null;
     if (data_nascimento) {
@@ -3909,6 +3929,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
 
             const [result] = await pool.query(
                 `INSERT INTO colaboradores (
+                    cod_colaborador,
                     nome_colaborador, 
                     apelido_colaborador, 
                     sexo, 
@@ -3928,8 +3949,9 @@ app.post('/api/colaboradores/save', async (req, res) => {
                     foto_colaborador,
                     id_colaborador_atualiza,
                     criado_em
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
                 [
+                    parseInt(cod_colaborador, 10),
                     nome_colaborador,
                     apelido_colaborador,
                     sexo,

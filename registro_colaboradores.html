@@ -1214,9 +1214,9 @@
                         <div id="tab-dados" class="tab-content active">
                             <!-- Row 1: Metadata + Status + Senha -->
                             <div class="form-row" style="align-items: flex-end; gap: 15px; margin-bottom: 15px;">
-                                <div class="form-group" style="flex: 0 0 65px;">
-                                    <label class="form-label" style="color: #009688; font-weight: 500; margin-bottom: 5px;">Código</label>
-                                    <div id="metadata-codigo" style="border: 1px solid #ccc; border-radius: 6px; height: 38px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #b71c1c; background-color: #fff; font-size: 1.05rem;">--</div>
+                                <div class="form-group" style="flex: 0 0 100px;">
+                                    <label class="form-label" style="color: #009688; font-weight: 500; margin-bottom: 5px;">Código <span>*</span></label>
+                                    <input type="text" class="input-field" id="input-codigo" placeholder="Código" style="font-weight: 700; color: #b71c1c; text-align: center;" oninput="this.value = this.value.replace(/\D/g, '')" required>
                                 </div>
                                 <div class="form-group" style="flex: 1.5; min-width: 130px;">
                                     <label class="form-label">Status <span>*</span></label>
@@ -1761,6 +1761,7 @@
             clearError();
 
             // Read field values
+            const cod_colaborador = document.getElementById('input-codigo').value.trim();
             const status       = document.getElementById('select-status').value;
             const senha        = document.getElementById('input-senha').value.trim();
             const id_perfil    = document.getElementById('select-perfil').value;
@@ -1781,6 +1782,7 @@
             const observacoes  = document.getElementById('textarea-observacoes').value.trim();
 
             // Validation
+            if (cod_colaborador === '') return showError('Por favor, preencha o Código.');
             if (!id_perfil) return showError('Por favor, selecione o Perfil de acesso no Portal.');
             if (!id_pais)   return showError('Por favor, selecione o País.');
             if (!nome)      return showError('Por favor, preencha o Nome completo.');
@@ -1803,6 +1805,7 @@
 
             const payload = {
                 id_colaborador:   currentColaboradorId || null,
+                cod_colaborador:  parseInt(cod_colaborador, 10),
                 nome_colaborador: nome,
                 apelido_colaborador: apelido,
                 sexo,
@@ -1843,7 +1846,10 @@
                 // Update metadata after save
                 if (!currentColaboradorId) {
                     currentColaboradorId = result.id;
-                    document.getElementById('metadata-codigo').innerText = result.id;
+                    const inputCodigo = document.getElementById('input-codigo');
+                    if (inputCodigo) {
+                        inputCodigo.disabled = true;
+                    }
                     document.getElementById('metadata-criado').innerText = formatDate(new Date().toISOString());
                     document.getElementById('metadata-atualizado').innerText = '--';
                     document.getElementById('metadata-registrado').innerText = (localStorage.getItem('user_nome') || '--').toUpperCase();
@@ -1932,6 +1938,11 @@
                 } else {
                     // Hide delete button for new records
                     if (deleteBtn) deleteBtn.style.display = 'none';
+                    const inputCodigo = document.getElementById('input-codigo');
+                    if (inputCodigo) {
+                        inputCodigo.disabled = false;
+                        inputCodigo.value = '';
+                    }
                     updateTabStates();
                 }
             } catch (err) {
@@ -1971,7 +1982,11 @@
                 const c = await res.json();
 
                 // Set metadata & title
-                document.getElementById('metadata-codigo').innerText = c.id_colaborador;
+                const inputCodigo = document.getElementById('input-codigo');
+                if (inputCodigo) {
+                    inputCodigo.value = c.cod_colaborador !== undefined && c.cod_colaborador !== null ? c.cod_colaborador : '';
+                    inputCodigo.disabled = true;
+                }
                 document.getElementById('metadata-criado').innerText = formatDate(c.criado_em);
                 document.getElementById('metadata-atualizado').innerText = c.atualizado_em ? formatDate(c.atualizado_em) : '--';
                 document.getElementById('page-title-text').innerText = 'Atualização de Colaborador';

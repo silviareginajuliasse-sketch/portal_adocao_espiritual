@@ -1105,7 +1105,7 @@
                             <i class="fa-solid fa-church card-icon bg-maroon"></i>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-title">Paróquias Parceiras</div>
+                            <div class="stat-card-title">Paróquias Implantadas</div>
                             <div class="stat-card-value" id="paroquia-parceiras">0</div>
                             <div class="stat-card-subtext" id="paroquia-parceiras-pct">0% do total</div>
                             <i class="fa-solid fa-handshake card-icon bg-green"></i>
@@ -1160,7 +1160,7 @@
                                                 <circle cx="12" cy="12" r="1.8" fill="#ff0000"/>
                                             </svg>
                                         </div>
-                                        <span style="color: #2d3748; font-weight: 600;">Paróquia / Comunidade Parceira</span>
+                                        <span style="color: #2d3748; font-weight: 600;">Paróquia / Comunidade Implantada</span>
                                     </div>
                                 </div>
                             </div>
@@ -1197,7 +1197,7 @@
 
                     <!-- General Table -->
                     <div class="dashboard-card col-12">
-                        <div class="dashboard-card-title">Paróquias e Comunidades Parceiras</div>
+                        <div class="dashboard-card-title">Paróquias e Comunidades Implantadas</div>
                         <div class="table-responsive">
                             <table class="recent-table">
                                 <thead>
@@ -2161,7 +2161,7 @@
                                     <span style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background-color: #fcebeb; color: #7b0000;">
                                         ${p.tipo === 'Comunidade' ? 'Comunidade' : 'Paróquia'}
                                     </span>
-                                    ${isParceira ? '<span style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030;">Parceira</span>' : ''}
+                                    ${isParceira ? '<span style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030;">Implantada</span>' : ''}
                                 </div>
                                 <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-location-dot" style="margin-right: 5px; color: #7b0000;"></i>${p.cidade} - ${state}</p>
                                 <p style="margin: 0 0 4px 0; font-size: 11px; color: #4a5568;"><i class="fa-solid fa-hotel" style="margin-right: 5px; color: #7b0000;"></i>${p.nome_arquidiocese || '-'}</p>
@@ -2212,7 +2212,7 @@
                                         <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;" title="${item.nome}">${item.nome}</span>
                                         ${item.parceira ? `
                                             <span style="display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 9px; font-weight: 700; background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030; flex-shrink: 0;">
-                                                Parceira
+                                                Implantada
                                             </span>
                                         ` : ''}
                                     </li>
@@ -2238,7 +2238,7 @@
                         const stateName = ESTADO_NAMES[state] || state;
                         const parceirasCount = stateNonGPSParceiras[state] || 0;
                         const partnerBadge = parceirasCount > 0 
-                            ? `<span style="background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; display: inline-flex; align-items: center; gap: 2px; margin-right: 4px;" title="${parceirasCount} paróquia(s) parceira(s)"><i class="fa-solid fa-handshake"></i> ${parceirasCount}</span>`
+                            ? `<span style="background-color: #fcebeb; border: 1px solid #ffccd5; color: #c53030; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; display: inline-flex; align-items: center; gap: 2px; margin-right: 4px;" title="${parceirasCount} paróquia(s) implantada(s)"><i class="fa-solid fa-handshake"></i> ${parceirasCount}</span>`
                             : '';
                         return `
                             <div onclick="focusOnState('${state}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background-color: #f7fafc; border: 1px solid #edf2f7; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#7b0000'; this.style.backgroundColor='#fff';" onmouseout="this.style.borderColor='#edf2f7'; this.style.backgroundColor='#f7fafc';">

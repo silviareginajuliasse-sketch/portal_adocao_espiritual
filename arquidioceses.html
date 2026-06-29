@@ -1136,9 +1136,32 @@
 
         function filterList() {
             const query = document.getElementById('search-input').value.toLowerCase();
-            filteredArquidioceses = allArquidioceses.filter(arq => 
-                arq.nome_arquidiocese.toLowerCase().includes(query)
-            );
+            filteredArquidioceses = allArquidioceses.filter(arq => {
+                const arquidiocese = (arq.nome_arquidiocese || '').toLowerCase();
+                const lideres = (arq.lideres || '').toLowerCase();
+                const endereco = (arq.endereco || arq.endereco_lider || '').toLowerCase();
+                const cidade = (arq.cidade || '').toLowerCase();
+                const regional = (arq.nome_regional || '').toLowerCase();
+                
+                // Buscar também no endereço mockado se houver
+                let mockEndereco = '';
+                const mockDataStr = localStorage.getItem(`arq_mock_${arq.id_arquidiocese}`);
+                if (mockDataStr) {
+                    try {
+                        const mock = JSON.parse(mockDataStr);
+                        if (mock.endereco) {
+                            mockEndereco = mock.endereco.toLowerCase();
+                        }
+                    } catch (e) {}
+                }
+
+                return arquidiocese.includes(query) || 
+                       lideres.includes(query) || 
+                       endereco.includes(query) || 
+                       mockEndereco.includes(query) ||
+                       cidade.includes(query) || 
+                       regional.includes(query);
+            });
             currentPage = 1;
             renderList();
         }

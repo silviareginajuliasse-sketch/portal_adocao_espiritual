@@ -1094,8 +1094,7 @@
 
                     <form id="arquidiocese-form" onsubmit="saveArquidiocese(event)">
                         
-                        <!-- Hidden field to store state selected automatically by regional -->
-                        <input type="hidden" id="state-select" value="">
+
 
                         <!-- Tab Content: IDENTIFICAÇÃO -->
                         <div id="tab-identificacao" class="tab-content active">
@@ -1149,15 +1148,24 @@
                                 </div>
                             </div>
 
-                            <!-- Row 2: Nome da (Arqui)Diocese, Cidade -->
+                            <!-- Row 2: Nome da (Arqui)Diocese, Cidade, Estado -->
                             <div class="form-row">
-                                <div class="form-group" style="flex: 2; min-width: 250px;">
+                                <div class="form-group" style="flex: 2.2; min-width: 250px;">
                                     <label class="form-label" for="name-input">Nome da (Arqui)Diocese <span>*</span></label>
                                     <input type="text" class="input-field" id="name-input" placeholder="" required>
                                 </div>
-                                <div class="form-group" style="flex: 1.5; min-width: 200px;">
+                                <div class="form-group" style="flex: 1.1; min-width: 150px;">
                                     <label class="form-label" for="city-input">Cidade <span>*</span></label>
                                     <input type="text" class="input-field" id="city-input" placeholder="" required>
+                                </div>
+                                <div class="form-group" style="flex: 1.1; min-width: 150px;">
+                                    <label class="form-label" for="state-select">Estado <span>*</span></label>
+                                    <div class="input-wrapper">
+                                        <select class="select-field" id="state-select" required>
+                                            <option value="" disabled selected></option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1251,6 +1259,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode') || 'new';
         const id = urlParams.get('id');
+        let countryStates = [];
+        let regionalsDetails = [];
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -1366,21 +1376,80 @@
             
             if (!countryId) {
                 regionalSelect.innerHTML = '<option value="" disabled selected>Selecione o país primeiro</option>';
+                stateSelect.innerHTML = '<option value="" disabled selected></option>';
+                countryStates = [];
                 return;
             }
 
             regionalSelect.innerHTML = '<option value="" disabled selected>Carregando regionais...</option>';
-            stateSelect.value = "";
+            stateSelect.innerHTML = '<option value="" disabled selected>Carregando...</option>';
 
+            // Load states and build statesMap
+            const statesMap = {};
+            try {
+                const response = await fetch(`${API_URL}/estados/pais/${countryId}`);
+                if (response.ok) {
+                    const states = await response.json();
+                    countryStates = states; // Save to global
+                    stateSelect.innerHTML = '<option value="" disabled selected></option>';
+                    states.forEach(est => {
+                        const option = document.createElement('option');
+                        option.value = est.id_estado;
+                        option.textContent = `${est.sigla_estado} - ${est.nome_estado}`.toUpperCase();
+                        stateSelect.appendChild(option);
+                        
+                        statesMap[est.id_estado] = est.sigla_estado.toUpperCase();
+                    });
+                } else {
+                    stateSelect.innerHTML = '<option value="" disabled selected></option>';
+                    countryStates = [];
+                }
+            } catch (error) {
+                console.error("Erro ao carregar estados:", error);
+                stateSelect.innerHTML = '<option value="" disabled selected></option>';
+                countryStates = [];
+            }
+
+            // Load basic regionals to map country IDs in case the details endpoint hasn't refreshed
+            const regionalCountryMap = {};
             try {
                 const allRegionals = await fetchData('regional');
-                const filteredRegionals = allRegionals.filter(r => r.ID_PAIS == countryId || !r.ID_PAIS);
+                allRegionals.forEach(r => {
+                    regionalCountryMap[r.id_regional] = r.ID_PAIS;
+                });
+            } catch (error) {
+                console.warn("Erro ao obter regionais básicas:", error);
+            }
+
+            try {
+                const allDetails = await fetchData('regionais/detalhes');
+                regionalsDetails = allDetails; // Save to global
+                
+                // Group by id_regional to consolidate multiple states into a single option with state abbreviations
+                const grouped = allDetails.reduce((acc, curr) => {
+                    if (!acc[curr.id_regional]) {
+                        acc[curr.id_regional] = {
+                            id_regional: curr.id_regional,
+                            nome_regional: curr.nome_regional,
+                            siglas: [],
+                            ID_PAIS: curr.ID_PAIS || regionalCountryMap[curr.id_regional]
+                        };
+                    }
+                    const sigla = curr.sigla_estado || statesMap[curr.id_estado];
+                    if (sigla && !acc[curr.id_regional].siglas.includes(sigla.toUpperCase())) {
+                        acc[curr.id_regional].siglas.push(sigla.toUpperCase());
+                    }
+                    return acc;
+                }, {});
+
+                const filteredRegionals = Object.values(grouped).filter(r => r.ID_PAIS == countryId || !r.ID_PAIS);
 
                 regionalSelect.innerHTML = '<option value="" disabled selected>Selecione a regional</option>';
                 filteredRegionals.forEach(r => {
                     const option = document.createElement('option');
                     option.value = r.id_regional;
-                    option.textContent = r.nome_regional.toUpperCase();
+                    const siglasText = r.siglas.length > 0 ? ` (${r.siglas.join(', ')})` : '';
+                    option.textContent = (r.nome_regional + siglasText).toUpperCase();
                     regionalSelect.appendChild(option);
                 });
             } catch (error) {
@@ -1389,34 +1458,76 @@
             }
         }
 
-        async function handleRegionalChange() {
+        function filterStatesByRegional() {
             const regionalId = document.getElementById('regional-select').value;
             const stateSelect = document.getElementById('state-select');
+            const previousValue = stateSelect.value;
+            
+            stateSelect.innerHTML = '<option value="" disabled selected></option>';
             
             if (!regionalId) {
-                stateSelect.value = "";
+                // If no regional is selected, show all states of the country
+                countryStates.forEach(est => {
+                    const option = document.createElement('option');
+                    option.value = est.id_estado;
+                    option.textContent = `${est.sigla_estado} - ${est.nome_estado}`.toUpperCase();
+                    stateSelect.appendChild(option);
+                });
+                stateSelect.value = previousValue || "";
                 return;
             }
-
-            try {
-                const details = await fetchData('regionais/detalhes');
-                const match = details.find(d => d.id_regional == regionalId);
-                if (match && match.id_estado) {
-                    stateSelect.value = match.id_estado;
-                } else {
-                    // Fallback to first state of country
-                    const countryId = document.getElementById('country-select').value;
-                    const response = await fetch(`${API_URL}/estados/pais/${countryId}`);
-                    if (response.ok) {
-                        const states = await response.json();
-                        if (states.length > 0) {
-                            stateSelect.value = states[0].id_estado;
-                        }
+            
+            // Filter details for selected regional
+            const regionalStates = regionalsDetails.filter(d => d.id_regional == regionalId);
+            
+            if (regionalStates.length > 0) {
+                // Remove duplicates in regionalStates based on id_estado
+                const uniqueStates = [];
+                const stateIdsSeen = new Set();
+                
+                regionalStates.forEach(rs => {
+                    if (rs.id_estado && !stateIdsSeen.has(rs.id_estado)) {
+                        stateIdsSeen.add(rs.id_estado);
+                        uniqueStates.push(rs);
                     }
+                });
+                
+                uniqueStates.forEach(rs => {
+                    const option = document.createElement('option');
+                    option.value = rs.id_estado;
+                    
+                    let sigla = rs.sigla_estado;
+                    if (!sigla) {
+                        const stateObj = countryStates.find(s => s.id_estado == rs.id_estado);
+                        if (stateObj) sigla = stateObj.sigla_estado;
+                    }
+                    const siglaStr = sigla ? sigla.toUpperCase() : "";
+                    const nomeStr = rs.nome_estado ? rs.nome_estado.toUpperCase() : "";
+                    option.textContent = siglaStr && nomeStr ? `${siglaStr} - ${nomeStr}` : (nomeStr || siglaStr);
+                    
+                    stateSelect.appendChild(option);
+                });
+                
+                // If there's only one state in this regional, select it automatically
+                if (uniqueStates.length === 1) {
+                    stateSelect.value = uniqueStates[0].id_estado;
+                } else if (previousValue && uniqueStates.some(rs => rs.id_estado == previousValue)) {
+                    stateSelect.value = previousValue;
                 }
-            } catch (error) {
-                console.warn("Erro ao definir estado da regional:", error);
+            } else {
+                // Fallback to all states
+                countryStates.forEach(est => {
+                    const option = document.createElement('option');
+                    option.value = est.id_estado;
+                    option.textContent = `${est.sigla_estado} - ${est.nome_estado}`.toUpperCase();
+                    stateSelect.appendChild(option);
+                });
+                stateSelect.value = previousValue || "";
             }
+        }
+
+        async function handleRegionalChange() {
+            filterStatesByRegional();
         }
 
         async function deleteArquidiocese() {
@@ -1639,6 +1750,7 @@
 
                 if (arq.id_regional) {
                     document.getElementById('regional-select').value = arq.id_regional;
+                    filterStatesByRegional();
                 }
 
                 if (arq.id_estado) {
@@ -1893,7 +2005,10 @@
                     if (state.countryId) {
                         document.getElementById('country-select').value = state.countryId;
                         handleCountryChange().then(() => {
-                            if (state.regionalId) document.getElementById('regional-select').value = state.regionalId;
+                            if (state.regionalId) {
+                                document.getElementById('regional-select').value = state.regionalId;
+                                filterStatesByRegional();
+                            }
                             if (state.stateId) document.getElementById('state-select').value = state.stateId;
                         });
                     }
