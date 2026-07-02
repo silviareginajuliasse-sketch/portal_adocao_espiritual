@@ -21,7 +21,7 @@
             --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.08);
-            --tree-line-color: #557db5;
+            --tree-line-color: #cbd5e1;
         }
 
         * {
@@ -441,7 +441,8 @@
             display: flex;
             flex-direction: column;
             background-color: var(--bg-gray);
-            overflow: auto;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         /* Page header inside content area */
@@ -470,149 +471,177 @@
             margin-top: 2px;
         }
 
-        /* Tree Diagram Layout & Connections */
+        /* Tree Diagram Layout & Connections - Horizontal Left-to-Right layout */
         .tree-container {
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 40px 20px;
+            align-items: flex-start; /* Align to the top of scroll viewport to prevent negative coordinates/cutoff */
+            padding: 20px;
             overflow-x: auto;
+            overflow-y: auto; /* Allow both scrollings if needed */
             width: 100%;
             flex: 1;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .tree-container:active {
+            cursor: grabbing;
         }
 
         .tree-wrapper {
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Align root element horizontally */
             align-items: center;
+            margin: 0; /* Align to the left (no auto margin centering) */
+            min-width: max-content;
+            min-height: 600px; /* Explicit height to contain the tallest column (Level 2) and prevent top-cutoff */
+            padding: 40px 40px 40px 10px; /* Minimal padding with safe margins */
         }
 
         .tree-wrapper ul {
             display: flex;
-            flex-direction: row;
-            padding-top: 24px;
+            flex-direction: column; /* Stack siblings vertically */
+            justify-content: center;
+            padding-left: 40px; /* Space between parent card and child cards */
             position: relative;
             list-style-type: none;
             margin: 0;
+            gap: 20px; /* Spacing between siblings */
         }
+
+        /* Nested child branches do not expand the parent's height */
+        /* .tree-wrapper li ul {
+            height: 0;
+        } */
 
         .tree-wrapper li {
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Align card and its child list horizontally */
             align-items: center;
             position: relative;
-            padding: 24px 12px 0 12px;
             list-style-type: none;
+            padding: 0;
         }
 
-        /* Horizontal connection line between siblings */
-        .tree-wrapper li::before, 
-        .tree-wrapper li::after {
+        /* Vertical connector line connecting all sibling cards in a column */
+        .tree-wrapper li::before {
             content: '';
             position: absolute;
-            top: 0;
-            right: 50%;
-            border-top: 2px solid var(--tree-line-color);
-            width: 50%;
-            height: 24px;
+            top: -10px; /* Extend half of the 20px gap above the li to bridge the gap with the sibling line */
+            bottom: -10px; /* Extend half of the 20px gap below the li to bridge the gap with the sibling line */
+            left: -20px; /* Positioned outside to the left of the card in the padding space */
+            border-left: 2px solid var(--tree-line-color);
+            width: 0;
             z-index: 1;
         }
 
-        .tree-wrapper li::after {
-            right: auto;
-            left: 50%;
-            border-left: 2px solid var(--tree-line-color);
+        /* Cut off vertical connector above first child and below last child */
+        .tree-wrapper li:first-child::before {
+            top: 50%;
         }
 
-        /* Remove connector line for single child */
-        .tree-wrapper li:only-child::after, 
+        .tree-wrapper li:last-child::before {
+            bottom: 50%;
+        }
+
+        /* No vertical connector if it's the only child */
         .tree-wrapper li:only-child::before {
             display: none;
         }
 
-        .tree-wrapper li:only-child {
-            padding-top: 0;
-        }
-
-        /* Adjust lines for first and last elements */
-        .tree-wrapper li:first-child::before, 
-        .tree-wrapper li:last-child::after {
-            border: 0 none;
-        }
-
-        .tree-wrapper li:last-child::before {
-            border-right: 2px solid var(--tree-line-color);
-            border-radius: 0 8px 0 0;
-        }
-
-        .tree-wrapper li:first-child::after {
-            border-radius: 8px 0 0 0;
-        }
-
-        /* Vertical line from parent to child list */
-        .tree-wrapper ul::before {
+        /* Horizontal connector line from vertical line to the card */
+        .tree-wrapper li::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 50%;
-            border-left: 2px solid var(--tree-line-color);
-            width: 0;
-            height: 24px;
+            top: 50%;
+            left: -20px; /* Starts at vertical line and extends to left of the card */
+            border-top: 2px solid var(--tree-line-color);
+            width: 20px;
+            height: 0;
+            transform: translateY(-50%);
             z-index: 1;
         }
 
-        /* Remove line above roots */
-        .tree-wrapper > ul::before {
+        /* Horizontal connector line from parent card to the children's vertical line */
+        .tree-wrapper ul::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            border-top: 2px solid var(--tree-line-color);
+            width: 20px; /* Extends from the parent card to the center of the padding */
+            height: 0;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        /* Hide horizontal parent connector for the root ul */
+        .tree-wrapper > ul::after {
             display: none;
         }
 
+        /* Hide left vertical connector line for root li */
         .tree-wrapper > ul > li::before,
         .tree-wrapper > ul > li::after {
             display: none;
         }
 
-        .tree-wrapper > ul > li {
-            padding-top: 0;
-        }
-
         /* Card Styles matching user request */
         .org-card {
             background: #ffffff;
-            border: 2px solid #2b8c2b; /* Vibrant green border */
-            border-radius: 12px;
-            padding: 10px 16px;
-            display: inline-flex;
+            border: 2px solid #1a7f37; /* Clean green border matching the image */
+            border-radius: 12px; /* Previous rounded corners */
+            padding: 10px 12px; /* Previous compact padding */
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 12px;
-            min-width: 250px;
-            max-width: 300px;
+            min-width: 200px;
+            max-width: 220px;
             box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
             position: relative;
-            text-align: left;
             z-index: 10;
-            cursor: pointer;
+            cursor: default; /* Non-clickable */
             user-select: none;
         }
 
-        .org-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--card-shadow-hover);
-            border-color: #1e601e;
+        /* Circle bullet on the connector line containing the Adoção Espiritual logo */
+        .org-card::before {
+            content: '';
+            position: absolute;
+            left: -15px; /* Placed exactly on the horizontal connector line touching the card */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            border: 1.5px solid #1a7f37; /* Colored border matching the card border */
+            background-image: url('https://moacap.github.io/adocao_espiritual_site/favicon.png');
+            background-size: 70%; /* Logo icon size inside bullet */
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 20;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+
+        /* Hide the bullet for the root card */
+        .tree-wrapper > ul > li > .org-card::before {
+            display: none;
         }
 
         .org-avatar {
-            width: 44px;
-            height: 44px;
+            width: 44px; /* Previous avatar size */
+            height: 44px; /* Previous avatar size */
             border-radius: 50%;
             flex-shrink: 0;
             background-color: #dbe8f9;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #e2e8f0;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 2px solid #ffffff; /* White border around avatar */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow around avatar */
             overflow: hidden;
+            margin-bottom: 2px;
         }
 
         .org-avatar img {
@@ -633,30 +662,33 @@
             flex-direction: column;
             gap: 2px;
             min-width: 0;
+            width: 100%;
+            align-items: flex-start; /* Left-align the text under the centered avatar */
+            margin-top: 6px;
         }
 
         .org-area-name {
-            color: #3b629b; /* Elegant bold blue */
-            font-weight: 600;
-            font-size: 13.5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            color: #1d5ea8; /* Royal blue matching the image */
+            font-weight: 700; /* Bold font weight */
+            font-size: 13px; /* Previous compact font size */
+            white-space: normal; /* Allow wrapping */
+            line-height: 1.3;
         }
 
         .org-leader-name {
-            color: #777777; /* Grey leader name */
-            font-size: 12.5px;
+            color: #857463; /* Brownish warm grey matching the image */
+            font-size: 11.5px; /* Previous compact font size */
             font-weight: 400;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal; /* Allow wrapping */
+            margin-top: 2px;
         }
 
         .org-doc-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
             color: var(--primary-red);
-            font-size: 1.25rem;
-            margin-left: auto;
+            font-size: 1.2rem;
             padding: 4px;
             display: flex;
             align-items: center;
@@ -710,6 +742,7 @@
             color: var(--primary-red);
             margin-bottom: 15px;
         }
+
     </style>
 </head>
 
@@ -996,7 +1029,6 @@
                 // Render card
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'org-card';
-                cardDiv.onclick = () => editArea(node.id_area);
                 cardDiv.innerHTML = `
                     ${statusBadge}
                     <div class="org-avatar" style="${!node.foto_lider ? `background-color: ${initialsInfo.bg}` : ''}">
@@ -1070,16 +1102,49 @@
             }
         }
 
-        function editArea(id) {
-            const nomeParam = new URLSearchParams(window.location.search).get('nome') || '';
-            const cpfParam = new URLSearchParams(window.location.search).get('cpf') || '';
-            window.location.href = `registro_estrutura_organizacional.html?mode=edit&id=${id}&nome=${encodeURIComponent(nomeParam)}&cpf=${encodeURIComponent(cpfParam)}`;
-        }
+
 
         // Initialize elements
         window.addEventListener('DOMContentLoaded', () => {
             loadMenuGerencial();
             loadStructureTree();
+
+            // Drag-to-scroll functionality for tree container
+            const treeContainer = document.getElementById('tree-container');
+            const contentArea = document.querySelector('.content-area');
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            let startY;
+            let scrollTop;
+
+            treeContainer.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.org-card') || e.target.closest('.org-doc-btn')) return;
+                isDown = true;
+                startX = e.pageX - treeContainer.offsetLeft;
+                startY = e.pageY - treeContainer.offsetTop;
+                scrollLeft = treeContainer.scrollLeft;
+                scrollTop = contentArea.scrollTop;
+            });
+
+            treeContainer.addEventListener('mouseleave', () => {
+                isDown = false;
+            });
+
+            treeContainer.addEventListener('mouseup', () => {
+                isDown = false;
+            });
+
+            treeContainer.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - treeContainer.offsetLeft;
+                const y = e.pageY - treeContainer.offsetTop;
+                const walkX = (x - startX) * 1.5;
+                const walkY = (y - startY) * 1.5;
+                treeContainer.scrollLeft = scrollLeft - walkX;
+                contentArea.scrollTop = scrollTop - walkY;
+            });
         });
     </script>
 </body>

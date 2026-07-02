@@ -1073,6 +1073,48 @@
             }
         }
 
+        /* Custom Dropdown list for Searchable select */
+        .custom-dropdown-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #333;
+            transition: background 0.2s;
+        }
+        .custom-dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+        .custom-dropdown-item.selected {
+            background-color: #8b1e1e;
+            color: white;
+        }
+        
+        /* Certificates Modal Styles Override */
+        #modal-lideranca .modal-content-card {
+            max-width: 850px;
+            width: 90%;
+        }
+        .cert-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+        .cert-list-item:hover {
+            border-color: #8b1e1e;
+            background-color: #fff9f9;
+            transform: translateY(-1px);
+        }
+        .cert-list-item.selected {
+            border-color: #8b1e1e;
+            background-color: #fdf3f3;
+            box-shadow: 0 2px 8px rgba(139, 30, 30, 0.1);
+        }
 </style>
 </head>
 
@@ -1198,8 +1240,8 @@
                             <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-talentos')"><i
                                     class="fa-solid fa-star" style="color: #f1c40f; margin-right: 8px;"></i>
                                 TALENTOS E OBS</button>
-                            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-paroquias')"><i
-                                    class="fa-solid fa-church" style="margin-right: 8px;"></i> Paróquia</button>
+                            <button type="button" class="tab-btn" id="tab-btn-paroquias" onclick="switchTab(event, 'tab-paroquias')"><i
+                                    class="fa-solid fa-church" style="margin-right: 8px;"></i> PARÓQUIA<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openParoquiasModal()" title="Adicionar Paróquia" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i></button>
                             <button type="button" class="tab-btn" id="tab-btn-treinamentos" onclick="switchTab(event, 'tab-treinamentos')"><i
                                     class="fa-solid fa-chalkboard-user" style="margin-right: 8px;"></i>
                                 Treinamentos</button>
@@ -1208,7 +1250,7 @@
                                 Atividades<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAtividadesModal()" title="Adicionar Atividade" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i></button>
                             <button type="button" class="tab-btn" id="tab-btn-lideranca" onclick="switchTab(event, 'tab-lideranca')"><i
                                     class="fa-solid fa-user-flag" style="color: #9b59b6; margin-right: 8px;"></i>
-                                LIDERANÇAS<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openLiderancasModal()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i></button>
+                                CERTIFICADOS<i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openLiderancasModal()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i></button>
                         </div>
                         <!-- Tab: Dados Pessoais -->
                         <div id="tab-dados" class="tab-content active">
@@ -1382,77 +1424,14 @@
 
                         <!-- Tab: Paróquias -->
                         <div id="tab-paroquias" class="tab-content">
-                            <div class="paroquia-grid-container">
-                                <!-- Left Column (País, Estado, Paróquia) -->
-                                <div class="paroquia-column-left">
-                                    <!-- Row 1: País + Estado -->
-                                    <div class="paroquia-row-inline">
-                                        <!-- País -->
-                                        <div class="form-group" style="flex: 1;">
-                                            <label class="form-label">País</label>
-                                            <div class="input-wrapper">
-                                                <select class="select-field">
-                                                    <option value="">Selecione...</option>
-                                                    <option value="Brasil" selected>Brasil</option>
-                                                </select>
-                                                <i class="fa-solid fa-chevron-down select-icon"></i>
-                                            </div>
-                                        </div>
-                                        <!-- Estado -->
-                                        <div class="form-group" style="flex: 1;">
-                                            <label class="form-label">Estado</label>
-                                            <div class="input-wrapper">
-                                                <select class="select-field">
-                                                    <option value="">Selecione...</option>
-                                                    <option value="RJ">Rio de Janeiro</option>
-                                                    <option value="MG">Minas Gerais</option>
-                                                    <option value="SP">São Paulo</option>
-                                                </select>
-                                                <i class="fa-solid fa-chevron-down select-icon"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Row 2: Paróquia -->
-                                    <div class="form-group" style="width: 100%;">
-                                        <label class="form-label">Paróquia</label>
-                                        <div class="input-wrapper">
-                                            <select class="select-field">
-                                                <option value="">Selecione...</option>
-                                                <option value="1">Nossa Senhora de Guadalupe</option>
-                                                <option value="2">São Pedro do Mar</option>
-                                            </select>
-                                            <i class="fa-solid fa-chevron-down select-icon"></i>
-                                        </div>
-                                    </div>
+                            <div class="search-row" style="justify-content: flex-end;">
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="busca" oninput="filterParoquias(this.value)">
                                 </div>
+                            </div>
 
-                                <!-- Right Column (Arquidiocese, Regional, Grupos) -->
-                                <div class="paroquia-column-right">
-                                    <!-- Row 1: Arquidiocese + Regional -->
-                                    <div class="paroquia-row-inline" style="align-items: flex-start;">
-                                        <!-- Arquidiocese -->
-                                        <div class="form-group" style="flex: 3;">
-                                            <label class="form-label">Arquidiocese</label>
-                                            <div class="input-wrapper">
-                                                <select class="select-field">
-                                                    <option value="">Selecione...</option>
-                                                    <option value="1">Arquidiocese de São Sebastião do Rio de Janeiro</option>
-                                                </select>
-                                                <i class="fa-solid fa-chevron-down select-icon"></i>
-                                            </div>
-                                        </div>
-                                        <!-- Regional -->
-                                        <div class="form-group" style="flex: 1; min-width: 90px;">
-                                            <label class="form-label">Regional</label>
-                                            <div class="metadata-value" style="font-size: 1rem; color: #555; padding-top: 8px; font-weight: 400;">Leste 1</div>
-                                        </div>
-                                    </div>
-                                    <!-- Row 2: Grupos -->
-                                    <div class="form-group" style="width: 100%;">
-                                        <label class="form-label">Participação em grupos da paróquia</label>
-                                        <input type="text" class="input-field" placeholder="">
-                                    </div>
-                                </div>
+                            <div class="list-container" id="collaborator-paroquias-list">
+                                <!-- Populated dynamically -->
                             </div>
                         </div>
 
@@ -1932,9 +1911,13 @@
                     }
                 }
                 const id = urlParams.get('id');
+                const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
                 if (id) {
                     currentColaboradorId = id;
                     await loadCollaboratorData(id);
+                    if (deleteBtn && !isAdmin) {
+                        deleteBtn.style.display = 'none';
+                    }
                 } else {
                     // Hide delete button for new records
                     if (deleteBtn) deleteBtn.style.display = 'none';
@@ -1942,6 +1925,17 @@
                     if (inputCodigo) {
                         inputCodigo.disabled = false;
                         inputCodigo.value = '';
+                        try {
+                            const codeRes = await fetch(`${API_URL}/colaboradores/proximo-codigo`);
+                            if (codeRes.ok) {
+                                const codeData = await codeRes.json();
+                                if (codeData && codeData.proximo_codigo) {
+                                    inputCodigo.value = codeData.proximo_codigo;
+                                }
+                            }
+                        } catch (codeErr) {
+                            console.error('Erro ao buscar próximo código:', codeErr);
+                        }
                     }
                     updateTabStates();
                 }
@@ -1953,6 +1947,11 @@
 
         // --- Helper: delete collaborator ---
         async function deleteColaborador() {
+            const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
+            if (!isAdmin) {
+                alert('Apenas administradores podem excluir colaboradores.');
+                return;
+            }
             if (!currentColaboradorId) return;
             const nome = document.getElementById('input-nome').value.trim();
             if (confirm(`Deseja realmente excluir o colaborador "${nome}"?`)) {
@@ -2092,7 +2091,8 @@
                 await Promise.all([
                     loadCollaboratorTrainings(),
                     loadCollaboratorActivities(),
-                    loadCollaboratorLeadership()
+                    loadCollaboratorLeadership(),
+                    loadCollaboratorParoquias()
                 ]);
 
             } catch (err) {
@@ -2132,14 +2132,12 @@
             const deleteBtn = document.getElementById('btn-delete');
             const saveBtn   = document.getElementById('btn-save');
             if (deleteBtn && saveBtn) {
-                if (tabId === 'tab-treinamentos' || tabId === 'tab-atividades' || tabId === 'tab-lideranca') {
+                const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
+                if (tabId === 'tab-treinamentos' || tabId === 'tab-atividades' || tabId === 'tab-lideranca' || tabId === 'tab-paroquias') {
                     deleteBtn.style.display = 'none';
                     saveBtn.style.display   = 'none';
-                } else if (tabId === 'tab-paroquias') {
-                    deleteBtn.style.display = 'none';
-                    saveBtn.style.display   = 'block';
                 } else {
-                    deleteBtn.style.display = currentColaboradorId ? 'block' : 'none';
+                    deleteBtn.style.display = (currentColaboradorId && isAdmin) ? 'block' : 'none';
                     saveBtn.style.display   = 'block';
                 }
             }
@@ -2155,9 +2153,25 @@
             const modalTr = document.getElementById('modal-treinamentos');
             const modalAt = document.getElementById('modal-atividades');
             const modalLd = document.getElementById('modal-lideranca');
+            const modalPa = document.getElementById('modal-paroquias');
             if (event.target == modalTr) closeModal();
             if (event.target == modalAt) closeAtividadesModal();
             if (event.target == modalLd) closeLiderancaModal();
+            if (event.target == modalPa) closeParoquiasModal();
+
+            // Click outside paroquia dropdown list to close it
+            const paroquiaInput = document.getElementById('modal-paroquia-search-input');
+            const paroquiaDropdown = document.getElementById('modal-paroquia-dropdown-list');
+            if (paroquiaInput && paroquiaDropdown && event.target !== paroquiaInput && !paroquiaDropdown.contains(event.target)) {
+                hideParoquiaDropdown();
+            }
+
+            // Click outside certificates paroquia dropdown list to close it
+            const lidParoquiaInput = document.getElementById('modal-lideranca-paroquia-search-input');
+            const lidParoquiaDropdown = document.getElementById('modal-lideranca-paroquia-dropdown-list');
+            if (lidParoquiaInput && lidParoquiaDropdown && event.target !== lidParoquiaInput && !lidParoquiaDropdown.contains(event.target)) {
+                hideLiderancaParoquiaDropdown();
+            }
         };
 
         function openModal() {
@@ -2175,19 +2189,34 @@
         }
         function closeAtividadesModal() { document.getElementById('modal-atividades').style.display  = 'none'; }
 
-        function openLiderancasModal() {
+        async function openLiderancasModal() {
             if (document.getElementById('tab-btn-lideranca') && document.getElementById('tab-btn-lideranca').hasAttribute('disabled')) {
                 return;
             }
-            document.getElementById('modal-lideranca-title').innerText = 'Cadastrar Liderança';
+            // Reset fields
             document.getElementById('lideranca-id-movimentacao').value = '';
-            document.getElementById('select-tipo-lideranca').value = '';
             document.getElementById('input-lideranca-inicio').value = '';
             document.getElementById('input-lideranca-fim').value = '';
-            document.getElementById('select-lideranca-status').value = 'Ativo';
             document.getElementById('input-lideranca-observacao').value = '';
             
+            // Hide conditional groups
+            document.getElementById('group-lideranca-regional').style.display = 'none';
+            document.getElementById('group-lideranca-arquidiocese').style.display = 'none';
+            document.getElementById('group-lideranca-paroquia').style.display = 'none';
+            
+            // Clear select inputs
+            document.getElementById('select-lideranca-regional').value = '';
+            document.getElementById('select-lideranca-arquidiocese').value = '';
+            document.getElementById('select-lideranca-paroquia').value = '';
+            document.getElementById('modal-lideranca-paroquia-search-input').value = '';
+            
+            selectedCertificadoId = null;
+            
+            // Show modal
             document.getElementById('modal-lideranca').style.display = 'flex';
+            
+            // Load types of certificates
+            await loadCertificatesTypes();
         }
         function closeLiderancaModal() { document.getElementById('modal-lideranca').style.display = 'none'; }
 
@@ -2199,7 +2228,8 @@
             const trTabBtn = document.getElementById('tab-btn-treinamentos');
             const atTabBtn = document.getElementById('tab-btn-atividades');
             const ldTabBtn = document.getElementById('tab-btn-lideranca');
-            if (!trTabBtn || !atTabBtn || !ldTabBtn) return;
+            const paTabBtn = document.getElementById('tab-btn-paroquias');
+            if (!trTabBtn || !atTabBtn || !ldTabBtn || !paTabBtn) return;
             
             if (!currentColaboradorId) {
                 trTabBtn.setAttribute('disabled', 'true');
@@ -2217,6 +2247,12 @@
                 ldTabBtn.style.cursor = 'not-allowed';
                 const ldPlus = ldTabBtn.querySelector('.fa-circle-plus');
                 if (ldPlus) ldPlus.style.pointerEvents = 'none';
+
+                paTabBtn.setAttribute('disabled', 'true');
+                paTabBtn.style.opacity = '0.5';
+                paTabBtn.style.cursor = 'not-allowed';
+                const paPlus = paTabBtn.querySelector('.fa-circle-plus');
+                if (paPlus) paPlus.style.pointerEvents = 'none';
             } else {
                 trTabBtn.removeAttribute('disabled');
                 trTabBtn.style.opacity = '1';
@@ -2233,6 +2269,12 @@
                 ldTabBtn.style.cursor = 'pointer';
                 const ldPlus = ldTabBtn.querySelector('.fa-circle-plus');
                 if (ldPlus) ldPlus.style.pointerEvents = 'auto';
+
+                paTabBtn.removeAttribute('disabled');
+                paTabBtn.style.opacity = '1';
+                paTabBtn.style.cursor = 'pointer';
+                const paPlus = paTabBtn.querySelector('.fa-circle-plus');
+                if (paPlus) paPlus.style.pointerEvents = 'auto';
             }
         }
 
@@ -2399,16 +2441,20 @@
         }
 
         let collaboratorLeadership = [];
+        let allCertificados = [];
+        let selectedCertificadoId = null;
+        let allLiderancaRegionais = [];
+        let allLiderancaParoquias = [];
 
         async function loadCollaboratorLeadership() {
             if (!currentColaboradorId) return;
             try {
-                const res = await fetch(`${API_URL}/colaboradores/${currentColaboradorId}/lideranca`);
-                if (!res.ok) throw new Error('Erro ao buscar lideranças do colaborador.');
+                const res = await fetch(`${API_URL}/colaboradores/${currentColaboradorId}/certificados`);
+                if (!res.ok) throw new Error('Erro ao buscar certificados do colaborador.');
                 collaboratorLeadership = await res.json();
                 renderCollaboratorLeadership();
             } catch (err) {
-                console.error('Erro ao carregar lideranças do colaborador:', err);
+                console.error('Erro ao carregar certificados do colaborador:', err);
             }
         }
 
@@ -2419,13 +2465,13 @@
             listContainer.innerHTML = '';
             
             const filtered = collaboratorLeadership.filter(lead => 
-                (lead.tipo_lideranca || '').toLowerCase().includes(filterText.toLowerCase()) ||
+                (lead.nome_certificado || '').toLowerCase().includes(filterText.toLowerCase()) ||
                 (lead.status || '').toLowerCase().includes(filterText.toLowerCase()) ||
                 (lead.observacao || '').toLowerCase().includes(filterText.toLowerCase())
             );
             
             if (filtered.length === 0) {
-                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhuma liderança registrada.</div>';
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhum certificado registrado.</div>';
                 return;
             }
             
@@ -2444,7 +2490,7 @@
                 const editIcon = document.createElement('i');
                 editIcon.className = 'fa-regular fa-pen-to-square';
                 editIcon.style.cursor = 'pointer';
-                editIcon.title = 'Editar Liderança';
+                editIcon.title = 'Editar Certificado';
                 editIcon.onclick = (e) => {
                     e.stopPropagation();
                     editLeadership(lead);
@@ -2453,7 +2499,7 @@
                 const trash = document.createElement('i');
                 trash.className = 'fa-regular fa-trash-can trash-icon';
                 trash.style.cursor = 'pointer';
-                trash.title = 'Remover Liderança';
+                trash.title = 'Remover Certificado';
                 trash.onclick = (e) => {
                     e.stopPropagation();
                     deleteLeadership(lead.id_movimentacao);
@@ -2464,9 +2510,21 @@
 
                 const span = document.createElement('span');
                 const formattedInicio = formatSQLDate(lead.data_inicio);
-                const formattedFim = lead.data_fim ? formatSQLDate(lead.data_fim) : 'Ativo';
+                const periodLabel = lead.data_fim 
+                    ? `Período: ${formattedInicio} a ${formatSQLDate(lead.data_fim)}` 
+                    : `Início: ${formattedInicio}`;
                 const statusBadge = `<span style="font-weight: 600; color: ${lead.status === 'Ativo' ? '#2e7d32' : '#c0392b'};">${lead.status}</span>`;
-                let leadText = `<strong>${lead.tipo_lideranca}</strong> - Período: ${formattedInicio} a ${formattedFim} - Status: ${statusBadge}`;
+                
+                let contextText = '';
+                if (lead.id_tipo_certificado === 2 && lead.nome_paroquia) {
+                    contextText = ` - Paróquia: ${lead.nome_paroquia}`;
+                } else if (lead.id_tipo_certificado === 3 && lead.nome_arquidiocese) {
+                    contextText = ` - Arquidiocese: ${lead.nome_arquidiocese}`;
+                } else if (lead.id_tipo_certificado === 4 && lead.nome_regional) {
+                    contextText = ` - Regional: ${lead.nome_regional}`;
+                }
+                
+                let leadText = `<strong>${lead.nome_certificado}</strong>${contextText} - ${periodLabel} - Status: ${statusBadge}`;
                 if (lead.observacao && lead.observacao.trim() !== '') {
                     leadText += ` <span style="color: #7f8c8d; font-size: 0.9rem; font-style: italic;">(${lead.observacao})</span>`;
                 }
@@ -2482,46 +2540,330 @@
             renderCollaboratorLeadership(value);
         }
 
-        function editLeadership(lead) {
-            document.getElementById('modal-lideranca-title').innerText = 'Editar Liderança';
+        async function loadCertificatesTypes() {
+            try {
+                const res = await fetch(`${API_URL}/tipos_certificados_colaborador`);
+                if (!res.ok) throw new Error('Erro ao buscar tipos de certificados.');
+                allCertificados = await res.json();
+                renderCertificatesList();
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar lista de certificados: ' + err.message);
+            }
+        }
+
+        function renderCertificatesList() {
+            const listContainer = document.getElementById('modal-certificados-list');
+            listContainer.innerHTML = '';
+            
+            allCertificados.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'cert-list-item';
+                if (selectedCertificadoId === c.id_tipo_certificado) {
+                    item.classList.add('selected');
+                }
+                
+                item.onclick = () => selectCertificateOption(c.id_tipo_certificado);
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'certificado_opcao';
+                radio.value = c.id_tipo_certificado;
+                radio.checked = selectedCertificadoId === c.id_tipo_certificado;
+                radio.style.cursor = 'pointer';
+                radio.style.margin = '0';
+                radio.onclick = (e) => {
+                    e.stopPropagation();
+                    selectCertificateOption(c.id_tipo_certificado);
+                };
+                
+                const img = document.createElement('img');
+                img.src = c.imagem_certificado || './logo_circular.png';
+                img.alt = c.nome_certificado;
+                img.style.width = '30px';
+                img.style.height = '30px';
+                img.style.objectFit = 'contain';
+                
+                const span = document.createElement('span');
+                span.innerText = c.nome_certificado;
+                span.style.fontSize = '0.9rem';
+                span.style.color = '#333';
+                span.style.fontWeight = '500';
+                
+                item.appendChild(radio);
+                item.appendChild(img);
+                item.appendChild(span);
+                listContainer.appendChild(item);
+            });
+        }
+
+        async function selectCertificateOption(id_tipo_certificado) {
+            selectedCertificadoId = id_tipo_certificado;
+            renderCertificatesList();
+            
+            document.getElementById('group-lideranca-regional').style.display = 'none';
+            document.getElementById('group-lideranca-arquidiocese').style.display = 'none';
+            document.getElementById('group-lideranca-paroquia').style.display = 'none';
+            
+            document.getElementById('select-lideranca-regional').required = false;
+            document.getElementById('select-lideranca-arquidiocese').required = false;
+            document.getElementById('modal-lideranca-paroquia-search-input').required = false;
+            
+            if (id_tipo_certificado === 4) {
+                document.getElementById('group-lideranca-regional').style.display = 'block';
+                document.getElementById('select-lideranca-regional').required = true;
+                await loadLiderancaRegionais();
+            } else if (id_tipo_certificado === 2 || id_tipo_certificado === 3) {
+                document.getElementById('group-lideranca-arquidiocese').style.display = 'block';
+                document.getElementById('select-lideranca-arquidiocese').required = true;
+                await loadLiderancaArquidioceses();
+                
+                if (id_tipo_certificado === 2) {
+                    document.getElementById('group-lideranca-paroquia').style.display = 'block';
+                    document.getElementById('modal-lideranca-paroquia-search-input').required = true;
+                }
+            }
+        }
+
+        async function loadLiderancaRegionais() {
+            const selectReg = document.getElementById('select-lideranca-regional');
+            if (selectReg.options.length > 1) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/regional`);
+                if (!res.ok) throw new Error('Erro ao buscar regionais');
+                allLiderancaRegionais = await res.json();
+                
+                allLiderancaRegionais.sort((a, b) => (a.nome_regional || '').localeCompare(b.nome_regional || ''));
+                
+                selectReg.innerHTML = '<option value="" disabled selected>Selecione...</option>';
+                allLiderancaRegionais.forEach(r => {
+                    const option = document.createElement('option');
+                    option.value = r.id_regional;
+                    option.text = r.nome_regional;
+                    selectReg.appendChild(option);
+                });
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar regionais: ' + err.message);
+            }
+        }
+
+        async function loadLiderancaArquidioceses() {
+            const id_estado = document.getElementById('select-estado').value;
+            const selectArq = document.getElementById('select-lideranca-arquidiocese');
+            
+            if (!id_estado) {
+                alert('Por favor, defina o estado do colaborador na aba DADOS PESSOAIS.');
+                return;
+            }
+            
+            if (selectArq.getAttribute('data-loaded-for-state') === id_estado) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/arquidioceses/estado/${id_estado}`);
+                if (!res.ok) throw new Error('Erro ao buscar arquidioceses');
+                const arquidioceses = await res.json();
+                
+                arquidioceses.sort((a, b) => (a.nome_arquidiocese || '').localeCompare(b.nome_arquidiocese || ''));
+                
+                selectArq.innerHTML = '<option value="" disabled selected>Selecione...</option>';
+                arquidioceses.forEach(a => {
+                    const option = document.createElement('option');
+                    option.value = a.id_arquidiocese;
+                    option.text = a.nome_arquidiocese;
+                    selectArq.appendChild(option);
+                });
+                
+                selectArq.setAttribute('data-loaded-for-state', id_estado);
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar arquidioceses: ' + err.message);
+            }
+        }
+
+        async function handleLiderancaArquidioceseChange() {
+            const id_arquidiocese = document.getElementById('select-lideranca-arquidiocese').value;
+            
+            document.getElementById('select-lideranca-paroquia').value = '';
+            document.getElementById('modal-lideranca-paroquia-search-input').value = '';
+            hideLiderancaParoquiaDropdown();
+            allLiderancaParoquias = [];
+            
+            if (!id_arquidiocese) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/paroquias/arquidiocese/${id_arquidiocese}`);
+                if (!res.ok) throw new Error('Erro ao carregar paróquias');
+                allLiderancaParoquias = await res.json();
+                
+                allLiderancaParoquias.sort((a, b) => (a.nome_paroquia || '').localeCompare(b.nome_paroquia || ''));
+                
+                renderLiderancaParoquiaDropdown();
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar paróquias da arquidiocese: ' + err.message);
+            }
+        }
+
+        function renderLiderancaParoquiaDropdown(filterText = '') {
+            const listContainer = document.getElementById('modal-lideranca-paroquia-dropdown-list');
+            if (!listContainer) return;
+            
+            listContainer.innerHTML = '';
+            
+            const filtered = allLiderancaParoquias.filter(p => {
+                const combined = `${p.nome_paroquia} ${p.bairro || ''} ${p.cidade || ''}`.toLowerCase();
+                return combined.includes(filterText.toLowerCase());
+            });
+            
+            const currentSelectedId = document.getElementById('select-lideranca-paroquia').value;
+            
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 10px 14px; color: #999; font-size: 0.95rem;">Nenhuma paróquia encontrada.</div>';
+                return;
+            }
+            
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item';
+                if (currentSelectedId && currentSelectedId == p.id_paroquia) {
+                    div.classList.add('selected');
+                }
+                const locationPart = (p.bairro || p.cidade) ? ` - ${[p.bairro, p.cidade].filter(Boolean).join(', ')}` : '';
+                const displayName = `${p.nome_paroquia}${locationPart}`;
+                div.innerText = displayName;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    selectLiderancaParoquiaOption(p.id_paroquia, displayName);
+                };
+                listContainer.appendChild(div);
+            });
+        }
+
+        function showLiderancaParoquiaDropdown() {
+            const dropdown = document.getElementById('modal-lideranca-paroquia-dropdown-list');
+            if (dropdown) {
+                dropdown.style.display = 'block';
+                renderLiderancaParoquiaDropdown('');
+            }
+        }
+
+        function hideLiderancaParoquiaDropdown() {
+            const dropdown = document.getElementById('modal-lideranca-paroquia-dropdown-list');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function toggleLiderancaParoquiaDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('modal-lideranca-paroquia-dropdown-list');
+            if (dropdown) {
+                if (dropdown.style.display === 'block') {
+                    hideLiderancaParoquiaDropdown();
+                } else {
+                    showLiderancaParoquiaDropdown();
+                }
+            }
+        }
+
+        function selectLiderancaParoquiaOption(id, name) {
+            document.getElementById('select-lideranca-paroquia').value = id;
+            document.getElementById('modal-lideranca-paroquia-search-input').value = name;
+            hideLiderancaParoquiaDropdown();
+        }
+
+        async function editLeadership(lead) {
+            await openLiderancasModal();
+            
             document.getElementById('lideranca-id-movimentacao').value = lead.id_movimentacao;
-            document.getElementById('select-tipo-lideranca').value = lead.tipo_lideranca;
             document.getElementById('input-lideranca-inicio').value = formatSQLDate(lead.data_inicio);
             document.getElementById('input-lideranca-fim').value = lead.data_fim ? formatSQLDate(lead.data_fim) : '';
-            document.getElementById('select-lideranca-status').value = lead.status;
             document.getElementById('input-lideranca-observacao').value = lead.observacao || '';
             
-            document.getElementById('modal-lideranca').style.display = 'flex';
+            await selectCertificateOption(lead.id_tipo_certificado);
+            
+            if (lead.id_tipo_certificado === 4) {
+                document.getElementById('select-lideranca-regional').value = lead.id_regional || '';
+            } else if (lead.id_tipo_certificado === 2 || lead.id_tipo_certificado === 3) {
+                document.getElementById('select-lideranca-arquidiocese').value = lead.id_arquidiocese || '';
+                
+                if (lead.id_tipo_certificado === 2) {
+                    await handleLiderancaArquidioceseChange();
+                    
+                    document.getElementById('select-lideranca-paroquia').value = lead.id_paroquia || '';
+                    if (lead.id_paroquia) {
+                        const matchingParish = allLiderancaParoquias.find(p => p.id_paroquia == lead.id_paroquia);
+                        if (matchingParish) {
+                            const locationPart = (matchingParish.bairro || matchingParish.cidade) ? ` - ${[matchingParish.bairro, matchingParish.cidade].filter(Boolean).join(', ')}` : '';
+                            document.getElementById('modal-lideranca-paroquia-search-input').value = `${matchingParish.nome_paroquia}${locationPart}`;
+                        }
+                    }
+                }
+            }
         }
 
         async function saveLeadership(event) {
             event.preventDefault();
             if (!currentColaboradorId) return;
 
+            if (!selectedCertificadoId) {
+                alert('Por favor, selecione um certificado da lista à esquerda.');
+                return;
+            }
+
             const id_movimentacao = document.getElementById('lideranca-id-movimentacao').value;
-            const tipo_lideranca = document.getElementById('select-tipo-lideranca').value;
             const data_inicio = document.getElementById('input-lideranca-inicio').value;
             const data_fim = document.getElementById('input-lideranca-fim').value;
-            const status = document.getElementById('select-lideranca-status').value;
             const observacao = document.getElementById('input-lideranca-observacao').value;
 
-            if (!tipo_lideranca || !data_inicio || !status) {
-                alert('Por favor, preencha todos os campos obrigatórios (*).');
+            if (!data_inicio) {
+                alert('Por favor, preencha a Data de Início.');
                 return;
+            }
+
+            let id_regional = null;
+            let id_arquidiocese = null;
+            let id_paroquia = null;
+
+            if (selectedCertificadoId === 4) {
+                id_regional = document.getElementById('select-lideranca-regional').value;
+                if (!id_regional) {
+                    alert('Por favor, selecione uma Regional.');
+                    return;
+                }
+            } else if (selectedCertificadoId === 2 || selectedCertificadoId === 3) {
+                id_arquidiocese = document.getElementById('select-lideranca-arquidiocese').value;
+                if (!id_arquidiocese) {
+                    alert('Por favor, selecione uma Arquidiocese.');
+                    return;
+                }
+                
+                if (selectedCertificadoId === 2) {
+                    id_paroquia = document.getElementById('select-lideranca-paroquia').value;
+                    if (!id_paroquia) {
+                        alert('Por favor, selecione uma Paróquia.');
+                        return;
+                    }
+                }
             }
 
             const payload = {
                 id_colaborador: parseInt(currentColaboradorId),
                 id_movimentacao: id_movimentacao ? parseInt(id_movimentacao) : null,
-                tipo_lideranca,
+                id_tipo_certificado: parseInt(selectedCertificadoId),
+                id_paroquia: id_paroquia ? parseInt(id_paroquia) : null,
+                id_arquidiocese: id_arquidiocese ? parseInt(id_arquidiocese) : null,
+                id_regional: id_regional ? parseInt(id_regional) : null,
                 data_inicio,
                 data_fim,
-                status,
+                status: 'Ativo',
                 observacao
             };
 
             try {
-                const res = await fetch(`${API_URL}/colaborador_lideranca/save`, {
+                const res = await fetch(`${API_URL}/colaborador_certificados/save`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -2555,6 +2897,283 @@
                     console.error(err);
                     alert(err.message);
                 }
+            }
+        }
+
+        // --- Paróquias Tab Functions ---
+        let collaboratorParoquias = [];
+        let allParoquias = [];
+        let availableModalParoquias = [];
+
+        async function loadCollaboratorParoquias() {
+            if (!currentColaboradorId) return;
+            try {
+                const res = await fetch(`${API_URL}/colaboradores/${currentColaboradorId}/paroquias`);
+                if (!res.ok) throw new Error('Erro ao buscar paróquias');
+                collaboratorParoquias = await res.json();
+                renderCollaboratorParoquias();
+            } catch (err) {
+                console.error('Erro ao carregar paróquias do colaborador:', err);
+            }
+        }
+
+        function renderCollaboratorParoquias(filterText = '') {
+            const listContainer = document.getElementById('collaborator-paroquias-list');
+            if (!listContainer) return;
+            
+            listContainer.innerHTML = '';
+            
+            const filtered = collaboratorParoquias.filter(p => {
+                const combined = `${p.nome_paroquia} ${p.bairro || ''} ${p.cidade || ''} ${p.obs_colaborador_paroquia || ''}`.toLowerCase();
+                return combined.includes(filterText.toLowerCase());
+            });
+            
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #777;">Nenhuma paróquia associada.</div>';
+                return;
+            }
+            
+            filtered.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                
+                const trash = document.createElement('i');
+                trash.className = 'fa-regular fa-trash-can trash-icon';
+                trash.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteCollaboratorParoquia(p.id_paroquia, p.nome_paroquia);
+                };
+                
+                const span = document.createElement('span');
+                const locationPart = (p.bairro || p.cidade) ? ` - ${[p.bairro, p.cidade].filter(Boolean).join(', ')}` : '';
+                const obsPart = p.obs_colaborador_paroquia ? ` (${p.obs_colaborador_paroquia})` : '';
+                span.innerText = `${p.nome_paroquia}${locationPart}${obsPart}`;
+                
+                item.appendChild(trash);
+                item.appendChild(span);
+                listContainer.appendChild(item);
+            });
+        }
+
+        function filterParoquias(value) {
+            renderCollaboratorParoquias(value);
+        }
+
+        async function deleteCollaboratorParoquia(id_paroquia, nome_paroquia) {
+            if (!confirm(`Deseja realmente excluir a associação com a paróquia "${nome_paroquia}"?`)) return;
+            try {
+                const res = await fetch(`${API_URL}/colaboradores_paroquias/${currentColaboradorId}/${id_paroquia}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    await loadCollaboratorParoquias();
+                } else {
+                    throw new Error(result.error || 'Erro ao desassociar paróquia.');
+                }
+            } catch (err) {
+                console.error('Erro ao excluir paróquia:', err);
+                alert('Erro ao excluir associação: ' + err.message);
+            }
+        }
+
+        async function openParoquiasModal() {
+            if (!currentColaboradorId) return;
+            
+            const id_estado = document.getElementById('select-estado').value;
+            if (!id_estado) {
+                alert('Por favor, selecione e salve o estado do colaborador na aba DADOS PESSOAIS antes de associar paróquias.');
+                return;
+            }
+
+            document.getElementById('modal-paroquias').style.display = 'flex';
+            document.getElementById('input-modal-paroquia-obs').value = '';
+            
+            const searchInput = document.getElementById('modal-paroquia-search-input');
+            if (searchInput) searchInput.value = '';
+            
+            const selectIdVal = document.getElementById('select-modal-paroquia');
+            if (selectIdVal) selectIdVal.value = '';
+            
+            hideParoquiaDropdown();
+            availableModalParoquias = [];
+
+            const selectArq = document.getElementById('select-modal-arquidiocese');
+            selectArq.innerHTML = '<option value="" disabled selected>Selecione...</option>';
+            
+            try {
+                const res = await fetch(`${API_URL}/arquidioceses/estado/${id_estado}`);
+                if (!res.ok) throw new Error('Erro ao carregar arquidioceses do estado');
+                const arquidioceses = await res.json();
+                
+                arquidioceses.sort((a, b) => (a.nome_arquidiocese || '').localeCompare(b.nome_arquidiocese || ''));
+                
+                selectArq.innerHTML = '<option value="" disabled selected>Selecione...</option>';
+                arquidioceses.forEach(a => {
+                    const option = document.createElement('option');
+                    option.value = a.id_arquidiocese;
+                    option.text = a.nome_arquidiocese;
+                    selectArq.appendChild(option);
+                });
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar arquidioceses para o modal: ' + err.message);
+            }
+        }
+
+        async function handleModalArquidioceseChange() {
+            const id_arquidiocese = document.getElementById('select-modal-arquidiocese').value;
+            const searchInput = document.getElementById('modal-paroquia-search-input');
+            if (searchInput) searchInput.value = '';
+            
+            const selectIdVal = document.getElementById('select-modal-paroquia');
+            if (selectIdVal) selectIdVal.value = '';
+            
+            hideParoquiaDropdown();
+            availableModalParoquias = [];
+            
+            if (!id_arquidiocese) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/paroquias/arquidiocese/${id_arquidiocese}`);
+                if (!res.ok) throw new Error('Erro ao carregar paróquias da arquidiocese');
+                const paroquias = await res.json();
+                
+                const associatedIds = new Set(collaboratorParoquias.map(p => p.id_paroquia));
+                availableModalParoquias = paroquias.filter(p => !associatedIds.has(p.id_paroquia));
+                availableModalParoquias.sort((a, b) => (a.nome_paroquia || '').localeCompare(b.nome_paroquia || ''));
+                
+                renderModalParoquiaDropdown();
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar paróquias da arquidiocese: ' + err.message);
+            }
+        }
+
+        function renderModalParoquiaDropdown(filterText = '') {
+            const listContainer = document.getElementById('modal-paroquia-dropdown-list');
+            if (!listContainer) return;
+            
+            listContainer.innerHTML = '';
+            
+            const filtered = availableModalParoquias.filter(p => {
+                const combined = `${p.nome_paroquia} ${p.bairro || ''} ${p.cidade || ''}`.toLowerCase();
+                return combined.includes(filterText.toLowerCase());
+            });
+            
+            const currentSelectedId = document.getElementById('select-modal-paroquia').value;
+            
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 10px 14px; color: #999; font-size: 0.95rem;">Nenhuma paróquia encontrada.</div>';
+                return;
+            }
+            
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item';
+                if (currentSelectedId && currentSelectedId == p.id_paroquia) {
+                    div.classList.add('selected');
+                }
+                const locationPart = (p.bairro || p.cidade) ? ` - ${[p.bairro, p.cidade].filter(Boolean).join(', ')}` : '';
+                const displayName = `${p.nome_paroquia}${locationPart}`;
+                div.innerText = displayName;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    selectParoquiaOption(p.id_paroquia, displayName);
+                };
+                listContainer.appendChild(div);
+            });
+        }
+
+        function showParoquiaDropdown() {
+            const dropdown = document.getElementById('modal-paroquia-dropdown-list');
+            if (dropdown) {
+                dropdown.style.display = 'block';
+                renderModalParoquiaDropdown(document.getElementById('modal-paroquia-search-input').value);
+            }
+        }
+
+        function hideParoquiaDropdown() {
+            const dropdown = document.getElementById('modal-paroquia-dropdown-list');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function toggleParoquiaDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('modal-paroquia-dropdown-list');
+            if (dropdown) {
+                if (dropdown.style.display === 'block') {
+                    hideParoquiaDropdown();
+                } else {
+                    document.getElementById('modal-paroquia-search-input').focus();
+                    showParoquiaDropdown();
+                }
+            }
+        }
+
+        function filterParoquiaSearch(value) {
+            showParoquiaDropdown();
+            renderModalParoquiaDropdown(value);
+        }
+
+        function selectParoquiaOption(id, name) {
+            document.getElementById('select-modal-paroquia').value = id;
+            document.getElementById('modal-paroquia-search-input').value = name;
+            hideParoquiaDropdown();
+        }
+
+        function closeParoquiasModal() {
+            document.getElementById('modal-paroquias').style.display = 'none';
+        }
+
+        async function saveParoquiaAssociation(event) {
+            event.preventDefault();
+            if (!currentColaboradorId) return;
+            
+            const id_paroquia = document.getElementById('select-modal-paroquia').value;
+            const paroquiaInputName = document.getElementById('modal-paroquia-search-input').value.trim();
+            const obs_colaborador_paroquia = document.getElementById('input-modal-paroquia-obs').value.trim();
+            
+            if (!id_paroquia || !paroquiaInputName) {
+                alert('Por favor, selecione uma paróquia da lista.');
+                return;
+            }
+            
+            const matchingParish = availableModalParoquias.find(p => p.id_paroquia == id_paroquia);
+            if (!matchingParish) {
+                alert('Por favor, selecione uma paróquia válida da lista.');
+                return;
+            }
+            const expectedName = `${matchingParish.nome_paroquia}${(matchingParish.bairro || matchingParish.cidade) ? ` - ${[matchingParish.bairro, matchingParish.cidade].filter(Boolean).join(', ')}` : ''}`;
+            if (expectedName !== paroquiaInputName) {
+                alert('Por favor, selecione uma paróquia válida da lista.');
+                return;
+            }
+            
+            const payload = {
+                id_colaborador: parseInt(currentColaboradorId),
+                id_paroquia: parseInt(id_paroquia),
+                obs_colaborador_paroquia: obs_colaborador_paroquia || null
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/colaboradores_paroquias/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    closeParoquiasModal();
+                    await loadCollaboratorParoquias();
+                } else {
+                    throw new Error(result.error || 'Erro ao associar paróquia.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert(err.message);
             }
         }
 
@@ -2750,52 +3369,124 @@
         <div class="modal-content-card">
             <i class="fa-solid fa-xmark modal-close" onclick="closeLiderancaModal()"></i>
 
-            <div class="modal-header">
-                <span class="modal-title" id="modal-lideranca-title">Cadastro de Liderança</span>
-            </div>
-
             <form id="form-lideranca" onsubmit="saveLeadership(event)">
                 <input type="hidden" id="lideranca-id-movimentacao">
                 
+                <div style="display: flex; gap: 30px; margin-top: 10px; margin-bottom: 20px; align-items: stretch;">
+                    <!-- Left Panel: Certificados List -->
+                    <div style="flex: 1; display: flex; flex-direction: column; border-right: 1px solid #eee; padding-right: 20px; min-width: 250px;">
+                        <div style="font-size: 1.2rem; color: #333; font-weight: 600; border-bottom: 2px solid #8b1e1e; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase;">
+                            Certificados
+                        </div>
+                        <div id="modal-certificados-list" style="overflow-y: auto; max-height: 320px; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Fields -->
+                    <div style="flex: 1.2; display: flex; flex-direction: column; gap: 12px; justify-content: flex-start; min-width: 320px;">
+                        <!-- Regional Dropdown -->
+                        <div id="group-lideranca-regional" style="display: none;">
+                            <label class="form-label" for="select-lideranca-regional" style="color: #7f8c8d; font-size: 0.95rem; display: block; margin-bottom: 4px;">Regional</label>
+                            <div class="input-wrapper">
+                                <select class="select-field" id="select-lideranca-regional" style="width: 100%;">
+                                    <option value="" disabled selected>Selecione...</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+
+                        <!-- Arquidiocese Dropdown -->
+                        <div id="group-lideranca-arquidiocese" style="display: none;">
+                            <label class="form-label" for="select-lideranca-arquidiocese" style="color: #7f8c8d; font-size: 0.95rem; display: block; margin-bottom: 4px;">Arquidiocese</label>
+                            <div class="input-wrapper">
+                                <select class="select-field" id="select-lideranca-arquidiocese" style="width: 100%;" onchange="handleLiderancaArquidioceseChange()">
+                                    <option value="" disabled selected>Selecione...</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+
+                        <!-- Paróquia Searchable Dropdown -->
+                        <div id="group-lideranca-paroquia" style="display: none;">
+                            <label class="form-label" for="modal-lideranca-paroquia-search-input" style="color: #7f8c8d; font-size: 0.95rem; display: block; margin-bottom: 4px;">Paróquia</label>
+                            <div class="input-wrapper" style="position: relative;">
+                                <input type="text" class="input-field" id="modal-lideranca-paroquia-search-input" placeholder="Selecione..." readonly onclick="toggleLiderancaParoquiaDropdown(event)" style="width: 100%; cursor: pointer; padding-right: 35px;">
+                                <i class="fa-solid fa-chevron-down select-icon" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+                                <input type="hidden" id="select-lideranca-paroquia">
+                                <div id="modal-lideranca-paroquia-dropdown-list" class="dropdown-menu" style="display: none; width: 100%; top: 100%; box-sizing: border-box; max-height: 180px; overflow-y: auto; left: 0; margin-top: 2px;">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Start Date & End Date -->
+                        <div style="display: flex; gap: 15px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label" for="input-lideranca-inicio" style="color: #7f8c8d; font-size: 0.95rem; margin-bottom: 4px; display: block;">Data de Início *</label>
+                                <input type="text" class="input-field" id="input-lideranca-inicio" placeholder="DD/MM/YYYY" maxlength="10" oninput="maskDate(this)" required style="width: 100%; box-sizing: border-box;">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label" for="input-lideranca-fim" style="color: #7f8c8d; font-size: 0.95rem; margin-bottom: 4px; display: block;">Data de Fim</label>
+                                <input type="text" class="input-field" id="input-lideranca-fim" placeholder="DD/MM/YYYY" maxlength="10" oninput="maskDate(this)" style="width: 100%; box-sizing: border-box;">
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="form-group">
+                            <label class="form-label" for="input-lideranca-observacao" style="color: #7f8c8d; font-size: 0.95rem; margin-bottom: 4px; display: block;">Observações</label>
+                            <textarea class="input-field" id="input-lideranca-observacao" placeholder="informe se faz parte de algum grupo ou pastoral na paróquia selecionada" maxlength="255" style="width: 100%; height: 75px; resize: none; box-sizing: border-box; padding: 8px 12px; font-family: inherit; font-size: 0.95rem;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
+                    <div class="modal-logo">
+                        <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo">
+                        <div style="font-size: 0.7rem; font-weight: 600;">Adoção<br>Espiritual</div>
+                    </div>
+                    <button type="submit" class="btn-modal-save">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Paróquias -->
+    <div id="modal-paroquias" class="modal-overlay">
+        <div class="modal-content-card">
+            <i class="fa-solid fa-xmark modal-close" onclick="closeParoquiasModal()"></i>
+
+            <div class="modal-header">
+                <span class="modal-title" id="modal-paroquias-title">Associar Paróquia</span>
+            </div>
+
+            <form id="form-paroquia-associar" onsubmit="saveParoquiaAssociation(event)">
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label" for="select-tipo-lideranca" style="color: #7f8c8d; font-size: 0.95rem;">Tipo de Liderança *</label>
+                    <label class="form-label" for="select-modal-arquidiocese" style="color: #7f8c8d; font-size: 0.95rem;">Arquidiocese *</label>
                     <div class="input-wrapper">
-                        <select class="select-field" id="select-tipo-lideranca" required style="width: 100%;">
+                        <select class="select-field" id="select-modal-arquidiocese" required style="width: 100%;" onchange="handleModalArquidioceseChange()">
                             <option value="" disabled selected>Selecione...</option>
-                            <option value="Colaborador paroquial">Colaborador paroquial</option>
-                            <option value="Coordenador paroquial">Coordenador paroquial</option>
-                            <option value="Coordenador diocesano">Coordenador diocesano</option>
-                            <option value="Coordenador de missão">Coordenador de missão</option>
                         </select>
                         <i class="fa-solid fa-chevron-down select-icon"></i>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label" for="input-lideranca-inicio" style="color: #7f8c8d; font-size: 0.95rem;">Data de Início *</label>
-                        <input type="text" class="input-field" id="input-lideranca-inicio" placeholder="DD/MM/YYYY" maxlength="10" oninput="maskDate(this)" required>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label" for="input-lideranca-fim" style="color: #7f8c8d; font-size: 0.95rem;">Data de Fim</label>
-                        <input type="text" class="input-field" id="input-lideranca-fim" placeholder="DD/MM/YYYY" maxlength="10" oninput="maskDate(this)">
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label" for="select-lideranca-status" style="color: #7f8c8d; font-size: 0.95rem;">Status *</label>
+                <div class="form-group" style="margin-bottom: 15px; position: relative;">
+                    <label class="form-label" for="modal-paroquia-search-input" style="color: #7f8c8d; font-size: 0.95rem;">Paróquia *</label>
                     <div class="input-wrapper">
-                        <select class="select-field" id="select-lideranca-status" required style="width: 100%;">
-                            <option value="Ativo">Ativo</option>
-                            <option value="Inativo">Inativo</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                        <input type="text" class="input-field" id="modal-paroquia-search-input" placeholder="Selecione ou digite para buscar..." autocomplete="off" required style="width: 100%;" onfocus="showParoquiaDropdown()" oninput="filterParoquiaSearch(this.value)">
+                        <input type="hidden" id="select-modal-paroquia" name="id_paroquia" required>
+                        <i class="fa-solid fa-chevron-down select-icon" style="cursor: pointer;" onclick="toggleParoquiaDropdown(event)"></i>
+                    </div>
+                    <!-- Custom Dropdown List -->
+                    <div id="modal-paroquia-dropdown-list" class="custom-dropdown-list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 8px; max-height: 185px; overflow-y: auto; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-top: 5px;">
+                        <!-- Dynamically populated options -->
                     </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 25px;">
-                    <label class="form-label" for="input-lideranca-observacao" style="color: #7f8c8d; font-size: 0.95rem;">Observação</label>
-                    <textarea class="input-field" id="input-lideranca-observacao" placeholder="Observações adicionais..." maxlength="255" style="width: 100%; height: 60px; resize: vertical; box-sizing: border-box;"></textarea>
+                    <label class="form-label" for="input-modal-paroquia-obs" style="color: #7f8c8d; font-size: 0.95rem;">Observação</label>
+                    <textarea class="input-field" id="input-modal-paroquia-obs" placeholder="Observações..." maxlength="250" style="width: 100%; height: 80px; resize: vertical; box-sizing: border-box;"></textarea>
                 </div>
 
                 <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">

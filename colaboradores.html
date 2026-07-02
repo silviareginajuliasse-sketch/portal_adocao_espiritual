@@ -1171,8 +1171,10 @@
                     }
 
                     listItem.onclick = function() { window.location.href = 'registro_colaboradores.html?id=' + c.id_colaborador; };
+                    const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
+                    const trashHtml = isAdmin ? `<i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #e74c3c;"></i>` : '';
                     listItem.innerHTML = `
-                        <i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #e74c3c;"></i>
+                        ${trashHtml}
                         <div class="selo-col" style="width: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                             ${seloHtml}
                         </div>
@@ -1199,6 +1201,11 @@
 
         async function deleteCollaborator(event, id) {
             event.stopPropagation();
+            const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
+            if (!isAdmin) {
+                alert('Apenas administradores podem excluir colaboradores.');
+                return;
+            }
             if (!confirm('Deseja realmente excluir este colaborador?')) return;
             
             try {

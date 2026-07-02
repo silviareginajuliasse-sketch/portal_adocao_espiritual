@@ -437,6 +437,20 @@ app.get('/api/regionais/estado/:id_estado', async (req, res) => {
     }
 });
 
+// Route to get arquidioceses by state
+app.get('/api/arquidioceses/estado/:id_estado', async (req, res) => {
+    const { id_estado } = req.params;
+    console.log(`[API] GET /api/arquidioceses/estado/${id_estado}`);
+    try {
+        const query = 'SELECT * FROM arquidioceses WHERE id_estado = ? ORDER BY nome_arquidiocese';
+        const [rows] = await pool.query(query, [id_estado]);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/arquidioceses/estado:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Route to get arquidioceses by regional (Plural and Singular to avoid errors)
 app.get('/api/arquidioceses/regional/:id_regional', async (req, res) => {
     const { id_regional } = req.params;
@@ -458,6 +472,17 @@ app.get('/api/arquidiocese/regional/:id_regional', async (req, res) => {
         const [rows] = await pool.query('SELECT * FROM arquidioceses WHERE id_regional = ? ORDER BY nome_arquidiocese', [id_regional]);
         res.json(rows);
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get the next collaborator code (max + 1)
+app.get('/api/colaboradores/proximo-codigo', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT COALESCE(MAX(cod_colaborador), 0) + 1 AS proximo_codigo FROM colaboradores');
+        res.json({ proximo_codigo: rows[0].proximo_codigo });
+    } catch (err) {
+        console.error('Erro ao obter próximo código de colaborador:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -705,6 +730,58 @@ app.get('/api/colaboradores/:id/atividades', async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error('[API ERROR] GET /api/colaboradores/:id/atividades:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to list associated parishes for a specific collaborator
+app.get('/api/colaboradores/:id/paroquias', async (req, res) => {
+    const { id } = req.params;
+    console.log(`[API] GET /api/colaboradores/${id}/paroquias`);
+    try {
+        const query = `
+            SELECT cp.id_paroquia, p.nome_paroquia, p.bairro, p.cidade, cp.obs_colaborador_paroquia 
+            FROM colaboradores_paroquias cp 
+            JOIN paroquias p ON cp.id_paroquia = p.id_paroquia 
+            WHERE cp.id_colaborador = ?
+            ORDER BY p.nome_paroquia ASC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/colaboradores/:id/paroquias:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save/update collaborator parish association
+app.post('/api/colaboradores_paroquias/save', async (req, res) => {
+    const { id_colaborador, id_paroquia, obs_colaborador_paroquia } = req.body;
+    console.log(`[API] POST /api/colaboradores_paroquias/save`, req.body);
+    try {
+        const query = `
+            INSERT INTO colaboradores_paroquias (id_colaborador, id_paroquia, obs_colaborador_paroquia) 
+            VALUES (?, ?, ?) 
+            ON DUPLICATE KEY UPDATE obs_colaborador_paroquia = ?
+        `;
+        await pool.query(query, [id_colaborador, id_paroquia, obs_colaborador_paroquia || null, obs_colaborador_paroquia || null]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] POST /api/colaboradores_paroquias/save:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a collaborator's parish association
+app.delete('/api/colaboradores_paroquias/:id_colaborador/:id_paroquia', async (req, res) => {
+    const { id_colaborador, id_paroquia } = req.params;
+    console.log(`[API] DELETE /api/colaboradores_paroquias/${id_colaborador}/${id_paroquia}`);
+    try {
+        const query = 'DELETE FROM colaboradores_paroquias WHERE id_colaborador = ? AND id_paroquia = ?';
+        await pool.query(query, [id_colaborador, id_paroquia]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[API ERROR] DELETE /api/colaboradores_paroquias:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -1788,10 +1865,33 @@ app.delete('/api/projetos/equipe/:id_projeto/:id_colaborador', async (req, res) 
     }
 });
 
+// Route to list active certificate types
+app.get('/api/tipos_certificados_colaborador', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM tipos_certificados_colaborador WHERE status = "Ativo" ORDER BY nome_certificado ASC');
+        const mapped = rows.map(r => {
+            let base64 = null;
+            if (r.imagem_certificado && r.imagem_certificado.length > 0) {
+                base64 = `data:image/png;base64,${r.imagem_certificado.toString('base64')}`;
+            }
+            return {
+                id_tipo_certificado: r.id_tipo_certificado,
+                nome_certificado: r.nome_certificado,
+                imagem_certificado: base64,
+                status: r.status
+            };
+        });
+        res.json(mapped);
+    } catch (err) {
+        console.error('Erro ao listar tipos de certificados:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Generic GET all for a table
 app.get('/api/:table', async (req, res) => {
     const { table } = req.params;
-    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'treinamento_instrutores', 'colaborador_lideranca'];
+    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'treinamento_instrutores', 'colaborador_lideranca', 'colaborador_certificados', 'tipos_certificados_colaborador'];
 
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Tabela não permitida' });
@@ -3276,7 +3376,7 @@ app.post('/api/login', async (req, res) => {
         const isNumeric = /^\d+$/.test(cleanedColab);
         if (isNumeric) {
             const parsedId = parseInt(cleanedColab, 10);
-            query += ` OR c.id_colaborador = ?`;
+            query += ` OR c.cod_colaborador = ?`;
             params.push(parsedId);
         }
 
@@ -4111,6 +4211,158 @@ app.delete('/api/colaborador_lideranca/:id', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+
+// --- Collaborator Certificates (Certificados) Routes ---
+
+// Route to get certificates history for a specific collaborator
+app.get('/api/colaboradores/:id/certificados', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT cc.*, tc.nome_certificado, tc.imagem_certificado,
+                   p.nome_paroquia, a.nome_arquidiocese, r.nome_regional
+            FROM colaborador_certificados cc
+            INNER JOIN tipos_certificados_colaborador tc ON cc.id_tipo_certificado = tc.id_tipo_certificado
+            LEFT JOIN paroquias p ON cc.id_paroquia = p.id_paroquia
+            LEFT JOIN arquidioceses a ON cc.id_arquidiocese = a.id_arquidiocese
+            LEFT JOIN regional r ON cc.id_regional = r.id_regional
+            WHERE cc.id_colaborador = ?
+            ORDER BY cc.data_inicio DESC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        const mapped = rows.map(r => {
+            let base64 = null;
+            if (r.imagem_certificado && r.imagem_certificado.length > 0) {
+                base64 = `data:image/png;base64,${r.imagem_certificado.toString('base64')}`;
+            }
+            return {
+                ...r,
+                imagem_certificado: base64
+            };
+        });
+        res.json(mapped);
+    } catch (err) {
+        console.error('Erro ao listar certificados do colaborador:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save/update collaborator certificate
+app.post('/api/colaborador_certificados/save', async (req, res) => {
+    const {
+        id_colaborador,
+        id_movimentacao,
+        id_tipo_certificado,
+        id_paroquia,
+        id_arquidiocese,
+        id_regional,
+        data_inicio,
+        data_fim,
+        status,
+        observacao
+    } = req.body;
+
+    if (!id_colaborador || !id_tipo_certificado || !data_inicio || !status) {
+        return res.status(400).json({ success: false, error: 'Campos obrigatórios ausentes' });
+    }
+
+    const formatDateToMySQL = (dateStr) => {
+        if (!dateStr || dateStr.trim() === '') return null;
+        if (dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return `${year}-${month}-${day}`;
+            }
+        }
+        return dateStr;
+    };
+
+    const formattedInicio = formatDateToMySQL(data_inicio);
+    const formattedFim = formatDateToMySQL(data_fim);
+
+    try {
+        if (id_movimentacao) {
+            // Update
+            const query = `
+                UPDATE colaborador_certificados SET
+                    id_tipo_certificado = ?,
+                    id_paroquia = ?,
+                    id_arquidiocese = ?,
+                    id_regional = ?,
+                    data_inicio = ?,
+                    data_fim = ?,
+                    status = ?,
+                    observacao = ?
+                WHERE id_movimentacao = ? AND id_colaborador = ?
+            `;
+            await pool.query(query, [
+                parseInt(id_tipo_certificado, 10),
+                id_paroquia ? parseInt(id_paroquia, 10) : null,
+                id_arquidiocese ? parseInt(id_arquidiocese, 10) : null,
+                id_regional ? parseInt(id_regional, 10) : null,
+                formattedInicio,
+                formattedFim,
+                status,
+                observacao || null,
+                parseInt(id_movimentacao, 10),
+                parseInt(id_colaborador, 10)
+            ]);
+            res.json({ success: true, id: id_movimentacao });
+        } else {
+            // Insert - generate next ID
+            const [maxRows] = await pool.query('SELECT COALESCE(MAX(id_movimentacao), 0) + 1 AS nextId FROM colaborador_certificados');
+            const nextId = maxRows[0].nextId;
+
+            const query = `
+                INSERT INTO colaborador_certificados (
+                    id_colaborador,
+                    id_movimentacao,
+                    id_tipo_certificado,
+                    id_paroquia,
+                    id_arquidiocese,
+                    id_regional,
+                    data_inicio,
+                    data_fim,
+                    status,
+                    observacao
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            await pool.query(query, [
+                parseInt(id_colaborador, 10),
+                nextId,
+                parseInt(id_tipo_certificado, 10),
+                id_paroquia ? parseInt(id_paroquia, 10) : null,
+                id_arquidiocese ? parseInt(id_arquidiocese, 10) : null,
+                id_regional ? parseInt(id_regional, 10) : null,
+                formattedInicio,
+                formattedFim,
+                status,
+                observacao || null
+            ]);
+            res.json({ success: true, id: nextId });
+        }
+    } catch (err) {
+        console.error('Erro ao salvar certificado do colaborador:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a collaborator certificate record
+app.delete('/api/colaborador_certificados/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM colaborador_certificados WHERE id_movimentacao = ?', [parseInt(id, 10)]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao deletar certificado do colaborador:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 
 // --- User Satisfaction Survey (Pesquisa de Satisfação) Routes ---

@@ -1233,6 +1233,22 @@
         const idTreinamento = urlParams.get('id');
         const mode = urlParams.get('mode');
 
+        let hasInstructors = false;
+        let hasParticipants = false;
+
+        function updateParticipantesTabState() {
+            const tabParticipantes = document.getElementById('tab-btn-participantes');
+            if (tabParticipantes) {
+                if (hasInstructors || hasParticipants) {
+                    tabParticipantes.removeAttribute('disabled');
+                    tabParticipantes.removeAttribute('title');
+                } else {
+                    tabParticipantes.setAttribute('disabled', 'true');
+                    tabParticipantes.setAttribute('title', 'Cadastre datas e instrutores primeiro para liberar esta aba');
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             const btnExcluir = document.getElementById('btn-excluir');
             if (mode === 'edit' && idTreinamento) {
@@ -1498,16 +1514,8 @@
                 const instructors = await response.json();
                 listEl.innerHTML = '';
 
-                const tabParticipantes = document.getElementById('tab-btn-participantes');
-                if (tabParticipantes) {
-                    if (Array.isArray(instructors) && instructors.length > 0) {
-                        tabParticipantes.removeAttribute('disabled');
-                        tabParticipantes.removeAttribute('title');
-                    } else {
-                        tabParticipantes.setAttribute('disabled', 'true');
-                        tabParticipantes.setAttribute('title', 'Cadastre datas e instrutores primeiro para liberar esta aba');
-                    }
-                }
+                hasInstructors = Array.isArray(instructors) && instructors.length > 0;
+                updateParticipantesTabState();
                 
                 if (instructors.length === 0) {
                     listEl.innerHTML = '<li class="instructor-item" style="color: #777; font-style: italic;">Nenhum instrutor registrado.</li>';
@@ -1618,6 +1626,9 @@
                 }
                 const participants = await response.json();
                 listEl.innerHTML = '';
+
+                hasParticipants = Array.isArray(participants) && participants.length > 0;
+                updateParticipantesTabState();
                 
                 if (participants.length === 0) {
                     listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-style: italic; grid-column: span 3;">Nenhum participante registrado.</div>';

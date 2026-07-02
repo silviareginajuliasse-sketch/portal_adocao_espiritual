@@ -764,7 +764,7 @@
 
                 // Display name and leader. Show status only if equal to 'Inativo' as a styled badge.
                 const areaHtml = `<span style="color: #557db5; font-weight: 600;">${node.nome_area}</span>`;
-                const leaderHtml = `<span style="color: #777;"> (Líder: ${node.nome_lider || 'Sem líder'})</span>`;
+                const leaderHtml = `<span style="color: #777;"> (${node.nome_lider || 'Sem líder'})</span>`;
                 const normStatus = (node.status || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const normStatusLider = (node.status_lider || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const isInactive = normStatus === 'inativo' || normStatusLider === 'inativo';

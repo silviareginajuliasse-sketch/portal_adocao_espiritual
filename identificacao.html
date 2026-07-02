@@ -367,6 +367,7 @@
                     // Save user details to localStorage
                     localStorage.setItem('user_nome', colab.apelido_colaborador);
                     localStorage.setItem('user_id_colaborador', colab.id_colaborador);
+                    localStorage.setItem('user_cod_colaborador', colab.cod_colaborador !== undefined && colab.cod_colaborador !== null ? String(colab.cod_colaborador) : '');
                     if (colab.foto_colaborador) {
                         localStorage.setItem('adocao_user_photo', colab.foto_colaborador);
                     } else {
@@ -395,8 +396,13 @@
 
         function handleIdInput(input) {
             let v = input.value;
-            if (/^\d/.test(v) && !v.includes('@') && v.length <= 15) {
-                input.value = maskPhone(v);
+            if (/^\d/.test(v) && !v.includes('@')) {
+                let digits = v.replace(/\D/g, '');
+                if (digits.length > 5) {
+                    input.value = maskPhone(digits);
+                } else {
+                    input.value = digits;
+                }
             }
         }
 

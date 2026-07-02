@@ -1,4 +1,8 @@
-(function() {
+(function () {
+    const API_URL = (window.location.protocol === 'file:' || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '3000')
+        ? `http://${window.location.hostname || 'localhost'}:3000/api`
+        : '/api';
+
     function rebuildDropdown() {
         const dropdown = document.getElementById('dropdown-menu');
         if (!dropdown || dropdown.getAttribute('data-rebuilt')) return;
@@ -181,13 +185,14 @@
         const userDisplay = document.getElementById('user-display');
         const userId = document.getElementById('user-id');
         if (userDisplay) userDisplay.innerText = nome;
-        if (userId) userId.innerText = id_colab;
+        const savedCodColab = localStorage.getItem('user_cod_colaborador') || '';
+        if (userId) userId.innerText = savedCodColab || id_colab;
 
         // Dropdown Update
         const dropdownName = document.getElementById('dropdown-full-name');
         const dropdownId = document.getElementById('dropdown-id');
         if (dropdownName) dropdownName.innerText = nome.toUpperCase();
-        if (dropdownId) dropdownId.innerText = "Código de usuário: " + id_colab;
+        if (dropdownId) dropdownId.innerText = "Código de usuário: " + (savedCodColab || id_colab);
 
         // Profile Display Update
         const userRoles = document.querySelectorAll('.user-role strong');
@@ -227,14 +232,23 @@
 
         // Fetch dynamically from DB to stay up to date and load the seal
         if (id_colab) {
-            const apiUrl = window.location.protocol === 'file:' 
-                ? `http://${window.location.hostname || 'localhost'}:3000/api/colaboradores/${id_colab}`
-                : `/api/colaboradores/${id_colab}`;
-            
+            const apiUrl = `${API_URL}/colaboradores/${id_colab}`;
+
             fetch(apiUrl)
                 .then(res => res.ok ? res.json() : null)
                 .then(colab => {
                     if (colab) {
+                        if (colab.cod_colaborador !== undefined && colab.cod_colaborador !== null) {
+                            localStorage.setItem('user_cod_colaborador', String(colab.cod_colaborador));
+                            const dId = document.getElementById('dropdown-id');
+                            if (dId) {
+                                dId.innerText = "Código de usuário: " + colab.cod_colaborador;
+                            }
+                            const uId = document.getElementById('user-id');
+                            if (uId) {
+                                uId.innerText = colab.cod_colaborador;
+                            }
+                        }
                         if (colab.foto_colaborador) {
                             localStorage.setItem('adocao_user_photo', colab.foto_colaborador);
                             if (userInitials) {
@@ -276,9 +290,7 @@
 
         try {
             // Determine API URL dynamically (use relative path if served via http/https, fallback to localhost:3000 on file://)
-            const apiUrl = window.location.protocol === 'file:' 
-                ? `http://${window.location.hostname || 'localhost'}:3000/api/menu`
-                : '/api/menu';
+            const apiUrl = `${API_URL}/menu`;
 
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Failed to fetch menu');
@@ -403,10 +415,8 @@
         if (respondedLocal) return;
 
         try {
-            const apiUrl = window.location.protocol === 'file:' 
-                ? `http://${window.location.hostname || 'localhost'}:3000/api/pesquisa_satisfacao/status/${id_colab}`
-                : `/api/pesquisa_satisfacao/status/${id_colab}`;
-            
+            const apiUrl = `${API_URL}/pesquisa_satisfacao/status/${id_colab}`;
+
             const res = await fetch(apiUrl);
             if (res.ok) {
                 const data = await res.json();
@@ -1107,7 +1117,7 @@
         `;
 
         document.body.appendChild(overlay);
-        
+
         overlay.offsetHeight; // Force reflow
         overlay.classList.add('active');
 
@@ -1131,13 +1141,13 @@
         // Defensive generation of "Responder Depois" button if missing in parsed template
         let cancelBtn = overlay.querySelector('.btn-cancel');
         const submitBtn = overlay.querySelector('.btn-submit');
-        
+
         if (!cancelBtn && submitBtn) {
             cancelBtn = document.createElement('button');
             cancelBtn.type = 'button';
             cancelBtn.className = 'btn-cancel';
             cancelBtn.innerText = 'Responder Depois';
-            
+
             let btnGroup = overlay.querySelector('.btn-group');
             if (!btnGroup) {
                 btnGroup = document.createElement('div');
@@ -1149,7 +1159,7 @@
                 btnGroup.insertBefore(cancelBtn, submitBtn);
             }
         }
-        
+
         if (cancelBtn) {
             cancelBtn.type = 'button';
             cancelBtn.innerText = 'Responder Depois';
@@ -1171,13 +1181,12 @@
                 };
 
                 try {
-                    const apiUrl = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
-                    const res = await fetch(`${apiUrl}/pesquisa_satisfacao/save`, {
+                    const res = await fetch(`${API_URL}/pesquisa_satisfacao/save`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    
+
                     const result = await res.json();
                     if (res.ok && result.success) {
                         localStorage.setItem('adocao_survey_responded_' + colabId, 'true');
@@ -1215,7 +1224,7 @@
             const container = overlay.querySelector(`#stars-${groupName}`);
             if (!container) return;
             const stars = container.querySelectorAll('.star-rating');
-            
+
             stars.forEach(star => {
                 star.onclick = () => {
                     const val = parseInt(star.getAttribute('data-idx'));
@@ -1265,7 +1274,7 @@
         rows.forEach(row => {
             const feat = row.getAttribute('data-feat');
             const btns = row.querySelectorAll('.rating-btn');
-            
+
             btns.forEach(btn => {
                 btn.onclick = () => {
                     btns.forEach(b => b.classList.remove('active'));
@@ -1280,9 +1289,9 @@
             const scoreTxt = overlay.querySelector('#nps-score-txt');
             const emojiEl = overlay.querySelector('#nps-emoji');
             const labelEl = overlay.querySelector('#nps-label');
-            
+
             if (scoreTxt) scoreTxt.innerText = val;
-            
+
             const n = parseInt(val);
             if (emojiEl && labelEl) {
                 if (n <= 4) {
@@ -1356,17 +1365,16 @@
                 };
 
                 try {
-                    const apiUrl = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
-                    const res = await fetch(`${apiUrl}/pesquisa_satisfacao/save`, {
+                    const res = await fetch(`${API_URL}/pesquisa_satisfacao/save`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    
+
                     const result = await res.json();
                     if (res.ok && result.success) {
                         localStorage.setItem('adocao_survey_responded_' + colabId, 'true');
-                        
+
                         const pill = document.getElementById('survey-notification-pill');
                         if (pill) pill.remove();
 
@@ -1413,7 +1421,7 @@
             if (input) {
                 input.addEventListener('change', handlePhotoUpload);
             }
-            
+
             // Intercept clicks on links pointing to pesquisa_satisfacao.html
             document.addEventListener('click', (e) => {
                 const link = e.target.closest('a');
@@ -1431,7 +1439,7 @@
         if (input) {
             input.addEventListener('change', handlePhotoUpload);
         }
-        
+
         // Intercept clicks on links pointing to pesquisa_satisfacao.html
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
