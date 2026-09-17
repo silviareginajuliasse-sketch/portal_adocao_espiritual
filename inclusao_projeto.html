@@ -817,7 +817,7 @@
         }
 
         .tasks-table td.col-actions i.action-delete:hover {
-            color: var(--primary-red);
+            color: #555;
         }
 
         .tasks-table td.col-actions i.action-edit:hover {
@@ -1536,7 +1536,7 @@
                                 ${t.atividades.map(act => `
                                     <div class="task-activity-row" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #555;">
                                         <i class="fa-regular fa-pen-to-square" onclick="editActivity(${t.id_tarefa}, ${act.id_atividade})" title="Editar Atividade" style="cursor: pointer; color: #777; font-size: 0.95rem; transition: color 0.2s;" onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#777'"></i>
-                                        <i class="fa-regular fa-trash-can" onclick="deleteActivity(${act.id_atividade})" title="Excluir Atividade" style="cursor: pointer; color: #777; font-size: 0.95rem; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-red)'" onmouseout="this.style.color='#777'"></i>
+                                        <i class="fa-regular fa-trash-can" onclick="deleteActivity(${act.id_atividade})" title="Excluir Atividade" style="cursor: pointer; color: #555; font-size: 0.95rem; transition: color 0.2s;" onmouseover="this.style.color='#333'" onmouseout="this.style.color='#555'"></i>
                                         <span>${act.descricao}. Progresso: <span style="color: var(--primary-red); font-weight: 600;">${act.perc_atingido}%</span>. - ${act.status}</span>
                                     </div>
                                 `).join('')}

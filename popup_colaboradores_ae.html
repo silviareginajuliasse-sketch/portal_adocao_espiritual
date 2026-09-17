@@ -28,17 +28,19 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            padding: 20px;
+            padding: 10px;
+            overflow: hidden;
         }
 
         .modal-container {
             background-color: var(--bg-white);
-            width: 100%;
-            max-width: 580px;
+            width: 95%;
+            max-width: 780px;
+            max-height: 92vh;
             border-radius: 8px;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
             position: relative;
-            padding: 25px;
+            padding: 20px 25px;
             display: flex;
             flex-direction: column;
         }
@@ -65,8 +67,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            margin-top: 10px;
+            margin-bottom: 12px;
+            margin-top: 5px;
+            flex-shrink: 0;
         }
 
         .modal-title {
@@ -76,7 +79,7 @@
         }
 
         .search-container {
-            width: 220px;
+            width: 240px;
         }
 
         .search-input {
@@ -98,10 +101,12 @@
         .collaborators-list {
             border: 1px solid #ddd;
             border-radius: 6px;
-            max-height: 380px;
+            flex: 1;
+            min-height: 120px;
+            max-height: calc(92vh - 180px);
             overflow-y: auto;
-            margin-bottom: 25px;
-            padding: 10px;
+            margin-bottom: 10px;
+            padding: 5px 10px;
             background-color: #fff;
         }
 
@@ -126,7 +131,7 @@
         .list-item {
             display: flex;
             align-items: center;
-            padding: 12px 10px;
+            padding: 10px 8px;
             border-bottom: 1px solid #f0f0f0;
             cursor: pointer;
             transition: background 0.2s;
@@ -142,11 +147,11 @@
 
         /* Custom Checkbox conforming to design mockup */
         .custom-checkbox {
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             border: 1px solid #b5b5b5;
             border-radius: 4px;
-            margin-right: 15px;
+            margin-right: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -169,25 +174,30 @@
         }
 
         .item-text {
-            font-size: 1.05rem;
-            color: #666;
+            font-size: 0.98rem;
+            color: #444;
             font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Footer Area */
         .modal-footer {
             display: flex;
-            justify-content: flex-end;
-            align-items: center;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 8px;
+            flex-shrink: 0;
         }
 
         .save-btn {
             background-color: #8b1e1e;
             color: white;
             border: none;
-            padding: 12px 50px;
+            padding: 10px 45px;
             border-radius: 30px;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             font-weight: 600;
             letter-spacing: 0.5px;
             cursor: pointer;
@@ -220,6 +230,16 @@
         </div>
 
         <div class="modal-footer">
+            <div class="date-fields-container" style="display: flex; gap: 15px; align-items: flex-end;">
+                <div class="date-group" style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 0.85rem; color: #555; font-weight: 500;">Início Coordenação <span style="color: var(--primary-red);">*</span></label>
+                    <input type="text" id="input-inicio-coord" class="date-input" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" style="width: 125px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; color: #333;">
+                </div>
+                <div class="date-group" style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 0.85rem; color: #555; font-weight: 500;">Fim Coordenação</label>
+                    <input type="text" id="input-fim-coord" class="date-input" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)" style="width: 125px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; color: #333;">
+                </div>
+            </div>
             <button class="save-btn" onclick="saveSelection()">SALVAR</button>
         </div>
     </div>
@@ -228,10 +248,59 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const id_paroquia = urlParams.get('id_paroquia');
+        const id_arquidiocese = urlParams.get('id_arquidiocese');
+        const edit_colab_id = urlParams.get('edit_colab_id');
         const selectLider = urlParams.get('select_lider') === 'true';
         
         let allCollaborators = [];
         let selectedColabIds = new Set();
+
+        function extractId(val) {
+            if (val === null || val === undefined) return null;
+            let curr = val;
+            while (typeof curr === 'object' && curr !== null) {
+                if (curr.id_colaborador !== undefined) curr = curr.id_colaborador;
+                else if (curr.id !== undefined) curr = curr.id;
+                else break;
+            }
+            const num = parseInt(curr, 10);
+            return isNaN(num) ? null : num;
+        }
+
+        function maskDate(input) {
+            let v = input.value.replace(/\D/g, '').substring(0, 8);
+            if (v.length > 4) {
+                input.value = `${v.substring(0, 2)}/${v.substring(2, 4)}/${v.substring(4)}`;
+            } else if (v.length > 2) {
+                input.value = `${v.substring(0, 2)}/${v.substring(2)}`;
+            } else {
+                input.value = v;
+            }
+        }
+
+        function formatToYYYYMMDD(dateStr) {
+            if (!dateStr) return null;
+            let str = String(dateStr).trim();
+            if (!str || str === 'null' || str === 'undefined') return null;
+            if (str.includes('T')) str = str.split('T')[0];
+            if (str.includes('-') && str.length >= 10) return str.substring(0, 10);
+            const parts = str.split('/');
+            if (parts.length === 3 && parts[2].length === 4) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return null;
+        }
+
+        function formatToDDMMYYYY(isoStr) {
+            if (!isoStr) return '';
+            if (isoStr.includes('/')) return isoStr;
+            const date = new Date(isoStr);
+            if (isNaN(date.getTime())) return isoStr;
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const year = date.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        }
 
         function closePopup() {
             if (window.self !== window.top) {
@@ -242,7 +311,13 @@
         }
 
         function toggleSelection(element) {
-            const colabId = parseInt(element.getAttribute('data-id'));
+            if (edit_colab_id) {
+                // Do not allow unchecking when editing a specific coordinator
+                return;
+            }
+            const colabId = extractId(element.getAttribute('data-id'));
+            if (!colabId) return;
+
             if (selectLider) {
                 // Radio-like behavior for single selection
                 const previouslySelected = document.querySelector('.list-item.selected');
@@ -285,18 +360,63 @@
         }
 
         async function loadData() {
-            if (!id_paroquia && !selectLider) {
-                alert("Erro: ID da paróquia ausente na URL.");
-                return;
-            }
-
             try {
+                let linkedCoordinators = [];
                 if (!selectLider) {
-                    // Fetch already linked coordinators for the parish
-                    const linkedCoordinators = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
-                    linkedCoordinators.forEach(c => {
-                        selectedColabIds.add(c.id_colaborador);
-                    });
+                    if (id_paroquia) {
+                        try {
+                            linkedCoordinators = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
+                        } catch (e) {}
+                    }
+                    const tempCoords = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
+
+                    if (edit_colab_id) {
+                        const parsedEditId = extractId(edit_colab_id);
+                        if (parsedEditId) selectedColabIds.add(parsedEditId);
+
+                        const targetCoord = (tempCoords && tempCoords.length > 0)
+                            ? tempCoords.find(c => extractId(c.id_colaborador) === parsedEditId)
+                            : (linkedCoordinators ? linkedCoordinators.find(c => extractId(c.id_colaborador) === parsedEditId) : null);
+
+                        if (targetCoord) {
+                            if (targetCoord.data_inicio_coordenador) {
+                                document.getElementById('input-inicio-coord').value = formatToDDMMYYYY(targetCoord.data_inicio_coordenador);
+                            }
+                            if (targetCoord.data_fim_coordenador) {
+                                document.getElementById('input-fim-coord').value = formatToDDMMYYYY(targetCoord.data_fim_coordenador);
+                            }
+                        }
+                    } else {
+                        if (tempCoords && tempCoords.length > 0) {
+                            tempCoords.forEach(c => {
+                                const cid = extractId(c.id_colaborador);
+                                if (cid) selectedColabIds.add(cid);
+                            });
+                            const firstWithDates = tempCoords.find(c => c.data_inicio_coordenador);
+                            if (firstWithDates) {
+                                if (firstWithDates.data_inicio_coordenador) {
+                                    document.getElementById('input-inicio-coord').value = formatToDDMMYYYY(firstWithDates.data_inicio_coordenador);
+                                }
+                                if (firstWithDates.data_fim_coordenador) {
+                                    document.getElementById('input-fim-coord').value = formatToDDMMYYYY(firstWithDates.data_fim_coordenador);
+                                }
+                            }
+                        } else if (linkedCoordinators && linkedCoordinators.length > 0) {
+                            linkedCoordinators.forEach(c => {
+                                const cid = extractId(c.id_colaborador);
+                                if (cid) selectedColabIds.add(cid);
+                            });
+                            const firstWithDates = linkedCoordinators.find(c => c.data_inicio_coordenador);
+                            if (firstWithDates) {
+                                if (firstWithDates.data_inicio_coordenador) {
+                                    document.getElementById('input-inicio-coord').value = formatToDDMMYYYY(firstWithDates.data_inicio_coordenador);
+                                }
+                                if (firstWithDates.data_fim_coordenador) {
+                                    document.getElementById('input-fim-coord').value = formatToDDMMYYYY(firstWithDates.data_fim_coordenador);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Fetch all collaborators and filter to active ones (status === 'ativo' or 'Ativo')
@@ -304,43 +424,45 @@
                 try {
                     collaborators = await fetchData('colaboradores');
                 } catch (err) {
-                    console.warn("Could not fetch collaborators from database, using mock data.", err);
-                }
-
-                if (!collaborators || collaborators.length === 0) {
-                    // Provide fallback mock data for testing offline/static layout
-                    collaborators = [
-                        { id_colaborador: 1, nome_colaborador: "Silvia Regina Juliasse", status: "Ativo", nome_paroquia: "Paróquia São José" },
-                        { id_colaborador: 2, nome_colaborador: "Moacyr Caparroz", status: "Ativo", nome_paroquia: "Paróquia Nossa Senhora da Paz" },
-                        { id_colaborador: 3, nome_colaborador: "Ana Paula Silva", status: "Ativo", nome_paroquia: "Paróquia São Pedro" },
-                        { id_colaborador: 4, nome_colaborador: "Carlos Eduardo Oliveira", status: "Ativo", nome_paroquia: "Catedral Metropolitana" },
-                        { id_colaborador: 5, nome_colaborador: "Maria de Fátima Souza", status: "Ativo", nome_paroquia: "Paróquia Santo Antônio" }
-                    ];
+                    console.error("Erro ao buscar colaboradores do banco de dados:", err);
                 }
 
                 // Filter active ones
-                allCollaborators = collaborators.filter(c => c.status && c.status.toLowerCase() === 'ativo');
+                allCollaborators = (collaborators || []).filter(c => c.status && c.status.toLowerCase() === 'ativo');
+
+                if (edit_colab_id) {
+                    const parsedEditId = extractId(edit_colab_id);
+                    allCollaborators = allCollaborators.filter(c => extractId(c.id_colaborador) === parsedEditId);
+                }
 
                 const listContainer = document.getElementById('collaborators-list');
                 listContainer.innerHTML = '';
 
                 if (allCollaborators.length === 0) {
-                    listContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhum colaborador ativo cadastrado no sistema.</div>';
+                    listContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhum colaborador ativo encontrado.</div>';
                     return;
                 }
 
                 allCollaborators.forEach(c => {
-                    const isSelected = selectedColabIds.has(c.id_colaborador);
+                    const cid = extractId(c.id_colaborador);
+                    const isSelected = cid && selectedColabIds.has(cid);
                     const div = document.createElement('div');
                     div.className = `list-item${isSelected ? ' selected' : ''}`;
-                    div.setAttribute('data-id', c.id_colaborador);
+                    if (edit_colab_id) {
+                        div.style.cursor = 'default';
+                    }
+                    div.setAttribute('data-id', cid);
                     div.onclick = () => toggleSelection(div);
 
-                    const parishSuffix = c.nome_paroquia ? ` - ${c.nome_paroquia}` : '';
+                    const details = [];
+                    if (c.cidade) details.push(c.cidade);
+                    if (c.sigla_estado) details.push(c.sigla_estado);
+                    if (c.nome_paroquia) details.push(c.nome_paroquia);
+                    const suffix = details.length > 0 ? ` - ${details.join(' / ')}` : '';
 
                     div.innerHTML = `
                         <div class="custom-checkbox"></div>
-                        <span class="item-text">${c.nome_colaborador}${parishSuffix}</span>
+                        <span class="item-text">${c.nome_colaborador}${suffix}</span>
                     `;
                     listContainer.appendChild(div);
                 });
@@ -356,7 +478,7 @@
                     alert("Por favor, selecione um colaborador.");
                     return;
                 }
-                const colabId = parseInt(selectedItem.getAttribute('data-id'));
+                const colabId = extractId(selectedItem.getAttribute('data-id'));
                 const colabName = selectedItem.querySelector('.item-text').innerText.split(' - ')[0]; // strip parish suffix
 
                 if (window.self !== window.top) {
@@ -372,38 +494,108 @@
                 return;
             }
 
-            if (!id_paroquia) return;
+            const inicioCoord = document.getElementById('input-inicio-coord')?.value.trim() || '';
+            const fimCoord = document.getElementById('input-fim-coord')?.value.trim() || '';
 
-            const selectedArray = Array.from(selectedColabIds);
-            
-            // Build the payload
-            const payload = {
-                id_paroquia: parseInt(id_paroquia),
-                coordenadores: selectedArray
-            };
-
-            try {
-                const response = await postData('paroquia_coordenadores/save', payload);
-                if (response.success) {
-                    // Update localStorage
-                    const formattedCoordinators = allCollaborators
-                        .filter(c => selectedColabIds.has(c.id_colaborador))
-                        .map(c => ({
-                            id_colaborador: c.id_colaborador,
-                            nome_colaborador: c.nome_colaborador,
-                            status: c.status
-                        }));
-
-                    localStorage.setItem('temp_paroquia_coordenadores', JSON.stringify(formattedCoordinators));
-                    alert("Colaboradores salvos com sucesso!");
-                    window.history.back();
-                } else {
-                    alert("Erro ao salvar colaboradores: " + (response.error || "Erro desconhecido"));
-                }
-            } catch (error) {
-                console.error("Erro ao salvar colaboradores no banco:", error);
-                alert("Erro ao salvar colaboradores no banco de dados.");
+            if (selectedColabIds.size > 0 && (!inicioCoord || inicioCoord.length < 10)) {
+                alert("Por favor, preencha o campo de data 'Início Coordenação *' no formato DD/MM/AAAA.");
+                return;
             }
+
+            const dtInicio = formatToYYYYMMDD(inicioCoord);
+            const dtFim = formatToYYYYMMDD(fimCoord);
+
+            let existingCoordinators = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
+            if (existingCoordinators.length === 0 && id_paroquia) {
+                try {
+                    const linked = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
+                    if (linked) existingCoordinators = linked;
+                } catch (e) {}
+            }
+
+            let finalCoordinatorsList = [];
+
+            if (edit_colab_id) {
+                const colabId = extractId(edit_colab_id);
+                let found = false;
+                finalCoordinatorsList = existingCoordinators.map(c => {
+                    if (extractId(c.id_colaborador) === colabId) {
+                        found = true;
+                        return {
+                            ...c,
+                            id_colaborador: colabId,
+                            data_inicio_coordenador: dtInicio,
+                            data_fim_coordenador: dtFim
+                        };
+                    }
+                    return c;
+                });
+
+                if (!found) {
+                    const colabObj = allCollaborators.find(c => extractId(c.id_colaborador) === colabId);
+                    finalCoordinatorsList.push({
+                        id_colaborador: colabId,
+                        nome_colaborador: colabObj ? colabObj.nome_colaborador : '',
+                        status: 'Ativo',
+                        data_inicio_coordenador: dtInicio,
+                        data_fim_coordenador: dtFim
+                    });
+                }
+            } else {
+                const selectedArray = Array.from(selectedColabIds).map(id => extractId(id)).filter(id => id !== null);
+                finalCoordinatorsList = selectedArray.map(colabId => {
+                    const existing = existingCoordinators.find(c => extractId(c.id_colaborador) === colabId);
+                    const colabObj = allCollaborators.find(c => extractId(c.id_colaborador) === colabId);
+                    return {
+                        id_colaborador: colabId,
+                        nome_colaborador: existing ? existing.nome_colaborador : (colabObj ? colabObj.nome_colaborador : ''),
+                        status: existing ? existing.status : 'Ativo',
+                        data_inicio_coordenador: dtInicio,
+                        data_fim_coordenador: dtFim
+                    };
+                });
+            }
+
+            // Always update localStorage
+            let currentTemp = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
+            finalCoordinatorsList.forEach(newCoord => {
+                const idx = currentTemp.findIndex(c => extractId(c.id_colaborador) === extractId(newCoord.id_colaborador));
+                if (idx >= 0) {
+                    currentTemp[idx] = newCoord;
+                } else {
+                    currentTemp.push(newCoord);
+                }
+            });
+            localStorage.setItem('temp_paroquia_coordenadores', JSON.stringify(currentTemp));
+
+            // If paróquia already exists in DB, sync with backend database table
+            if (id_paroquia) {
+                const payload = {
+                    id_paroquia: parseInt(id_paroquia, 10),
+                    coordenadores: finalCoordinatorsList
+                        .map(c => ({
+                            id_colaborador: extractId(c.id_colaborador),
+                            data_inicio_coordenador: formatToYYYYMMDD(c.data_inicio_coordenador),
+                            data_fim_coordenador: formatToYYYYMMDD(c.data_fim_coordenador)
+                        }))
+                        .filter(c => c.id_colaborador !== null)
+                };
+
+                try {
+                    const response = await postData('paroquia_coordenadores/save', payload);
+                    if (!response.success) {
+                        alert("Erro ao salvar coordenadores no banco de dados: " + (response.error || "Erro desconhecido"));
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Erro ao salvar coordenadores no banco:", error);
+                    alert("Erro ao salvar coordenadores no banco de dados: " + (error.message || "Erro desconhecido"));
+                    return;
+                }
+            }
+
+            alert("Colaboradores salvos com sucesso!");
+            window.history.back();
         }
 
         window.onload = loadData;

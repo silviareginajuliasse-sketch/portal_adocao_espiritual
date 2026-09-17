@@ -1,5 +1,5 @@
-// Use relative path if on localhost to avoid CORS issues, otherwise use absolute
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+// Use relative path only if running directly on port 3000, otherwise target port 3000 backend
+const API_URL = (window.location.port === '3000')
     ? '/api'
     : 'http://localhost:3000/api';
 

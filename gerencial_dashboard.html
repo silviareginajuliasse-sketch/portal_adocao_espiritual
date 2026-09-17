@@ -1004,9 +1004,6 @@
                     <button class="dashboard-tab" data-tab="atividades" onclick="switchTab('atividades')">
                         <i class="fa-solid fa-clipboard-list"></i> Atividades
                     </button>
-                    <button class="dashboard-tab" data-tab="projetos" onclick="switchTab('projetos')">
-                        <i class="fa-solid fa-diagram-project"></i> Projetos
-                    </button>
                 </div>
             </div>
 
@@ -1195,28 +1192,21 @@
                         </div>
                     </div>
 
-                    <!-- General Table -->
-                    <div class="dashboard-card col-12">
-                        <div class="dashboard-card-title">Paróquias e Comunidades Implantadas</div>
-                        <div class="table-responsive">
-                            <table class="recent-table">
-                                <thead>
-                                    <tr>
-                                        <th>Paróquia / Comunidade</th>
-                                        <th>Tipo</th>
-                                        <th>Cidade / Estado</th>
-                                        <th>Arquidiocese</th>
-                                        <th>Regional</th>
-                                        <th>GPS</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="paroquias-tbody">
-                                    <tr>
-                                        <td colspan="7" style="text-align: center; padding: 20px; color: #718096;">Carregando paróquias...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <!-- Evolution Chart & Implanted without Date Row -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card col-8">
+                            <div class="dashboard-card-title">
+                                <span><i class="fa-solid fa-chart-column" style="color: #7b0000; margin-right: 8px;"></i>Evolução Semestral de Paróquias Implantadas</span>
+                            </div>
+                            <div style="position: relative; height: 185px; width: 100%;">
+                                <canvas id="chart-evolucao-implantadas"></canvas>
+                            </div>
+                        </div>
+                        <div class="dashboard-card col-4">
+                            <div class="dashboard-card-title">Paróquias implantadas sem data de implantação</div>
+                            <div id="paroquias-no-date-list" style="height: 185px; max-height: 185px; overflow-y: auto; display: flex; flex-direction: column; padding-right: 4px;">
+                                <div style="text-align: center; color: #718096; font-size: 0.85rem; padding: 20px;">Carregando paróquias...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1303,75 +1293,6 @@
                     </div>
                 </div>
 
-                <!-- Projetos Tab Panel -->
-                <div class="tab-panel" id="panel-projetos">
-                    <!-- KPI Cards Grid -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-card-title">Total de Projetos</div>
-                            <div class="stat-card-value" id="proj-total">0</div>
-                            <div class="stat-card-subtext">Cadastrados no portal</div>
-                            <i class="fa-solid fa-diagram-project card-icon bg-maroon"></i>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-card-title">Em Andamento</div>
-                            <div class="stat-card-value" id="proj-andamento">0</div>
-                            <div class="stat-card-subtext" id="proj-andamento-pct">0% do total</div>
-                            <i class="fa-solid fa-spinner card-icon bg-green"></i>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-card-title">Não Iniciados</div>
-                            <div class="stat-card-value" id="proj-naoiniciado">0</div>
-                            <div class="stat-card-subtext" id="proj-naoiniciado-pct">0% do total</div>
-                            <i class="fa-solid fa-hourglass-start card-icon bg-orange"></i>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-card-title">Encerrados</div>
-                            <div class="stat-card-value" id="proj-encerrado">0</div>
-                            <div class="stat-card-subtext" id="proj-encerrado-pct">0% do total</div>
-                            <i class="fa-solid fa-circle-check card-icon bg-red"></i>
-                        </div>
-                    </div>
-
-                    <!-- Charts Row -->
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card col-8">
-                            <div class="dashboard-card-title">Projetos por Área Estrutural</div>
-                            <div class="chart-container">
-                                <canvas id="chart-proj-areas"></canvas>
-                            </div>
-                        </div>
-                        <div class="dashboard-card col-4">
-                            <div class="dashboard-card-title">Status dos Projetos</div>
-                            <div class="chart-container">
-                                <canvas id="chart-proj-status"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Projects Table -->
-                    <div class="dashboard-card col-12">
-                        <div class="dashboard-card-title">Lista Geral de Projetos</div>
-                        <div class="table-responsive">
-                            <table class="recent-table">
-                                <thead>
-                                    <tr>
-                                        <th>Nome do Projeto</th>
-                                        <th>Área</th>
-                                        <th>Data Início</th>
-                                        <th>Data Fim</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="proj-tbody">
-                                    <tr>
-                                        <td colspan="5" style="text-align: center; padding: 20px; color: #718096;">Carregando projetos...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
@@ -1382,7 +1303,6 @@
         const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
         
         let allCollaborators = [];
-        let allProjects = [];
         let allParishes = [];
         let allArchdioceses = [];
         let allRegionals = [];
@@ -1390,10 +1310,9 @@
         let chartEstadosInstance = null;
         let chartPerfisInstance = null;
         let chartEvolucaoInstance = null;
-        let chartProjAreasInstance = null;
-        let chartProjStatusInstance = null;
         let chartParRegionaisInstance = null;
         let chartParTiposInstance = null;
+        let chartEvolucaoImplantadasInstance = null;
         let mapParoquiasInstance = null;
         let mapParoquiasMarkers = [];
 
@@ -1433,8 +1352,6 @@
             // Force charts update/animation triggers
             if (tabName === 'colaboradores' && allCollaborators.length > 0) {
                 renderCharts(allCollaborators);
-            } else if (tabName === 'projetos' && allProjects.length > 0) {
-                renderProjectsCharts(allProjects);
             } else if (tabName === 'paroquias') {
                 renderParoquiasTab();
             }
@@ -1743,176 +1660,6 @@
             }).join('');
         }
 
-        // Fetch and compute project statistics
-        async function loadProjectsData() {
-            try {
-                const res = await fetch(`${API_URL}/projetos`);
-                if (!res.ok) throw new Error('Erro ao listar projetos.');
-                allProjects = await res.json();
-
-                const total = allProjects.length;
-                const andamento = allProjects.filter(p => p.status === 'Em andamento').length;
-                const naoiniciado = allProjects.filter(p => p.status === 'Não iniciado').length;
-                const encerrado = allProjects.filter(p => p.status === 'Encerrado').length;
-
-                // Update KPI values
-                document.getElementById('proj-total').innerText = total;
-                document.getElementById('proj-andamento').innerText = andamento;
-                document.getElementById('proj-andamento-pct').innerText = total > 0 ? `${((andamento / total) * 100).toFixed(1)}% do total` : '0% do total';
-                
-                document.getElementById('proj-naoiniciado').innerText = naoiniciado;
-                document.getElementById('proj-naoiniciado-pct').innerText = total > 0 ? `${((naoiniciado / total) * 100).toFixed(1)}% do total` : '0% do total';
-                
-                document.getElementById('proj-encerrado').innerText = encerrado;
-                document.getElementById('proj-encerrado-pct').innerText = total > 0 ? `${((encerrado / total) * 100).toFixed(1)}% do total` : '0% do total';
-
-                // Render Charts
-                renderProjectsCharts(allProjects);
-
-                // Populate Projects Table
-                populateProjectsTable(allProjects);
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('proj-tbody').innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 20px; color: var(--accent-red); font-weight: 600;">
-                            <i class="fa-solid fa-circle-exclamation"></i> Erro ao carregar projetos: ${err.message}
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        // Render Projects Charts
-        function renderProjectsCharts(data) {
-            if (chartProjAreasInstance) chartProjAreasInstance.destroy();
-            if (chartProjStatusInstance) chartProjStatusInstance.destroy();
-
-            // 1. Projects by Area
-            const areaCounts = {};
-            data.forEach(p => {
-                const areaName = p.nome_area || 'Sem Área';
-                areaCounts[areaName] = (areaCounts[areaName] || 0) + 1;
-            });
-            const sortedAreas = Object.entries(areaCounts)
-                .sort((a, b) => b[1] - a[1]);
-
-            const areaLabels = sortedAreas.map(item => item[0]);
-            const areaValues = sortedAreas.map(item => item[1]);
-
-            // 2. Projects by Status
-            const statusCounts = {
-                'Não iniciado': 0,
-                'Em andamento': 0,
-                'Encerrado': 0,
-                'Cancelado': 0
-            };
-            data.forEach(p => {
-                if (p.status in statusCounts) {
-                    statusCounts[p.status]++;
-                } else {
-                    statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
-                }
-            });
-
-            const statusLabels = Object.keys(statusCounts);
-            const statusValues = Object.values(statusCounts);
-
-            // Render Bar Chart (Areas)
-            const ctxAreas = document.getElementById('chart-proj-areas').getContext('2d');
-            chartProjAreasInstance = new Chart(ctxAreas, {
-                type: 'bar',
-                data: {
-                    labels: areaLabels,
-                    datasets: [{
-                        label: 'Projetos',
-                        data: areaValues,
-                        backgroundColor: '#8b1e1e',
-                        borderRadius: 5,
-                        maxBarThickness: 40
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1, precision: 0 }
-                        }
-                    }
-                }
-            });
-
-            // Render Doughnut Chart (Status)
-            const ctxStatus = document.getElementById('chart-proj-status').getContext('2d');
-            chartProjStatusInstance = new Chart(ctxStatus, {
-                type: 'doughnut',
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusValues,
-                        backgroundColor: ['#a0aec0', '#2e7d32', '#3182ce', '#e53e3e'], // Grey, Green, Blue, Red
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 12, font: { family: 'Outfit', size: 11 } }
-                        }
-                    },
-                    cutout: '65%'
-                }
-            });
-        }
-
-        // Populate Projects Table
-        function populateProjectsTable(data) {
-            const tbody = document.getElementById('proj-tbody');
-            if (!tbody) return;
-
-            if (data.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 20px; color: #718096;">
-                            Nenhum projeto cadastrado.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = data.map(p => {
-                // Status badge formatting
-                let badgeClass = 'badge-active';
-                if (p.status === 'Não iniciado') badgeClass = 'badge-pending';
-                else if (p.status === 'Encerrado') badgeClass = 'badge-active'; // Uses active layout (green/teal)
-                else if (p.status === 'Cancelado') badgeClass = 'badge-inactive';
-
-                // Date formatting
-                const dateStart = p.data_inicio ? new Date(p.data_inicio).toLocaleDateString('pt-BR') : '-';
-                const dateEnd = p.data_fim ? new Date(p.data_fim).toLocaleDateString('pt-BR') : '-';
-
-                return `
-                    <tr>
-                        <td style="font-weight: 600; color: var(--text-dark);">${p.nome_projeto}</td>
-                        <td><span class="badge" style="background-color: #f7fafc; border: 1px solid #edf2f7; color: #4a5568; font-weight: 600;">${p.nome_area || 'Sem Área'}</span></td>
-                        <td>${dateStart}</td>
-                        <td>${dateEnd}</td>
-                        <td><span class="badge ${badgeClass}">${p.status}</span></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
         // Dictionary of coordinates for Brazilian states
         const ESTADO_COORDINATES = {
             'AC': [-9.97499, -67.8076],
@@ -2002,28 +1749,18 @@
             }
         }
 
-        // Render Paróquias Dashboard elements (KPIs, Map, Charts, Table)
+        // Render Paróquias Dashboard elements (KPIs, Map, Charts)
         function renderParoquiasTab() {
             if (allParishes.length === 0) return;
 
             // 1. UPDATE KPIs
             const total = allParishes.length;
-            const parceiras = allParishes.filter(p => p.parceira === 'Sim' || p.parceira === 'sim').length;
+            const parceiras = allParishes.filter(p => {
+                return (p.data_implantacao !== null && p.data_implantacao !== undefined && p.data_implantacao !== '') ||
+                       (p.implantada && p.implantada.toLowerCase() === 'sim') ||
+                       (p.parceira && p.parceira.toLowerCase() === 'sim');
+            }).length;
             
-            // Format status and type strings to bypass encoding issues
-            const getCleanType = (tipo) => {
-                if (!tipo) return 'Paróquia';
-                return tipo.includes('Par') || tipo.includes('par') ? 'Paróquia' : 'Comunidade';
-            };
-
-            const getCleanStatus = (status) => {
-                if (!status) return 'Ativo';
-                const s = status.toLowerCase();
-                if (s.includes('pros')) return 'Em Prospecção';
-                if (s.includes('inativo')) return 'Inativo';
-                return 'Ativo';
-            };
-
             document.getElementById('paroquia-total').innerText = total;
             document.getElementById('paroquia-parceiras').innerText = parceiras;
             document.getElementById('paroquia-parceiras-pct').innerText = total > 0 
@@ -2037,49 +1774,6 @@
 
             // 3. RENDER CHARTS
             renderParoquiasCharts();
-
-            // 4. POPULATE TABLE
-            const tbody = document.getElementById('paroquias-tbody');
-            if (tbody) {
-                const getLatestDate = (p) => {
-                    const created = p.criado_em ? new Date(p.criado_em).getTime() : 0;
-                    const updated = p.atualizado_em ? new Date(p.atualizado_em).getTime() : 0;
-                    const tCreated = isNaN(created) ? 0 : created;
-                    const tUpdated = isNaN(updated) ? 0 : updated;
-                    return Math.max(tCreated, tUpdated);
-                };
-
-                const filteredParishes = allParishes
-                    .filter(p => p.parceira === 'Sim' || p.parceira === 'sim')
-                    .sort((a, b) => getLatestDate(b) - getLatestDate(a))
-                    .slice(0, 5);
-
-                tbody.innerHTML = filteredParishes.map(p => {
-                    // Check GPS status
-                    const hasGPS = p.latitude !== null && p.longitude !== null;
-                    const gpsBadge = hasGPS
-                        ? `<span class="badge" style="background-color: #e6fffa; border: 1px solid #b2f5ea; color: #234e52;"><i class="fa-solid fa-location-crosshairs"></i> Mapeado</span>`
-                        : `<span class="badge" style="background-color: #f7fafc; border: 1px solid #edf2f7; color: #718096;"><i class="fa-solid fa-location-arrow"></i> Não Mapeado</span>`;
-
-                    // Status badge class
-                    const cleanStatus = getCleanStatus(p.status);
-                    let statusClass = 'badge-active';
-                    if (cleanStatus === 'Em Prospecção') statusClass = 'badge-pending';
-                    else if (cleanStatus === 'Inativo') statusClass = 'badge-inactive';
-
-                    return `
-                        <tr>
-                            <td style="font-weight: 600; color: var(--text-dark);">${p.nome_paroquia}</td>
-                            <td>${getCleanType(p.tipo)}</td>
-                            <td>${p.cidade || 'Não informada'} / ${p.sigla_estado || '-'}</td>
-                            <td>${p.nome_arquidiocese || 'Não Informada'}</td>
-                            <td>${p.nome_regional || 'Não Informado'}</td>
-                            <td>${gpsBadge}</td>
-                            <td><span class="badge ${statusClass}">${cleanStatus}</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
         }
 
         // Initialize and update the Leaflet Map
@@ -2097,7 +1791,10 @@
                     attributionControl: false
                 });
 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapParoquiasInstance);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri'
+                }).addTo(mapParoquiasInstance);
             }
 
             // Clear existing markers/layers
@@ -2112,7 +1809,8 @@
             allParishes.forEach(p => {
                 const hasGPS = p.latitude !== null && p.longitude !== null;
                 const state = p.sigla_estado || 'RJ';
-                const isParceira = p.parceira !== null && p.parceira !== undefined && p.parceira !== '' && p.parceira.toLowerCase() !== 'nao' && p.parceira.toLowerCase() !== 'não';
+                const valImp = p.implantada || p.parceira;
+                const isParceira = valImp !== null && valImp !== undefined && valImp !== '' && valImp.toLowerCase() !== 'nao' && valImp.toLowerCase() !== 'não';
 
                 if (hasGPS) {
                     // Correct negative longitude common typo for Brazil (e.g. +43.46 -> -43.46)
@@ -2285,6 +1983,7 @@
             // Destroy existing instances to avoid canvas overlap warnings
             if (chartParRegionaisInstance) chartParRegionaisInstance.destroy();
             if (chartParTiposInstance) chartParTiposInstance.destroy();
+            if (chartEvolucaoImplantadasInstance) chartEvolucaoImplantadasInstance.destroy();
 
             // 1. Regional distribution data aggregation
             const regionalCounts = {};
@@ -2307,6 +2006,83 @@
 
             const typeLabels = Object.keys(typeCounts);
             const typeValues = Object.values(typeCounts);
+
+            // 3. Bar Chart Data Aggregation: Only paroquias where implantada='Sim' AND data_implantacao IS NOT NULL
+            const implantedWithDate = allParishes.filter(p => {
+                const valImp = p.implantada || p.parceira;
+                const isImp = valImp !== null && valImp !== undefined && valImp !== '' && String(valImp).toLowerCase() !== 'nao' && String(valImp).toLowerCase() !== 'não';
+                
+                const rawDate = p.data_implantacao;
+                const hasValidDate = rawDate && rawDate !== 'NULL' && rawDate !== 'null' && String(rawDate).trim() !== '';
+                return isImp && hasValidDate;
+            });
+
+            const semesterMap = {};
+
+            implantedWithDate.forEach(p => {
+                const dateStr = String(p.data_implantacao).split('T')[0];
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10); // 1 - 12
+                    if (!isNaN(year) && !isNaN(month) && year > 1990) {
+                        const semNum = month <= 6 ? 1 : 2;
+                        const semKey = `${year}-${semNum}`;
+                        semesterMap[semKey] = (semesterMap[semKey] || 0) + 1;
+                    }
+                }
+            });
+
+            // Sort ONLY semester keys that have actual implantations (count > 0)
+            const sortedSemKeys = Object.keys(semesterMap).sort();
+
+            const semLabels = [];
+            const semValuesNew = [];
+
+            sortedSemKeys.forEach(key => {
+                const count = semesterMap[key];
+                if (count > 0) {
+                    const [y, s] = key.split('-');
+                    const semNumName = s === '1' ? '1º' : '2º';
+                    semLabels.push(`${y}/${semNumName}`);
+                    semValuesNew.push(count);
+                }
+            });
+
+            if (semLabels.length === 0) {
+                const curYear = new Date().getFullYear();
+                semLabels.push(`${curYear}/1º`);
+                semValuesNew.push(0);
+            }
+
+            // 4. Paróquias implantadas sem data de implantação (implantada='Sim' AND data_implantacao IS NULL)
+            const implantedNoDate = allParishes.filter(p => {
+                const valImp = p.implantada || p.parceira;
+                const isImp = valImp !== null && valImp !== undefined && valImp !== '' && valImp.toLowerCase() !== 'nao' && valImp.toLowerCase() !== 'não';
+                const noDate = !p.data_implantacao || p.data_implantacao === 'NULL' || p.data_implantacao === 'null' || p.data_implantacao === '';
+                return isImp && noDate;
+            });
+
+            const noDateListEl = document.getElementById('paroquias-no-date-list');
+            if (noDateListEl) {
+                if (implantedNoDate.length === 0) {
+                    noDateListEl.innerHTML = `
+                        <div style="text-align: center; color: #718096; font-size: 0.85rem; padding: 25px; font-style: italic;">
+                            Nenhuma paróquia implantada sem data.
+                        </div>
+                    `;
+                } else {
+                    noDateListEl.innerHTML = implantedNoDate.map(p => {
+                        const uf = p.sigla_estado || 'RJ';
+                        const fullText = `${uf} - ${p.nome_paroquia}`;
+                        return `
+                            <div style="font-size: 0.82rem; color: #2d3748; padding: 0 5px; height: 26px; line-height: 26px; border-bottom: 1px dashed #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; flex-shrink: 0;" title="${fullText}">
+                                <strong>${uf}</strong> - ${p.nome_paroquia}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
 
             // Render Regional Bar Chart
             const ctxReg = document.getElementById('chart-paroquias-regionais').getContext('2d');
@@ -2397,12 +2173,58 @@
                     cutout: '65%'
                 }
             });
+
+            // Render Semester Evolution Bar Chart (Specific count per semester)
+            const ctxSem = document.getElementById('chart-evolucao-implantadas').getContext('2d');
+            chartEvolucaoImplantadasInstance = new Chart(ctxSem, {
+                type: 'bar',
+                data: {
+                    labels: semLabels,
+                    datasets: [
+                        {
+                            label: 'Paróquias Implantadas no Semestre',
+                            data: semValuesNew,
+                            backgroundColor: '#438a4b',
+                            borderColor: '#7b0000',
+                            borderWidth: 1.5,
+                            borderRadius: 5,
+                            maxBarThickness: 45
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Implantadas no semestre: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            grid: { color: '#f0f0f0' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             loadMenuGerencial();
             loadDashboardData();
-            loadProjectsData();
             loadParoquiasDashboardInitialData();
         });
     </script>

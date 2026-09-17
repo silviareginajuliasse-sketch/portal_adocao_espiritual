@@ -926,14 +926,14 @@
         }
 
         .lideranca-table td.col-delete i {
-            color: #7f8c8d;
+            color: #555;
             font-size: 1.15rem;
             cursor: pointer;
             transition: color 0.2s;
         }
 
         .lideranca-table td.col-delete i:hover {
-            color: var(--primary-red);
+            color: #333;
         }
 
         .lideranca-table td.col-info {
@@ -1089,6 +1089,7 @@
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-lideranca" onclick="switchTab(event, 'tab-lideranca')">
                             <i class="fa-solid fa-circle-user" style="color: #00bcd4;"></i> LIDERANÇA
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddLideranca()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                     </div>
 
@@ -1203,12 +1204,7 @@
                             <!-- Hidden input to maintain compatibility with bishop-input -->
                             <input type="hidden" id="bishop-input">
 
-                            <div class="lideranca-header-row">
-                                <div class="lideranca-title-with-icon" onclick="openAddLideranca()" style="cursor: pointer;" title="Adicionar Liderança">
-                                    <img src="./arquidioceses-header-icon.png" class="lideranca-title-icon" alt="Icon">
-                                    Lideranças cadastradas
-                                </div>
-                            </div>
+
 
                             <!-- List of Lideranças in Table structure conforming to model -->
                             <div class="lideranca-table-container">
@@ -1227,7 +1223,7 @@
                             </button>
                             <div class="action-group-right">
                                 <button type="button" class="delete-btn" id="delete-btn" onclick="deleteArquidiocese()">Excluir</button>
-                                <button type="submit" class="submit-btn">Salvar</button>
+                                <button type="submit" class="submit-btn" id="submit-btn">Salvar</button>
                             </div>
                         </div>
 
@@ -1342,6 +1338,16 @@
                     } else {
                         deleteBtn.style.display = 'none';
                     }
+                }
+            }
+
+            // Hide/Show the Submit (Salvar) button depending on the active tab
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) {
+                if (tabId === 'tab-lideranca') {
+                    submitBtn.style.display = 'none';
+                } else {
+                    submitBtn.style.display = 'block';
                 }
             }
         }

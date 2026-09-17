@@ -779,11 +779,13 @@
                 <!-- The List -->
                 <div class="list-container">
                     <div class="list-header" style="display: flex; align-items: center; padding: 12px 15px; background-color: #f7f9fa; font-weight: bold; border-bottom: 1px solid #e2e8f0; gap: 15px; color: #4a5568; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                        <div style="width: 50px; flex-shrink: 0; text-align: center;"></div>
-                        <div style="width: 36px; flex-shrink: 0; text-align: center;"></div>
-                        <div style="flex: 1 1 45%; min-width: 200px;">Paróquia / Comunidade</div>
-                        <div style="flex: 0 0 180px; min-width: 130px;">Tipo</div>
-                        <div style="flex: 0 0 150px; min-width: 120px;">GPS</div>
+                        <div style="width: 35px; flex-shrink: 0; text-align: center;"></div>
+                        <div style="width: 30px; flex-shrink: 0; text-align: center;"></div>
+                        <div style="flex: 1 1 auto; min-width: 180px;">Paróquia / Comunidade</div>
+                        <div style="flex: 0 0 110px; min-width: 90px;">Tipo</div>
+                        <div style="flex: 0 0 100px; min-width: 80px;">Implantada</div>
+                        <div style="flex: 0 0 140px; min-width: 110px;">Data Implantação</div>
+                        <div style="flex: 0 0 130px; min-width: 100px;">GPS</div>
                     </div>
                     <div id="paroquias-list">
                         <div style="padding: 20px; text-align: center; color: #777;">Carregando paróquias...</div>
@@ -874,11 +876,29 @@
             window.location.href = url;
         }
 
+        const API_URL = 'http://localhost:3000/api';
+
+        function formatDate(dateStr) {
+            if (!dateStr || dateStr === 'NULL' || dateStr === 'null') return '-';
+            const cleanStr = String(dateStr).split('T')[0];
+            const parts = cleanStr.split('-');
+            if (parts.length === 3) {
+                const [year, month, day] = parts;
+                if (year.length === 4) {
+                    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+                }
+            }
+            return dateStr;
+        }
+
         async function loadParoquias() {
             const listContainer = document.getElementById('paroquias-list');
             try {
-                const response = await fetch('http://localhost:3000/api/paroquias/detalhes');
-                if (!response.ok) throw new Error('Erro ao carregar paróquias');
+                const response = await fetch(`${API_URL}/paroquias/detalhes`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Status ${response.status}: ${errorText}`);
+                }
                 const data = await response.json();
                 
                 listContainer.innerHTML = '';
@@ -898,18 +918,40 @@
                     
                     const trashIcon = document.createElement('i');
                     trashIcon.className = 'fa-regular fa-trash-can trash-icon';
-                    trashIcon.style.width = '50px';
+                    trashIcon.style.width = '35px';
                     trashIcon.style.flexShrink = '0';
                     trashIcon.style.textAlign = 'center';
                     trashIcon.onclick = (e) => {
                         e.stopPropagation();
                         deleteParoquia(paroquia.id_paroquia, paroquia.nome_paroquia);
                     };
+
+                    const valImplantada = paroquia.implantada || paroquia.parceira;
+                    const hasSelo = (paroquia.data_implantacao !== null && paroquia.data_implantacao !== undefined && paroquia.data_implantacao !== '') ||
+                                    (valImplantada !== null && valImplantada !== undefined && valImplantada !== '' && valImplantada.toLowerCase() !== 'nao' && valImplantada.toLowerCase() !== 'não');
+                    
+                    const seloDiv = document.createElement('div');
+                    seloDiv.style.width = '30px';
+                    seloDiv.style.flexShrink = '0';
+                    seloDiv.style.display = 'flex';
+                    seloDiv.style.justifyContent = 'center';
+                    seloDiv.style.alignItems = 'center';
+
+                    if (hasSelo) {
+                        const seloImg = document.createElement('img');
+                        seloImg.src = './logo_circular_vermelho.png';
+                        seloImg.alt = 'Selo';
+                        seloImg.style.width = '26px';
+                        seloImg.style.height = '26px';
+                        seloImg.style.objectFit = 'contain';
+                        seloImg.title = 'Paróquia Parceira Adoção';
+                        seloDiv.appendChild(seloImg);
+                    }
                     
                     // Column 1: Paróquia / Comunidade (Name + Address details)
                     const detailsDiv = document.createElement('div');
-                    detailsDiv.style.flex = '1 1 45%';
-                    detailsDiv.style.minWidth = '200px';
+                    detailsDiv.style.flex = '1 1 auto';
+                    detailsDiv.style.minWidth = '180px';
                     detailsDiv.style.display = 'flex';
                     detailsDiv.style.flexDirection = 'column';
                     
@@ -940,20 +982,35 @@
                     
                     // Column 2: Tipo (Paróquia or Comunidade)
                     const tipoDiv = document.createElement('div');
-                    tipoDiv.style.flex = '0 0 180px';
-                    tipoDiv.style.minWidth = '130px';
+                    tipoDiv.style.flex = '0 0 110px';
+                    tipoDiv.style.minWidth = '90px';
                     tipoDiv.style.fontWeight = '500';
                     tipoDiv.style.color = '#444';
                     
-                    // Format type string safely to avoid encoding glitches
                     const rawTipo = paroquia.tipo || 'Paróquia';
                     const cleanTipo = (rawTipo.includes('Par') || rawTipo.includes('par')) ? 'Paróquia' : 'Comunidade';
                     tipoDiv.textContent = cleanTipo;
+
+                    // Column 3: Implantada ('Sim' or 'Não')
+                    const impDiv = document.createElement('div');
+                    impDiv.style.flex = '0 0 100px';
+                    impDiv.style.minWidth = '80px';
+                    impDiv.style.fontWeight = '500';
+                    impDiv.style.color = hasSelo ? '#2e7d32' : '#777';
+                    impDiv.textContent = hasSelo ? 'Sim' : 'Não';
+
+                    // Column 4: Data Implantação
+                    const dataImpDiv = document.createElement('div');
+                    dataImpDiv.style.flex = '0 0 140px';
+                    dataImpDiv.style.minWidth = '110px';
+                    dataImpDiv.style.fontWeight = '400';
+                    dataImpDiv.style.color = '#555';
+                    dataImpDiv.textContent = formatDate(paroquia.data_implantacao);
                     
-                    // Column 3: GPS Status Badge
+                    // Column 5: GPS Status Badge
                     const gpsDiv = document.createElement('div');
-                    gpsDiv.style.flex = '0 0 150px';
-                    gpsDiv.style.minWidth = '120px';
+                    gpsDiv.style.flex = '0 0 130px';
+                    gpsDiv.style.minWidth = '100px';
                     
                     const hasGPS = paroquia.latitude !== null && paroquia.longitude !== null;
                     const gpsBadge = document.createElement('span');
@@ -977,44 +1034,27 @@
                         gpsBadge.innerHTML = '<i class="fa-solid fa-location-arrow"></i> Não Mapeado';
                     }
                     gpsDiv.appendChild(gpsBadge);
-                    
-                    const hasSelo = paroquia.parceira !== null && paroquia.parceira !== undefined && paroquia.parceira !== '' && paroquia.parceira.toLowerCase() !== 'nao' && paroquia.parceira.toLowerCase() !== 'não';
-                    const seloDiv = document.createElement('div');
-                    seloDiv.style.width = '36px';
-                    seloDiv.style.flexShrink = '0';
-                    seloDiv.style.display = 'flex';
-                    seloDiv.style.justifyContent = 'center';
-                    seloDiv.style.alignItems = 'center';
-
-                    if (hasSelo) {
-                        const seloImg = document.createElement('img');
-                        seloImg.src = './logo_circular_vermelho.png';
-                        seloImg.alt = 'Selo';
-                        seloImg.style.width = '30px';
-                        seloImg.style.height = '30px';
-                        seloImg.style.objectFit = 'contain';
-                        seloImg.title = 'Paróquia Parceira Adoção';
-                        seloDiv.appendChild(seloImg);
-                    }
 
                     item.appendChild(trashIcon);
                     item.appendChild(seloDiv);
                     item.appendChild(detailsDiv);
                     item.appendChild(tipoDiv);
+                    item.appendChild(impDiv);
+                    item.appendChild(dataImpDiv);
                     item.appendChild(gpsDiv);
                     
                     listContainer.appendChild(item);
                 });
             } catch (err) {
-                console.error(err);
-                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">Erro ao carregar paróquias.</div>';
+                console.error('Erro ao carregar paróquias:', err);
+                listContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: #e74c3c;">Erro ao carregar paróquias: ${err.message || 'Falha de conexão com o servidor'}</div>`;
             }
         }
 
         async function deleteParoquia(id, nome) {
             if (confirm(`Deseja realmente excluir a paróquia "${nome}"?`)) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/paroquias/${id}`, {
+                    const response = await fetch(`${API_URL}/paroquias/${id}`, {
                         method: 'DELETE'
                     });
                     if (response.ok) {

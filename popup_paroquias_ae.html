@@ -279,16 +279,7 @@
                     console.warn("Could not fetch parishes from database, using mock data.", err);
                 }
 
-                if (!paroquias || paroquias.length === 0) {
-                    // Provide fallback mock data for testing offline/static layout
-                    paroquias = [
-                        { id_paroquia: 1, nome_paroquia: "Paróquia São José", cidade: "São José dos Campos", sigla_estado: "SP" },
-                        { id_paroquia: 2, nome_paroquia: "Paróquia Nossa Senhora da Paz", cidade: "São Paulo", sigla_estado: "SP" },
-                        { id_paroquia: 3, nome_paroquia: "Paróquia São Pedro", cidade: "Rio de Janeiro", sigla_estado: "RJ" },
-                        { id_paroquia: 4, nome_paroquia: "Catedral Metropolitana", cidade: "Belo Horizonte", sigla_estado: "MG" },
-                        { id_paroquia: 5, nome_paroquia: "Paróquia Santo Antônio", cidade: "Porto Alegre", sigla_estado: "RS" }
-                    ];
-                }
+                paroquias = paroquias || [];
 
                 // Sort parishes alphabetically by name
                 paroquias.sort((a, b) => a.nome_paroquia.localeCompare(b.nome_paroquia));

@@ -841,14 +841,14 @@
         }
 
         .lideranca-table td.col-delete i {
-            color: #7f8c8d;
+            color: #555;
             font-size: 1.15rem;
             cursor: pointer;
             transition: color 0.2s;
         }
 
         .lideranca-table td.col-delete i:hover {
-            color: var(--primary-red);
+            color: #333;
         }
 
         .lideranca-table td.col-info {
@@ -976,6 +976,7 @@
                 </button>
                 <button type="button" class="tab-btn" id="tab-btn-lideranca" onclick="switchTab(event, 'tab-lideranca')">
                     <i class="fa-solid fa-circle-user" style="color: #00bcd4;"></i> LIDERANÇA
+                    <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddLideranca()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                 </button>
             </div>
 
@@ -1061,16 +1062,6 @@
 
                 <!-- Tab Content: LIDERANÇA -->
                 <div id="tab-lideranca" class="tab-content">
-                    <div class="lideranca-header-row">
-                        <div class="lideranca-title-with-icon" onclick="openAddLideranca()" style="cursor: pointer;" title="Adicionar Liderança">
-                            <i class="fa-solid fa-plus-circle" style="color: var(--primary-red); font-size: 1.5rem; margin-right: 5px;"></i>
-                            Lideranças cadastradas
-                        </div>
-                        <div class="lideranca-search-container">
-                            <input type="text" id="lideranca-search" class="lideranca-search-input" placeholder="Pesquisar..." oninput="displayLiderancas(this.value)">
-                        </div>
-                    </div>
-
                     <!-- List of Lideranças in Table structure -->
                     <div class="lideranca-table-container">
                         <table class="lideranca-table">
@@ -1087,7 +1078,7 @@
                     
                     <div class="action-group-right">
                         <button type="button" id="delete-btn" class="delete-btn" style="display: none;" onclick="deleteDivisao()">Excluir</button>
-                        <button type="submit" class="submit-btn">Salvar</button>
+                        <button type="submit" id="submit-btn" class="submit-btn">Salvar</button>
                     </div>
                 </div>
             </form>
@@ -1259,6 +1250,25 @@
             if (btn) btn.classList.add('active');
             const content = document.getElementById(tabId);
             if (content) content.classList.add('active');
+
+            // Hide/Show Excluir and Salvar buttons depending on active tab
+            const deleteBtn = document.getElementById('delete-btn');
+            if (deleteBtn) {
+                if (tabId === 'tab-lideranca') {
+                    deleteBtn.style.display = 'none';
+                } else {
+                    deleteBtn.style.display = (id && mode === 'edit') ? 'block' : 'none';
+                }
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) {
+                if (tabId === 'tab-lideranca') {
+                    submitBtn.style.display = 'none';
+                } else {
+                    submitBtn.style.display = 'block';
+                }
+            }
         }
 
         // --- Leadership State Management ---

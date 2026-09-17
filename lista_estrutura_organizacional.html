@@ -335,7 +335,7 @@
         }
 
         .trash-icon:hover {
-            color: var(--primary-red);
+            color: #555;
         }
 
         .item-text {
@@ -762,20 +762,24 @@
                 const nodeDiv = document.createElement('div');
                 nodeDiv.className = 'tree-node';
 
-                // Display name and leader. Show status only if equal to 'Inativo' as a styled badge.
-                const areaHtml = `<span style="color: #557db5; font-weight: 600;">${node.nome_area}</span>`;
-                const leaderHtml = `<span style="color: #777;"> (${node.nome_lider || 'Sem líder'})</span>`;
-                const normStatus = (node.status || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                const normStatusLider = (node.status_lider || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                const isInactive = normStatus === 'inativo' || normStatusLider === 'inativo';
-                const statusHtml = isInactive ? `<span class="status-badge status-inativo">Inativo</span>` : '';
-                
-                nodeDiv.innerHTML = `
-                    <div class="list-item" onclick="editArea(${node.id_area})">
-                        ${getLeaderAvatarHtml(node)}
-                        <span class="item-text" style="cursor: pointer; flex-grow: 1;">${areaHtml}${leaderHtml} ${statusHtml}</span>
-                    </div>
-                `;
+                 // Display name and leader. Show status only if equal to 'Inativo' as a styled badge.
+                 const areaHtml = `<span style="color: #557db5; font-weight: 600;">${node.nome_area}</span>`;
+                 let leadersText = node.nome_lider || 'Sem líder';
+                 if (node.nome_lider_2) {
+                     leadersText += ` / ${node.nome_lider_2}`;
+                 }
+                 const leaderHtml = `<span style="color: #777;"> (${leadersText})</span>`;
+                 const normStatus = (node.status || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                 const normStatusLider = (node.status_lider || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                 const isInactive = normStatus === 'inativo' || normStatusLider === 'inativo';
+                 const statusHtml = isInactive ? `<span class="status-badge status-inativo">Inativo</span>` : '';
+                 
+                 nodeDiv.innerHTML = `
+                     <div class="list-item" onclick="editArea(${node.id_area})">
+                         ${getLeaderAvatarHtml(node)}
+                         <span class="item-text" style="cursor: pointer; flex-grow: 1;">${areaHtml}${leaderHtml} ${statusHtml}</span>
+                     </div>
+                 `;
 
                 if (node.children && node.children.length > 0) {
                     const childrenHtml = renderTree(node.children, false);

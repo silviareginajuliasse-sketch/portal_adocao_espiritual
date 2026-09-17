@@ -28,17 +28,19 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            padding: 20px;
+            padding: 10px;
+            overflow: hidden;
         }
 
         .modal-container {
             background-color: var(--bg-white);
-            width: 100%;
+            width: 95%;
             max-width: 950px;
+            max-height: 92vh;
             border-radius: 8px;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
             position: relative;
-            padding: 25px;
+            padding: 20px 25px;
             display: flex;
             flex-direction: column;
         }
@@ -64,6 +66,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 5px;
+            flex-shrink: 0;
         }
 
         .modal-title {
@@ -96,17 +99,21 @@
             height: 2px;
             background-color: var(--primary-red);
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
         }
 
         /* List Area */
         .collaborators-list {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 5px 30px;
-            max-height: 400px;
+            gap: 6px 24px;
+            flex: 1;
+            min-height: 150px;
+            max-height: calc(92vh - 180px);
+            overflow-x: hidden;
             overflow-y: auto;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             padding-right: 5px;
         }
 
@@ -131,8 +138,9 @@
         .list-item {
             display: flex;
             align-items: center;
-            padding: 12px 5px;
+            padding: 8px 6px;
             border-bottom: 1px solid #f0f0f0;
+            min-width: 0;
             transition: background 0.2s;
         }
 
@@ -142,15 +150,17 @@
 
         /* Presence Dropdown styling */
         .presence-select {
-            padding: 6px 12px;
+            padding: 6px 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: #333;
             outline: none;
             background: white;
-            margin-right: 15px;
+            margin-right: 12px;
             cursor: pointer;
+            width: 140px;
+            flex-shrink: 0;
             transition: border-color 0.2s;
         }
 
@@ -159,9 +169,11 @@
         }
 
         .item-text {
-            font-size: 1.1rem;
-            color: #777;
+            font-size: 0.95rem;
+            color: #444;
             font-weight: 400;
+            flex: 1;
+            min-width: 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -172,7 +184,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
+            margin-top: 5px;
+            flex-shrink: 0;
         }
 
         .footer-logo {
@@ -197,9 +210,9 @@
             background-color: #ae3326;
             color: white;
             border: none;
-            padding: 12px 45px;
+            padding: 10px 45px;
             border-radius: 30px;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 600;
             font-style: italic;
             cursor: pointer;
@@ -339,7 +352,11 @@
                     span.className = 'item-text';
                     
                     const cidadeStr = p.cidade ? ` - ${p.cidade}` : '';
-                    span.textContent = `${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}`;
+                    const colabCode = (p.cod_colaborador !== undefined && p.cod_colaborador !== null && p.cod_colaborador !== '')
+                        ? p.cod_colaborador
+                        : p.colaborador_id;
+                    const colabName = p.nome_colaborador || p.apelido_colaborador || '';
+                    span.textContent = `${colabCode} - ${colabName}${cidadeStr}`;
                     span.title = span.textContent;
 
                     item.appendChild(select);

@@ -126,7 +126,7 @@ async function connectDB() {
                 WHERE TABLE_SCHEMA = DATABASE() 
                   AND TABLE_NAME = 'paroquias'
             `);
-            const paroquiasColumnNames = paroquiasColumnsList.map(c => c.COLUMN_NAME.toLowerCase());
+            const paroquiasColumnNames = paroquiasColumnsList.map(c => (c.COLUMN_NAME || c.column_name || c.Field || c.field || '').toLowerCase());
 
             if (!paroquiasColumnNames.includes('cep')) {
                 console.log('Adicionando coluna cep na tabela paroquias...');
@@ -136,6 +136,22 @@ async function connectDB() {
             if (!paroquiasColumnNames.includes('bairro')) {
                 console.log('Adicionando coluna bairro na tabela paroquias...');
                 await pool.query('ALTER TABLE paroquias ADD COLUMN bairro VARCHAR(50) NULL');
+            }
+
+            if (!paroquiasColumnNames.includes('data_implantacao')) {
+                console.log('Adicionando coluna data_implantacao na tabela paroquias...');
+                await pool.query('ALTER TABLE paroquias ADD COLUMN data_implantacao DATE NULL');
+            }
+
+            if (paroquiasColumnNames.includes('parceira') && !paroquiasColumnNames.includes('implantada')) {
+                console.log('Migrando coluna parceira para implantada na tabela paroquias...');
+                try {
+                    await pool.query('ALTER TABLE paroquias CHANGE COLUMN parceira implantada VARCHAR(50) NULL');
+                } catch (rErr) {
+                    try {
+                        await pool.query('ALTER TABLE paroquias RENAME COLUMN parceira TO implantada');
+                    } catch (_) {}
+                }
             }
 
             // Migrate existing legacy paroquia records to separate address and neighborhood
@@ -493,10 +509,10 @@ app.get('/api/colaboradores', async (req, res) => {
     try {
         const photoField = isLight ? '' : 'c.foto_colaborador,';
         const query = `
-             SELECT c.id_colaborador, c.nome_colaborador, c.apelido_colaborador, c.cidade, c.telefone, c.email,
+             SELECT c.id_colaborador, c.cod_colaborador, c.nome_colaborador, c.apelido_colaborador, c.cidade, c.telefone, c.email,
                     ${photoField} e.nome_estado, e.sigla_estado, p.nome_pais, c.perfil AS nome_perfil,
                     c.atualizado_em, c.criado_em, c.status, c.perfil AS id_perfil, pa.nome_paroquia,
-                    c.selo_colaborador
+                    c.selo_colaborador, pa.id_arquidiocese, pa.id_arquidiocese AS paroquia_id_arquidiocese, c.id_paroquia
              FROM colaboradores c
              LEFT JOIN estados e ON c.id_estado = e.id_estado
              LEFT JOIN pais p ON e.id_pais = p.id_pais
@@ -871,14 +887,16 @@ app.get('/api/treinamentos', async (req, res) => {
 app.get('/api/estrutura_organizacional', async (req, res) => {
     try {
         const query = `
-            SELECT eo.id_area, eo.nome_area, eo.status, eo.id_colaborador_lider, eo.subordinado_id_area,
+            SELECT eo.id_area, eo.nome_area, eo.status, eo.grupo, eo.staff, eo.id_colaborador_lider, eo.id_colaborador_lider_2, eo.subordinado_id_area,
                    c.nome_colaborador AS nome_lider, c.apelido_colaborador AS apelido_lider,
                    c.foto_colaborador AS foto_lider, c.status AS status_lider,
+                   c2.nome_colaborador AS nome_lider_2, c2.apelido_colaborador AS apelido_lider_2,
                    eo_parent.nome_area AS nome_area_pai,
                    eo.criado_em, eo.atualizado_em, eo.id_colaborador_atualiza,
                    eo.nome_arquivo_atribuicoes
             FROM estrutura_organizacional eo
             LEFT JOIN colaboradores c ON eo.id_colaborador_lider = c.id_colaborador
+            LEFT JOIN colaboradores c2 ON eo.id_colaborador_lider_2 = c2.id_colaborador
             LEFT JOIN estrutura_organizacional eo_parent ON eo.subordinado_id_area = eo_parent.id_area
             ORDER BY eo.nome_area ASC
         `;
@@ -922,15 +940,17 @@ app.get('/api/estrutura_organizacional/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const query = `
-            SELECT eo.id_area, eo.nome_area, eo.status, eo.id_colaborador_lider, eo.subordinado_id_area,
+            SELECT eo.id_area, eo.nome_area, eo.status, eo.grupo, eo.staff, eo.id_colaborador_lider, eo.id_colaborador_lider_2, eo.subordinado_id_area,
                    c.nome_colaborador AS nome_lider, c.apelido_colaborador AS apelido_lider,
                    c.foto_colaborador AS foto_lider,
+                   c2.nome_colaborador AS nome_lider_2, c2.apelido_colaborador AS apelido_lider_2,
                    eo_parent.nome_area AS nome_area_pai,
                    eo.criado_em, eo.atualizado_em, eo.id_colaborador_atualiza,
                    col_up.apelido_colaborador AS nome_colaborador_atualiza,
                    eo.nome_arquivo_atribuicoes
             FROM estrutura_organizacional eo
             LEFT JOIN colaboradores c ON eo.id_colaborador_lider = c.id_colaborador
+            LEFT JOIN colaboradores c2 ON eo.id_colaborador_lider_2 = c2.id_colaborador
             LEFT JOIN estrutura_organizacional eo_parent ON eo.subordinado_id_area = eo_parent.id_area
             LEFT JOIN colaboradores col_up ON eo.id_colaborador_atualiza = col_up.id_colaborador
             WHERE eo.id_area = ?
@@ -2106,10 +2126,10 @@ app.get('/api/paroquias/tipos', async (req, res) => {
     }
 });
 
-// Route to get enum partners of paroquias
-app.get('/api/paroquias/parceiras', async (req, res) => {
+// Route to get enum implantada of paroquias
+app.get('/api/paroquias/implantadas', async (req, res) => {
     try {
-        const [rows] = await pool.query("SHOW COLUMNS FROM paroquias LIKE 'parceira'");
+        const [rows] = await pool.query("SHOW COLUMNS FROM paroquias LIKE 'implantada'");
         if (rows.length > 0) {
             const type = rows[0].Type; // e.g. enum('Sim','Não','Em prospecção')
             const match = type.match(/^enum\((.*)\)$/i);
@@ -2118,9 +2138,46 @@ app.get('/api/paroquias/parceiras', async (req, res) => {
                 return res.json(values);
             }
         }
+        // Fallback check for legacy column name if table was not renamed yet
+        const [legacyRows] = await pool.query("SHOW COLUMNS FROM paroquias LIKE 'parceira'");
+        if (legacyRows.length > 0) {
+            const type = legacyRows[0].Type;
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                const values = match[1].split(',').map(v => v.replace(/^'(.*)'$/, '$1'));
+                return res.json(values);
+            }
+        }
         res.json([]);
     } catch (err) {
-        console.error('Erro ao obter opções de parceira:', err);
+        console.error('Erro ao obter opções de implantada:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Alias route for backwards compatibility
+app.get('/api/paroquias/parceiras', async (req, res) => {
+    try {
+        const [rows] = await pool.query("SHOW COLUMNS FROM paroquias LIKE 'implantada'");
+        if (rows.length > 0) {
+            const type = rows[0].Type;
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                const values = match[1].split(',').map(v => v.replace(/^'(.*)'$/, '$1'));
+                return res.json(values);
+            }
+        }
+        const [legacyRows] = await pool.query("SHOW COLUMNS FROM paroquias LIKE 'parceira'");
+        if (legacyRows.length > 0) {
+            const type = legacyRows[0].Type;
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                const values = match[1].split(',').map(v => v.replace(/^'(.*)'$/, '$1'));
+                return res.json(values);
+            }
+        }
+        res.json([]);
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
@@ -2128,25 +2185,49 @@ app.get('/api/paroquias/parceiras', async (req, res) => {
 // Specific route to save/update Paroquia
 app.post('/api/paroquias/save', async (req, res) => {
     console.log('POST /api/paroquias/save - Body:', req.body);
-    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, bairro, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, socialMedia, id_colaborador_atualiza, cep } = req.body;
+    const { id_paroquia, nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, bairro, cidade, id_estado, status, tipo, implantada, parceira, data_implantacao, latitude, longitude, site, observacoes, socialMedia, id_colaborador_atualiza, cep } = req.body;
 
     try {
         let savedId = id_paroquia;
         const colabId = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza) : null;
-        const partnerVal = parceira || 'Não';
+        const implantadaVal = implantada || parceira || 'Não';
+
+        let colNames = [];
+        try {
+            const [cols] = await pool.query(`
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'paroquias'
+            `);
+            colNames = cols.map(c => (c.COLUMN_NAME || c.column_name || '').toLowerCase());
+        } catch (_) {}
+
+        const targetCol = colNames.includes('implantada') ? 'implantada' : (colNames.includes('parceira') ? 'parceira' : 'implantada');
+        const hasDataImp = colNames.includes('data_implantacao');
 
         if (id_paroquia) {
             // Update
-            await pool.query(
-                'UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, bairro = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, parceira = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ?, cep = ? WHERE id_paroquia = ?',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId, cep || null, id_paroquia]
-            );
+            const setSql = hasDataImp
+                ? `UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, bairro = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, ${targetCol} = ?, data_implantacao = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ?, cep = ? WHERE id_paroquia = ?`
+                : `UPDATE paroquias SET nome_paroquia = ?, id_arquidiocese = ?, id_divisao_arquidiocesana = ?, endereco = ?, bairro = ?, cidade = ?, id_estado = ?, status = ?, tipo = ?, ${targetCol} = ?, latitude = ?, longitude = ?, site = ?, observacoes = ?, atualizado_em = NOW(), id_colaborador_atualiza = ?, cep = ? WHERE id_paroquia = ?`;
+
+            const params = hasDataImp
+                ? [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, implantadaVal, data_implantacao || null, latitude, longitude, site || '', observacoes || null, colabId, cep || null, id_paroquia]
+                : [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, implantadaVal, latitude, longitude, site || '', observacoes || null, colabId, cep || null, id_paroquia];
+
+            await pool.query(setSql, params);
         } else {
             // Insert
-            const [result] = await pool.query(
-                'INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, bairro, cidade, id_estado, status, tipo, parceira, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza, cep) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?)',
-                [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, partnerVal, latitude, longitude, site || '', observacoes || null, colabId, cep || null]
-            );
+            const insertSql = hasDataImp
+                ? `INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, bairro, cidade, id_estado, status, tipo, ${targetCol}, data_implantacao, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza, cep) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?)`
+                : `INSERT INTO paroquias (nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana, endereco, bairro, cidade, id_estado, status, tipo, ${targetCol}, latitude, longitude, site, observacoes, criado_em, atualizado_em, id_colaborador_atualiza, cep) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?)`;
+
+            const params = hasDataImp
+                ? [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, implantadaVal, data_implantacao || null, latitude, longitude, site || '', observacoes || null, colabId, cep || null]
+                : [nome_paroquia, id_arquidiocese, id_divisao_arquidiocesana || null, endereco, bairro || null, cidade, id_estado, status, tipo, implantadaVal, latitude, longitude, site || '', observacoes || null, colabId, cep || null];
+
+            const [result] = await pool.query(insertSql, params);
             savedId = result.insertId;
         }
 
@@ -2192,7 +2273,7 @@ app.delete('/api/paroquias/:id', async (req, res) => {
 // Specific route to get Paroquias with details (Country, Regional, State and Archdiocese names)
 app.get('/api/paroquias/detalhes', async (req, res) => {
     try {
-        const query = `
+        const buildQuery = (impCol, dateCol) => `
             SELECT 
                 p.id_paroquia,
                 p.nome_paroquia,
@@ -2201,7 +2282,12 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
                 p.endereco,
                 p.status,
                 p.tipo,
-                p.parceira,
+                CASE 
+                    WHEN ${dateCol} IS NOT NULL THEN 'Sim'
+                    ELSE ${impCol}
+                END AS implantada,
+                ${impCol} AS parceira,
+                ${dateCol} AS data_implantacao,
                 p.latitude,
                 p.longitude,
                 p.criado_em,
@@ -2219,9 +2305,36 @@ app.get('/api/paroquias/detalhes', async (req, res) => {
             LEFT JOIN divisao_arquidiocesana da ON p.id_arquidiocese = da.id_arquidiocese AND p.id_divisao_arquidiocesana = da.id_divisao_arquidiocesana
             ORDER BY p.criado_em DESC
         `;
-        const [rows] = await pool.query(query);
-        res.json(rows);
+
+        // Attempt 1: p.implantada + p.data_implantacao
+        try {
+            const [rows] = await pool.query(buildQuery('p.implantada', 'p.data_implantacao'));
+            return res.json(rows);
+        } catch (_) {}
+
+        // Attempt 2: p.implantada + NULL data_implantacao
+        try {
+            const [rows] = await pool.query(buildQuery('p.implantada', 'NULL'));
+            return res.json(rows);
+        } catch (_) {}
+
+        // Attempt 3: p.parceira + p.data_implantacao
+        try {
+            const [rows] = await pool.query(buildQuery('p.parceira', 'p.data_implantacao'));
+            return res.json(rows);
+        } catch (_) {}
+
+        // Attempt 4: p.parceira + NULL data_implantacao
+        try {
+            const [rows] = await pool.query(buildQuery('p.parceira', 'NULL'));
+            return res.json(rows);
+        } catch (_) {}
+
+        // Attempt 5: Ultimate safe fallback ('Não' + NULL)
+        const [rows] = await pool.query(buildQuery("'Não'", 'NULL'));
+        return res.json(rows);
     } catch (err) {
+        console.error('Erro em /api/paroquias/detalhes:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -2286,6 +2399,11 @@ app.get('/api/paroquias/:id', async (req, res) => {
         const [rows] = await pool.query(query, [id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Paróquia não encontrada' });
         const paroquia = rows[0];
+        if (paroquia.implantada !== undefined && paroquia.parceira === undefined) {
+            paroquia.parceira = paroquia.implantada;
+        } else if (paroquia.parceira !== undefined && paroquia.implantada === undefined) {
+            paroquia.implantada = paroquia.parceira;
+        }
 
         // Fetch midias
         const [midias] = await pool.query(
@@ -2854,7 +2972,8 @@ app.get('/api/paroquias/:id/coordenadores', async (req, res) => {
     const { id } = req.params;
     try {
         const query = `
-            SELECT c.id_colaborador, c.nome_colaborador, c.apelido_colaborador, c.telefone, c.email, c.status
+            SELECT c.id_colaborador, c.nome_colaborador, c.apelido_colaborador, c.telefone, c.email, c.status,
+                   pc.data_inicio_coordenador, pc.data_fim_coordenador
             FROM paroquia_coordenadores pc
             INNER JOIN colaboradores c ON pc.id_colaborador = c.id_colaborador
             WHERE pc.id_paroquia = ?
@@ -2870,23 +2989,123 @@ app.get('/api/paroquias/:id/coordenadores', async (req, res) => {
 
 // Route to save parish coordinators (links)
 app.post('/api/paroquia_coordenadores/save', async (req, res) => {
-    const { id_paroquia, coordenadores } = req.body;
-    if (!id_paroquia) {
-        return res.status(400).json({ success: false, error: 'ID da paróquia ausente' });
+    const { id_paroquia, coordenadores, data_inicio_coordenador, data_fim_coordenador } = req.body;
+    
+    let parishId = id_paroquia;
+    while (typeof parishId === 'object' && parishId !== null) {
+        if (parishId.id_paroquia !== undefined) parishId = parishId.id_paroquia;
+        else if (parishId.id !== undefined) parishId = parishId.id;
+        else break;
     }
-    try {
-        // Delete existing links for this parish
-        await pool.query('DELETE FROM paroquia_coordenadores WHERE id_paroquia = ?', [id_paroquia]);
+    parishId = parseInt(parishId, 10);
+    if (!parishId || isNaN(parishId)) {
+        return res.status(400).json({ success: false, error: 'ID da paróquia ausente ou inválido' });
+    }
 
-        // Insert new ones
+    const sanitizeDateForDB = (dateStr) => {
+        if (!dateStr) return null;
+        let str = String(dateStr).trim();
+        if (!str || str === 'null' || str === 'undefined') return null;
+        if (str.includes('T')) str = str.split('T')[0];
+        if (str.includes('/')) {
+            const parts = str.split('/');
+            if (parts.length === 3 && parts[2].length === 4) {
+                str = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+            return str;
+        }
+        return null;
+    };
+
+    try {
+        // Ensure columns exist on table paroquia_coordenadores
+        try {
+            await pool.query('ALTER TABLE paroquia_coordenadores ADD COLUMN data_inicio_coordenador DATE DEFAULT NULL');
+        } catch (e) {}
+        try {
+            await pool.query('ALTER TABLE paroquia_coordenadores ADD COLUMN data_fim_coordenador DATE DEFAULT NULL');
+        } catch (e) {}
+
+        // Upsert (insert or update) coordinators without deleting other existing records
         if (coordenadores && coordenadores.length > 0) {
             for (const id_colab of coordenadores) {
-                await pool.query('INSERT INTO paroquia_coordenadores (id_paroquia, id_colaborador) VALUES (?, ?)', [id_paroquia, id_colab]);
+                let dtInicio = sanitizeDateForDB(data_inicio_coordenador);
+                let dtFim = sanitizeDateForDB(data_fim_coordenador);
+
+                if (typeof id_colab === 'object' && id_colab !== null) {
+                    if (id_colab.data_inicio_coordenador !== undefined) {
+                        dtInicio = sanitizeDateForDB(id_colab.data_inicio_coordenador);
+                    }
+                    if (id_colab.data_fim_coordenador !== undefined) {
+                        dtFim = sanitizeDateForDB(id_colab.data_fim_coordenador);
+                    }
+                }
+
+                let colabId = id_colab;
+                while (typeof colabId === 'object' && colabId !== null) {
+                    if (colabId.id_colaborador !== undefined) {
+                        colabId = colabId.id_colaborador;
+                    } else if (colabId.id !== undefined) {
+                        colabId = colabId.id;
+                    } else {
+                        break;
+                    }
+                }
+                colabId = parseInt(colabId, 10);
+
+                if (isNaN(colabId)) {
+                    console.warn('ID do colaborador inválido, ignorando:', id_colab);
+                    continue;
+                }
+
+                // Check if link already exists for this parish & collaborator
+                const [existing] = await pool.query(
+                    'SELECT 1 FROM paroquia_coordenadores WHERE id_paroquia = ? AND id_colaborador = ?',
+                    [parishId, colabId]
+                );
+
+                if (existing && existing.length > 0) {
+                    await pool.query(
+                        'UPDATE paroquia_coordenadores SET data_inicio_coordenador = ?, data_fim_coordenador = ? WHERE id_paroquia = ? AND id_colaborador = ?',
+                        [dtInicio, dtFim, parishId, colabId]
+                    );
+                } else {
+                    await pool.query(
+                        'INSERT INTO paroquia_coordenadores (id_paroquia, id_colaborador, data_inicio_coordenador, data_fim_coordenador) VALUES (?, ?, ?, ?)',
+                        [parishId, colabId, dtInicio, dtFim]
+                    );
+                }
             }
         }
         res.json({ success: true });
     } catch (err) {
         console.error('Erro ao salvar coordenadores da paróquia:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a single coordinator link from a parish (explicit delete via trash icon)
+app.delete('/api/paroquia_coordenadores', async (req, res) => {
+    let parishId = req.query.id_paroquia || req.body?.id_paroquia;
+    let colabId = req.query.id_colaborador || req.body?.id_colaborador;
+
+    parishId = parseInt(parishId, 10);
+    colabId = parseInt(colabId, 10);
+
+    if (isNaN(parishId) || isNaN(colabId)) {
+        return res.status(400).json({ success: false, error: 'Parâmetros ausentes ou inválidos' });
+    }
+
+    try {
+        await pool.query(
+            'DELETE FROM paroquia_coordenadores WHERE id_paroquia = ? AND id_colaborador = ?',
+            [parishId, colabId]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir coordenador da paróquia:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -3228,18 +3447,24 @@ app.delete('/api/divisao_arquidiocesana/:id', deleteDivisao);
 // POST: Save/Update area
 app.post('/api/estrutura_organizacional/save', async (req, res) => {
     console.log('POST /api/estrutura_organizacional/save - Body keys:', Object.keys(req.body));
-    const { id, nome_area, id_colaborador_lider, subordinado_id_area, status, id_colaborador_atualiza, nome_arquivo_atribuicoes, arquivo_atribuicoes_base64 } = req.body;
+    const { id, nome_area, id_colaborador_lider, id_colaborador_lider_2, subordinado_id_area, status, grupo, staff, id_colaborador_atualiza, nome_arquivo_atribuicoes, arquivo_atribuicoes_base64 } = req.body;
 
     try {
         // Validation
         if (!nome_area || nome_area.trim() === '') {
             return res.status(400).json({ success: false, error: 'Crítica: Por favor, preencha o Nome da Área.' });
         }
-        if (!id_colaborador_lider) {
-            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o Líder.' });
+        if (!id_colaborador_lider && grupo !== 'Sim') {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o Líder 1.' });
         }
         if (!status) {
             return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o Status.' });
+        }
+        if (!grupo) {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o campo Grupo sem liderança.' });
+        }
+        if (!staff) {
+            return res.status(400).json({ success: false, error: 'Crítica: Por favor, selecione o campo Área staff.' });
         }
 
         // Check duplicate name
@@ -3253,12 +3478,13 @@ app.post('/api/estrutura_organizacional/save', async (req, res) => {
 
         let savedId = id;
         const subId = subordinado_id_area ? parseInt(subordinado_id_area) : null;
-        const lidId = parseInt(id_colaborador_lider);
+        const lidId = id_colaborador_lider ? parseInt(id_colaborador_lider) : 0;
+        const lid2Id = id_colaborador_lider_2 ? parseInt(id_colaborador_lider_2) : 0;
         const colabUp = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza) : null;
 
         if (id) {
             // Update
-            let queryParams = [nome_area.trim(), lidId, subId, status, colabUp];
+            let queryParams = [nome_area.trim(), lidId, lid2Id, subId, status, grupo, staff, colabUp];
             let fileUpdateSql = "";
             
             if (arquivo_atribuicoes_base64) {
@@ -3273,7 +3499,7 @@ app.post('/api/estrutura_organizacional/save', async (req, res) => {
 
             await pool.query(
                 `UPDATE estrutura_organizacional 
-                 SET nome_area = ?, id_colaborador_lider = ?, subordinado_id_area = ?, status = ?, id_colaborador_atualiza = ?, atualizado_em = NOW() ${fileUpdateSql}
+                 SET nome_area = ?, id_colaborador_lider = ?, id_colaborador_lider_2 = ?, subordinado_id_area = ?, status = ?, grupo = ?, staff = ?, id_colaborador_atualiza = ?, atualizado_em = NOW() ${fileUpdateSql}
                  WHERE id_area = ?`,
                 queryParams
             );
@@ -3287,9 +3513,9 @@ app.post('/api/estrutura_organizacional/save', async (req, res) => {
 
             await pool.query(
                 `INSERT INTO estrutura_organizacional (
-                    id_area, nome_area, id_colaborador_lider, subordinado_id_area, status, criado_em, atualizado_em, id_colaborador_atualiza, nome_arquivo_atribuicoes, arquivo_atribuicoes
-                ) VALUES (?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?)`,
-                [nextId, nome_area.trim(), lidId, subId, status, colabUp, fileName, fileBuffer]
+                    id_area, nome_area, id_colaborador_lider, id_colaborador_lider_2, subordinado_id_area, status, grupo, staff, criado_em, atualizado_em, id_colaborador_atualiza, nome_arquivo_atribuicoes, arquivo_atribuicoes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?)`,
+                [nextId, nome_area.trim(), lidId, lid2Id, subId, status, grupo, staff, colabUp, fileName, fileBuffer]
             );
             savedId = nextId;
         }
@@ -3771,11 +3997,11 @@ app.get('/api/treinamentos/:id/participantes', async (req, res) => {
     const { id } = req.params;
     try {
         const query = `
-            SELECT tp.id, tp.id_treinamento, tp.id_colaborador AS colaborador_id, tp.id_colaborador, tp.presenca, c.apelido_colaborador, c.cidade
+            SELECT tp.id, tp.id_treinamento, tp.id_colaborador AS colaborador_id, tp.id_colaborador, tp.presenca, c.cod_colaborador, c.nome_colaborador, c.apelido_colaborador, c.cidade
             FROM treinamento_participantes tp
             INNER JOIN colaboradores c ON tp.id_colaborador = c.id_colaborador
             WHERE tp.id_treinamento = ?
-            ORDER BY c.apelido_colaborador ASC
+            ORDER BY c.nome_colaborador ASC
         `;
         const [rows] = await pool.query(query, [id]);
         res.json(rows);

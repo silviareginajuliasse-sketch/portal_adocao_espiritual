@@ -319,8 +319,12 @@
                     const sigla = c.sigla_estado || '';
                     const cidadeEst = [c.cidade, sigla].filter(Boolean).join(' - ');
                     
-                    // Format: id_colaborador - nome_colaborador - cidade - sigla_estado
-                    span.textContent = `${c.id_colaborador} - ${c.nome_colaborador}${cidadeEst ? ` - ${cidadeEst}` : ''}`;
+                    const colabCode = (c.cod_colaborador !== undefined && c.cod_colaborador !== null && c.cod_colaborador !== '')
+                        ? c.cod_colaborador
+                        : c.id_colaborador;
+                    
+                    // Format: cod_colaborador - nome_colaborador - cidade - sigla_estado
+                    span.textContent = `${colabCode} - ${c.nome_colaborador}${cidadeEst ? ` - ${cidadeEst}` : ''}`;
 
                     item.appendChild(checkbox);
                     item.appendChild(span);

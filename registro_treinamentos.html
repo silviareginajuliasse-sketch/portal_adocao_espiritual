@@ -754,15 +754,28 @@
 
         .participants-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px 20px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 16px;
             padding: 10px 0;
         }
 
         .participant-item {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 12px;
+            min-width: 0;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .participant-item:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .participant-avatar {
@@ -789,30 +802,37 @@
         }
 
         .participant-name {
-            color: #2e7d32;
-            font-weight: 500;
-            font-size: 1.05rem;
+            color: #334155;
+            font-weight: 400;
+            font-size: 0.9rem;
             flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .participant-name strong {
+            font-weight: 600;
+            color: #1e293b;
         }
 
         .participant-delete {
-            color: #777;
+            color: #94a3b8;
             cursor: pointer;
-            font-size: 1.1rem;
-            transition: color 0.2s;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            padding: 4px;
+            border-radius: 4px;
         }
 
         .participant-delete:hover {
-            color: var(--primary-red);
+            color: #ef4444;
+            background-color: #fee2e2;
         }
 
-        @media (max-width: 800px) {
-            .participants-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 500px) {
+        @media (max-width: 768px) {
             .participants-grid {
                 grid-template-columns: 1fr;
             }
@@ -1616,12 +1636,12 @@
         async function loadParticipantsList(id) {
             const listEl = document.getElementById('participants-list');
             if (!listEl) return;
-            listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; grid-column: span 3;">Carregando participantes...</div>';
+            listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; grid-column: 1 / -1;">Carregando participantes...</div>';
 
             try {
                 const response = await fetch(`${API_URL}/treinamentos/${id}/participantes`);
                 if (!response.ok) {
-                    listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e; grid-column: span 3;">Erro ao carregar participantes.</div>';
+                    listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e; grid-column: 1 / -1;">Erro ao carregar participantes.</div>';
                     return;
                 }
                 const participants = await response.json();
@@ -1631,7 +1651,7 @@
                 updateParticipantesTabState();
                 
                 if (participants.length === 0) {
-                    listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-style: italic; grid-column: span 3;">Nenhum participante registrado.</div>';
+                    listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #777; font-style: italic; grid-column: 1 / -1;">Nenhum participante registrado.</div>';
                     return;
                 }
 
@@ -1640,28 +1660,36 @@
                     item.className = 'participant-item';
 
                     const cidadeStr = p.cidade ? ` - ${p.cidade}` : '';
+                    const colabCode = (p.cod_colaborador !== undefined && p.cod_colaborador !== null && p.cod_colaborador !== '')
+                        ? p.cod_colaborador
+                        : p.colaborador_id;
+                    const colabName = p.nome_colaborador || p.apelido_colaborador || '';
 
                     let presenceHtml = '';
                     if (p.presenca === 'Concluído') {
-                        presenceHtml = `<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.1rem; flex-shrink: 0; margin-right: 5px;" title="Concluído"></i>`;
+                        presenceHtml = `<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.15rem; flex-shrink: 0;" title="Concluído"></i>`;
                     } else if (p.presenca === 'Não concluído') {
-                        presenceHtml = `<i class="fa-solid fa-circle-exclamation" style="color: #d35400; font-size: 1.1rem; flex-shrink: 0; margin-right: 5px;" title="Não concluído"></i>`;
+                        presenceHtml = `<i class="fa-solid fa-circle-exclamation" style="color: #d35400; font-size: 1.15rem; flex-shrink: 0;" title="Não concluído"></i>`;
                     } else if (p.presenca === 'Não participou') {
-                        presenceHtml = `<i class="fa-solid fa-circle-xmark" style="color: #c0392b; font-size: 1.1rem; flex-shrink: 0; margin-right: 5px;" title="Não participou"></i>`;
+                        presenceHtml = `<i class="fa-solid fa-circle-xmark" style="color: #c0392b; font-size: 1.15rem; flex-shrink: 0;" title="Não participou"></i>`;
+                    } else {
+                        presenceHtml = `<i class="fa-regular fa-circle" style="color: #cbd5e1; font-size: 1.15rem; flex-shrink: 0;" title="Pendente de confirmação"></i>`;
                     }
+
+                    const fullTitle = `${colabCode} - ${colabName}${cidadeStr}`;
 
                     item.innerHTML = `
                         ${presenceHtml}
-                        <i class="fa-regular fa-trash-can participant-delete" style="cursor: pointer; font-size: 1rem; flex-shrink: 0; margin-left: 5px; margin-right: 5px;" onclick="deleteParticipant(${p.id})"></i>
-                        <span class="participant-name" style="color: #333; font-weight: 500; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}">
-                            ${p.colaborador_id} - ${p.apelido_colaborador || ''}${cidadeStr}
+                        <span class="participant-name" title="${fullTitle}">
+                            <strong>${colabCode}</strong> - ${colabName}${cidadeStr}
                         </span>
+                        <i class="fa-regular fa-trash-can participant-delete" onclick="deleteParticipant(${p.id})" title="Remover participante"></i>
                     `;
                     listEl.appendChild(item);
                 });
             } catch (err) {
                 console.error('Erro ao listar participantes:', err);
-                listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e; grid-column: span 3;">Erro ao carregar participantes.</div>';
+                listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b1e1e; grid-column: 1 / -1;">Erro ao carregar participantes.</div>';
             }
         }
 

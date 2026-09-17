@@ -721,13 +721,16 @@
         /* Column widths on desktop */
         @media (min-width: 900px) {
             .col-status {
-                flex: 0 0 130px !important;
+                flex: 0 0 115px !important;
             }
             .col-tipo {
-                flex: 0 0 180px !important;
+                flex: 0 0 160px !important;
             }
             .col-parceira {
-                flex: 0 0 160px !important;
+                flex: 0 0 120px !important;
+            }
+            .col-data-implantacao {
+                flex: 0 0 145px !important;
             }
         }
 
@@ -772,7 +775,8 @@
             }
             .form-group.col-status,
             .form-group.col-tipo,
-            .form-group.col-parceira {
+            .form-group.col-parceira,
+            .form-group.col-data-implantacao {
                 width: 100% !important;
                 flex: 1 1 100% !important;
             }
@@ -980,14 +984,14 @@
         }
 
         .lideranca-table td.col-delete i {
-            color: #ccc;
+            color: #555;
             font-size: 1.1rem;
             cursor: pointer;
             transition: color 0.2s;
         }
 
         .lideranca-table td.col-delete i:hover {
-            color: var(--primary-red);
+            color: #333;
         }
 
         .lideranca-table td.col-info {
@@ -1268,12 +1272,15 @@
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-lideranca" onclick="switchTab(event, 'tab-lideranca')">
                             <i class="fa-solid fa-circle-user" style="color: #00bcd4;"></i> LIDERANÇA
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddLideranca()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-coordenadores" onclick="switchTab(event, 'tab-coordenadores')">
                             <i class="fa-solid fa-users" style="color: #f1c40f;"></i> COORDENADORES
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddCoordenador()" title="Adicionar Coordenador" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-obs" onclick="switchTab(event, 'tab-obs')">
                             <i class="fa-solid fa-clock-rotate-left" style="color: #9b59b6;"></i> HISTÓRICO DE RELACIONAMENTO
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddHistorico()" title="Adicionar Histórico" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                     </div>
 
@@ -1305,10 +1312,16 @@
                                 <div class="form-group col-parceira">
                                     <label class="form-label">Implantada <span>*</span></label>
                                     <div class="input-wrapper">
-                                        <select class="select-field" id="select-parceira" required>
+                                        <select class="select-field" id="select-parceira" required onchange="handleParceiraChange()">
                                             <!-- Dynamically populated -->
                                         </select>
                                         <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group col-data-implantacao">
+                                    <label class="form-label">Data implantação <span id="span-data-implantacao-req" style="display: none; color: var(--primary-red);">*</span></label>
+                                    <div class="input-wrapper">
+                                        <input type="text" class="input-field" id="input-data-implantacao" placeholder="99/99/9999" maxlength="10" oninput="maskDate(this)">
                                     </div>
                                 </div>
                                 <div class="metadata-container">
@@ -1448,13 +1461,6 @@
 
                         <!-- Tab Content: LIDERANÇA -->
                         <div id="tab-lideranca" class="tab-content">
-                            <div class="lideranca-header-row">
-                                <div class="lideranca-title-with-icon" onclick="openAddLideranca()" style="cursor: pointer;" title="Adicionar Liderança">
-                                    <img src="./arquidioceses-header-icon.png" class="lideranca-title-icon" alt="Icon">
-                                    Lideranças cadastradas
-                                </div>
-                            </div>
-
                             <!-- List of Lideranças in Table structure conforming to model -->
                             <div class="lideranca-table-container">
                                 <table class="lideranca-table">
@@ -1467,13 +1473,6 @@
 
                         <!-- Tab Content: COORDENADORES -->
                         <div id="tab-coordenadores" class="tab-content">
-                            <div class="lideranca-header-row">
-                                <div class="lideranca-title-with-icon" onclick="openAddCoordenador()" style="cursor: pointer;" title="Adicionar Coordenador">
-                                    <img src="./arquidioceses-header-icon.png" class="lideranca-title-icon" alt="Icon">
-                                    Coordenadores Adoção Espiritual
-                                </div>
-                            </div>
-
                             <!-- List of Coordenadores in Table structure conforming to model -->
                             <div class="lideranca-table-container">
                                 <table class="lideranca-table">
@@ -1486,13 +1485,6 @@
 
                         <!-- Tab Content: HISTÓRICO DE RELACIONAMENTO -->
                         <div id="tab-obs" class="tab-content">
-                            <div class="lideranca-header-row" style="margin-top: 25px;">
-                                <div class="lideranca-title-with-icon" onclick="openAddHistorico()" style="cursor: pointer;" title="Adicionar Histórico">
-                                    <img src="./arquidioceses-header-icon.png" class="lideranca-title-icon" alt="Icon">
-                                    Histórico de relacionamento
-                                </div>
-                            </div>
-
                             <div class="lideranca-table-container">
                                 <table class="lideranca-table">
                                     <thead>
@@ -1544,6 +1536,79 @@
                 input.value = value;
             }
         }
+
+        function maskDate(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 8) value = value.substring(0, 8);
+            if (value.length > 4) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2, 4) + '/' + value.substring(4);
+            } else if (value.length > 2) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2);
+            } else {
+                input.value = value;
+            }
+        }
+
+        function formatToYYYYMMDD(dateStr) {
+            if (!dateStr || !dateStr.trim()) return null;
+            const str = dateStr.trim();
+            if (str.includes('-')) return str;
+            const parts = str.split('/');
+            if (parts.length === 3 && parts[2].length === 4) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return str;
+        }
+
+        function formatDateToBR(dateStr) {
+            if (!dateStr || dateStr === '--') return '';
+            try {
+                if (dateStr.includes('T')) {
+                    dateStr = dateStr.split('T')[0];
+                }
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const year = parts[0];
+                    const month = parts[1];
+                    const day = parts[2].substring(0, 2);
+                    return `${day}/${month}/${year}`;
+                }
+                return dateStr;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function formatDateToISO(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return null;
+            const parts = dateStr.trim().split('/');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                if (day && month && year && year.length === 4) {
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            return null;
+        }
+
+        function handleParceiraChange() {
+            const selectParceira = document.getElementById('select-parceira');
+            if (!selectParceira) return;
+            const parceiraVal = selectParceira.value;
+            const reqSpan = document.getElementById('span-data-implantacao-req');
+            const inputData = document.getElementById('input-data-implantacao');
+            if (parceiraVal === 'Sim') {
+                if (reqSpan) reqSpan.style.display = 'inline';
+                if (inputData) inputData.setAttribute('required', 'true');
+            } else {
+                if (reqSpan) reqSpan.style.display = 'none';
+                if (inputData) inputData.removeAttribute('required');
+            }
+        }
+
+        const handleImplantadaChange = handleParceiraChange;
 
         async function loadCountries() {
             try {
@@ -1677,6 +1742,23 @@
             const id_divisao_arquidiocesana = document.getElementById('select-divisao').value;
             const tipo = document.getElementById('select-tipo').value;
             const parceira = document.getElementById('select-parceira').value;
+            const implantada = parceira;
+            const rawDataImplantacao = document.getElementById('input-data-implantacao')?.value.trim() || '';
+
+            if (parceira === 'Sim' || implantada === 'Sim') {
+                if (!rawDataImplantacao) {
+                    alert('O campo Data implantação é de preenchimento obrigatório quando Implantada = Sim.');
+                    document.getElementById('input-data-implantacao')?.focus();
+                    return;
+                }
+                if (rawDataImplantacao.length < 10) {
+                    alert('Por favor, informe uma Data implantação válida no formato DD/MM/AAAA.');
+                    document.getElementById('input-data-implantacao')?.focus();
+                    return;
+                }
+            }
+
+            const data_implantacao = formatDateToISO(rawDataImplantacao);
             
             const nome_paroquia = document.getElementById('input-nome').value.trim();
             const endereco = document.getElementById('input-endereco').value.trim();
@@ -1689,7 +1771,7 @@
 
             const cep = document.getElementById('input-cep').value.trim();
 
-            if (!id_pais || !id_estado || !id_regional || !id_arquidiocese || !nome_paroquia || !endereco || !cidade || !cep || !tipo || !parceira) {
+            if (!id_pais || !id_estado || !id_regional || !id_arquidiocese || !nome_paroquia || !endereco || !cidade || !cep || !tipo || (!parceira && !implantada)) {
                 alert('Por favor, preencha todos os campos obrigatórios (*).');
                 return;
             }
@@ -1711,7 +1793,9 @@
                 id_estado,
                 status: status.toLowerCase(),
                 tipo,
+                implantada,
                 parceira,
+                data_implantacao,
                 latitude: latitude ? parseFloat(latitude.replace(',', '.')) : null,
                 longitude: longitude ? parseFloat(longitude.replace(',', '.')) : null,
                 site: site || '',
@@ -1783,8 +1867,11 @@
 
         async function loadParceiraOptions() {
             try {
-                const response = await fetch(`${API_URL}/paroquias/parceiras`);
-                if (!response.ok) throw new Error('Falha ao buscar opções de parceira');
+                let response = await fetch(`${API_URL}/paroquias/implantadas`);
+                if (!response.ok) {
+                    response = await fetch(`${API_URL}/paroquias/parceiras`);
+                }
+                if (!response.ok) throw new Error('Falha ao buscar opções de implantada');
                 const options = await response.json();
                 const select = document.getElementById('select-parceira');
                 if (!select) return;
@@ -1796,8 +1883,9 @@
                     select.appendChild(option);
                 });
                 select.value = 'Não';
+                handleParceiraChange();
             } catch (err) {
-                console.error("Erro ao carregar opções de parceira:", err);
+                console.error("Erro ao carregar opções de implantada:", err);
             }
         }
 
@@ -1906,9 +1994,16 @@
                 if (paroquia.tipo) {
                     document.getElementById('select-tipo').value = paroquia.tipo;
                 }
-                if (paroquia.parceira) {
-                    document.getElementById('select-parceira').value = paroquia.parceira;
+                const valImplantada = paroquia.implantada || paroquia.parceira;
+                if (valImplantada) {
+                    document.getElementById('select-parceira').value = valImplantada;
                 }
+                if (paroquia.data_implantacao) {
+                    document.getElementById('input-data-implantacao').value = formatDateToBR(paroquia.data_implantacao);
+                } else {
+                    document.getElementById('input-data-implantacao').value = '';
+                }
+                handleParceiraChange();
                 document.getElementById('input-nome').value = paroquia.nome_paroquia || '';
                 document.getElementById('input-cidade').value = paroquia.cidade || '';
 
@@ -2101,7 +2196,53 @@
             });
         }
 
+        function extractId(val) {
+            if (val === null || val === undefined) return null;
+            let curr = val;
+            while (typeof curr === 'object' && curr !== null) {
+                if (curr.id_colaborador !== undefined) curr = curr.id_colaborador;
+                else if (curr.id !== undefined) curr = curr.id;
+                else break;
+            }
+            const num = parseInt(curr, 10);
+            return isNaN(num) ? null : num;
+        }
+
         // --- Coordinators State Management ---
+        async function updateCoordinatorDate(index, field, val) {
+            let list = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
+            if (!list[index]) return;
+
+            const formattedVal = formatToYYYYMMDD(val);
+            list[index][field] = formattedVal;
+            
+            localStorage.setItem('temp_paroquia_coordenadores', JSON.stringify(list));
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const parId = urlParams.get('id');
+
+            const isCompleteOrEmpty = !val || val.length === 0 || val.length === 10;
+            if (parId && isCompleteOrEmpty) {
+                try {
+                    const payload = {
+                        id_paroquia: parseInt(parId, 10),
+                        coordenadores: list.map(c => ({
+                            id_colaborador: extractId(c.id_colaborador),
+                            data_inicio_coordenador: c.data_inicio_coordenador || null,
+                            data_fim_coordenador: c.data_fim_coordenador || null
+                        })).filter(c => c.id_colaborador !== null)
+                    };
+                    await fetch(`${API_URL}/paroquia_coordenadores/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (err) {
+                    console.error("Erro ao atualizar data do coordenador no banco:", err);
+                }
+            }
+        }
+
         function displayCoordenadores() {
             const tbody = document.getElementById('coordenadores-tbody');
             if (!tbody) return;
@@ -2120,15 +2261,32 @@
                 return;
             }
 
+            const formatToDDMMYYYY = (isoStr) => {
+                if (!isoStr) return '';
+                if (isoStr.includes('/')) return isoStr;
+                const date = new Date(isoStr);
+                if (isNaN(date.getTime())) return isoStr;
+                const day = String(date.getUTCDate()).padStart(2, '0');
+                const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                const year = date.getUTCFullYear();
+                return `${day}/${month}/${year}`;
+            };
+
             list.forEach((coord, idx) => {
                 const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.onclick = () => editCoordenador(idx);
+
+                const dtInicio = formatToDDMMYYYY(coord.data_inicio_coordenador);
+                const dtFim = formatToDDMMYYYY(coord.data_fim_coordenador);
+
                 tr.innerHTML = `
                     <td class="col-delete" onclick="event.stopPropagation(); deleteCoordenador(${idx})">
                         <i class="fa-regular fa-trash-can"></i>
                     </td>
                     <td class="col-info">
-                        <div style="font-size: 0.92rem; color: #333; line-height: 1.4;">
-                            <strong>${coord.nome_colaborador}</strong>
+                        <div style="font-size: 0.95rem; color: #333; font-weight: normal; line-height: 1.4;">
+                            ${coord.nome_colaborador} - Início coordenação: ${dtInicio} - Fim coordenação: ${dtFim}
                         </div>
                     </td>
                 `;
@@ -2186,28 +2344,38 @@
             const nomeUser = urlParams.get('nome') || '';
             const cpfUser = urlParams.get('cpf') || '';
             const parId = id ? `&id_paroquia=${id}` : '';
-            window.location.href = `popup_colaboradores_ae.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}${parId}`;
+            const arqId = document.getElementById('select-arquidiocese')?.value || '';
+            const arqParam = arqId ? `&id_arquidiocese=${arqId}` : '';
+            window.location.href = `popup_colaboradores_ae.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}${parId}${arqParam}`;
+        }
+
+        function editCoordenador(index) {
+            saveParentFormState();
+            localStorage.setItem('temp_paroquia_active_tab', 'tab-coordenadores');
+            const list = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
+            const coord = list[index];
+            if (!coord) return;
+
+            const colabId = extractId(coord.id_colaborador);
+            const nomeUser = urlParams.get('nome') || '';
+            const cpfUser = urlParams.get('cpf') || '';
+            const parId = id ? `&id_paroquia=${id}` : '';
+            const arqId = document.getElementById('select-arquidiocese')?.value || '';
+            const arqParam = arqId ? `&id_arquidiocese=${arqId}` : '';
+            const colabParam = colabId ? `&edit_colab_id=${colabId}` : '';
+
+            window.location.href = `popup_colaboradores_ae.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}${parId}${arqParam}${colabParam}`;
         }
 
         async function deleteCoordenador(index) {
             if (confirm("Deseja realmente remover este coordenador?")) {
                 const list = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
                 const coord = list[index];
-                if (coord && coord.id_colaborador && id) {
+                const colabId = coord ? extractId(coord.id_colaborador) : null;
+                if (colabId && id) {
                     try {
-                        const updatedCoordenadores = list
-                            .filter((_, idx) => idx !== index)
-                            .map(c => c.id_colaborador);
-                        
-                        const payload = {
-                            id_paroquia: parseInt(id),
-                            coordenadores: updatedCoordenadores
-                        };
-                        
-                        const response = await fetch(`${API_URL}/paroquia_coordenadores/save`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
+                        const response = await fetch(`${API_URL}/paroquia_coordenadores?id_paroquia=${id}&id_colaborador=${colabId}`, {
+                            method: 'DELETE'
                         });
                         
                         const res = await response.json();
@@ -2241,6 +2409,7 @@
                 status: document.getElementById('select-status').value,
                 tipo: document.getElementById('select-tipo').value,
                 parceira: document.getElementById('select-parceira').value,
+                data_implantacao: document.getElementById('input-data-implantacao')?.value || '',
                 countryId: document.getElementById('select-pais').value,
                 stateId: document.getElementById('select-estado').value,
                 regionalId: document.getElementById('select-regional').value,
@@ -2274,6 +2443,10 @@
                     if (state.parceira) {
                         document.getElementById('select-parceira').value = state.parceira;
                     }
+                    if (state.data_implantacao !== undefined) {
+                        document.getElementById('input-data-implantacao').value = state.data_implantacao || '';
+                    }
+                    handleParceiraChange();
                     
                     if (state.countryId) {
                         document.getElementById('select-pais').value = state.countryId;
@@ -2368,7 +2541,9 @@
                 const formattedCoordenadores = dbCoordenadores.map(item => ({
                     id_colaborador: item.id_colaborador,
                     nome_colaborador: item.nome_colaborador,
-                    status: item.status
+                    status: item.status,
+                    data_inicio_coordenador: item.data_inicio_coordenador,
+                    data_fim_coordenador: item.data_fim_coordenador
                 }));
                 localStorage.setItem('temp_paroquia_coordenadores', JSON.stringify(formattedCoordenadores));
                 displayCoordenadores();
@@ -2619,12 +2794,9 @@
             const saveBtn = document.getElementById('btn-save');
             
             if (deleteBtn && saveBtn) {
-                if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') {
+                if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores' || tabId === 'tab-obs') {
                     deleteBtn.style.display = 'none';
                     saveBtn.style.display = 'none';
-                } else if (tabId === 'tab-obs') {
-                    deleteBtn.style.display = 'none';
-                    saveBtn.style.display = 'inline-block';
                 } else { // tab-identificacao
                     deleteBtn.style.display = mode === 'new' ? 'none' : 'inline-block';
                     saveBtn.style.display = 'inline-block';

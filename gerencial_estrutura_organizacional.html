@@ -629,6 +629,22 @@
             display: none;
         }
 
+        /* Card with no leader style updates */
+        .org-card.no-leader {
+            background: #f8f9fa;
+            border-color: #bdc1c6;
+        }
+        .org-card.no-leader::before {
+            border-color: #bdc1c6;
+        }
+        .org-card.no-leader .org-avatar {
+            background-color: #e8eaed !important;
+            border-color: #bdc1c6;
+        }
+        .org-card.no-leader .org-avatar-initials {
+            color: #80868b !important;
+        }
+
         .org-avatar {
             width: 44px; /* Previous avatar size */
             height: 44px; /* Previous avatar size */
@@ -990,11 +1006,24 @@
             nodes.forEach(node => {
                 const li = document.createElement('li');
                 
+                // Check if has leader
+                const hasLeader = (node.nome_lider && node.id_colaborador_lider !== 0) || (node.nome_lider_2 && node.id_colaborador_lider_2 !== 0);
+
                 // Get leader initials pair color
                 const initialsInfo = getInitialsAndColors(node.apelido_lider || node.nome_lider);
                 
                 // Leader name fallback
-                const leaderName = node.apelido_lider || node.nome_lider || 'Sem líder';
+                let leaderName = '';
+                if (hasLeader) {
+                    leaderName = node.apelido_lider || node.nome_lider || '';
+                    if (node.apelido_lider_2 || node.nome_lider_2) {
+                        if (leaderName) {
+                            leaderName += ` / ${node.apelido_lider_2 || node.nome_lider_2}`;
+                        } else {
+                            leaderName = node.apelido_lider_2 || node.nome_lider_2;
+                        }
+                    }
+                }
                 
                 // Status mapping
                 const normStatusArea = (node.status || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -1004,7 +1033,7 @@
 
                 // Photo URL parsing
                 let avatarHtml = '';
-                if (node.foto_lider && node.foto_lider.trim() !== '') {
+                if (hasLeader && node.foto_lider && node.foto_lider.trim() !== '') {
                     const cleanFoto = node.foto_lider.replace(/[\r\n\s]+/g, '');
                     const safeName = (leaderName).replace(/'/g, "\\'");
                     avatarHtml = `<img src="${cleanFoto}" alt="Foto" onerror="handleAvatarError(this, '${safeName}')" />`;
@@ -1028,10 +1057,10 @@
 
                 // Render card
                 const cardDiv = document.createElement('div');
-                cardDiv.className = 'org-card';
+                cardDiv.className = 'org-card' + (!hasLeader ? ' no-leader' : '');
                 cardDiv.innerHTML = `
                     ${statusBadge}
-                    <div class="org-avatar" style="${!node.foto_lider ? `background-color: ${initialsInfo.bg}` : ''}">
+                    <div class="org-avatar" style="${(!node.foto_lider || !hasLeader) ? `background-color: ${initialsInfo.bg}` : ''}">
                         ${avatarHtml}
                     </div>
                     <div class="org-info">

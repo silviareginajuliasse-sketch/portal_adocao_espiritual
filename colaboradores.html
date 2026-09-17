@@ -1172,7 +1172,7 @@
 
                     listItem.onclick = function() { window.location.href = 'registro_colaboradores.html?id=' + c.id_colaborador; };
                     const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
-                    const trashHtml = isAdmin ? `<i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #e74c3c;"></i>` : '';
+                    const trashHtml = isAdmin ? `<i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #555;"></i>` : '';
                     listItem.innerHTML = `
                         ${trashHtml}
                         <div class="selo-col" style="width: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">

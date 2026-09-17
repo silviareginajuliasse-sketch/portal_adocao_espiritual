@@ -784,9 +784,9 @@
             <div class="form-grid">
                 <!-- Left Column -->
                 <div class="form-left-col">
-                    <!-- Status & Lider -->
+                    <!-- Status, Grupo sem Liderança & Área Staff -->
                     <div class="form-row">
-                        <div class="form-group" style="flex: 0 0 180px;">
+                        <div class="form-group">
                             <label class="form-label">Status <span>*</span></label>
                             <select id="select-status" class="form-control">
                                 <option value="Ativo">Ativo</option>
@@ -794,11 +794,38 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">Grupo sem liderança? <span>*</span></label>
+                            <select id="select-grupo-sem-lideranca" class="form-control">
+                                <option value="Não" selected>Não</option>
+                                <option value="Sim">Sim</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Área staff? <span>*</span></label>
+                            <select id="select-area-staff" class="form-control">
+                                <option value="Não" selected>Não</option>
+                                <option value="Sim">Sim</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Líder 1 & Líder 2 -->
+                    <div class="form-row">
+                        <div class="form-group">
                             <label class="form-label">
-                                Lider <span>*</span> 
-                                <i class="fa-solid fa-magnifying-glass" style="margin-left: 5px; cursor: pointer; font-size: 0.8rem;" onclick="openLiderPopup()"></i>
+                                Líder 1 <span id="asterisk-lider-1">*</span> 
+                                <i class="fa-solid fa-magnifying-glass" style="margin-left: 5px; cursor: pointer; font-size: 0.8rem;" onclick="openLiderPopup('input-lider')" title="Selecionar Líder 1"></i>
+                                <i class="fa-solid fa-xmark" style="margin-left: 8px; cursor: pointer; font-size: 0.8rem; color: #b25e5e; display: none;" id="clear-lider-1" onclick="clearLider1()" title="Remover Líder 1"></i>
                             </label>
                             <input type="text" id="input-lider" class="form-control" readonly placeholder="" style="cursor: default;" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Lider 2 
+                                <i class="fa-solid fa-magnifying-glass" style="margin-left: 5px; cursor: pointer; font-size: 0.8rem;" onclick="openLiderPopup('input-lider-2')" title="Selecionar Líder 2"></i>
+                                <i class="fa-solid fa-xmark" style="margin-left: 8px; cursor: pointer; font-size: 0.8rem; color: #b25e5e; display: none;" id="clear-lider-2" onclick="clearLider2()" title="Remover Líder 2"></i>
+                            </label>
+                            <input type="text" id="input-lider-2" class="form-control" readonly placeholder="" style="cursor: default;" />
                         </div>
                     </div>
 
@@ -904,6 +931,14 @@
                 if (metaPor) metaPor.textContent = savedName;
             }
 
+            // Add listener for Grupo sem liderança changes
+            const selectGrupo = document.getElementById('select-grupo-sem-lideranca');
+            if (selectGrupo) {
+                selectGrupo.addEventListener('change', function () {
+                    updateLider1Requirements();
+                });
+            }
+
             // Load options for Subordinado a select from database
             await loadSubordinadoOptions();
 
@@ -915,6 +950,7 @@
             } else {
                 // In inclusion mode, hide delete button
                 document.getElementById('btn-delete').style.display = 'none';
+                updateLider1Requirements();
             }
         };
 
@@ -932,14 +968,7 @@
                     console.warn('Erro ao carregar áreas da API, usando dados mockados.', err);
                 }
 
-                if (!areas || areas.length === 0) {
-                    // Fallback mock data to ensure dropdown works in offline/static mockup tests
-                    areas = [
-                        { id_area: 1, nome_area: 'Coordenação Nacional', apelido_lider: 'Silvia Juliasse', status: 'Ativo' },
-                        { id_area: 2, nome_area: 'Paróquia São José', apelido_lider: 'Moacyr Caparroz', status: 'Ativo' },
-                        { id_area: 3, nome_area: 'Diretoria Executiva', apelido_lider: 'Ana Paula', status: 'Ativo' }
-                    ];
-                }
+
 
                 const select = document.getElementById('select-subordinado');
                 select.innerHTML = '<option value=""></option>';
@@ -979,11 +1008,20 @@
                 const area = await fetchData(`estrutura_organizacional/${id}`);
                 if (area) {
                     document.getElementById('select-status').value = area.status;
+                    document.getElementById('select-grupo-sem-lideranca').value = area.grupo || 'Não';
+                    document.getElementById('select-area-staff').value = area.staff || 'Não';
                     document.getElementById('input-nome-area').value = area.nome_area;
                     
                     const inputLider = document.getElementById('input-lider');
                     inputLider.value = area.nome_lider || '';
-                    inputLider.setAttribute('data-id', area.id_colaborador_lider);
+                    inputLider.setAttribute('data-id', area.id_colaborador_lider || '0');
+
+                    const inputLider2 = document.getElementById('input-lider-2');
+                    if (inputLider2) {
+                        inputLider2.value = area.nome_lider_2 || '';
+                        inputLider2.setAttribute('data-id', area.id_colaborador_lider_2 || '0');
+                        updateClearLider2Icon();
+                    }
 
                     document.getElementById('select-subordinado').value = area.subordinado_id_area || '';
                     
@@ -998,6 +1036,9 @@
                         document.getElementById('upload-filename-label').innerHTML = `Atribuições da área: ${area.nome_arquivo_atribuicoes} <a href="${API_URL}/estrutura_organizacional/${id}/documento" target="_blank" style="margin-left: 8px; color: var(--btn-blue); text-decoration: underline; font-weight: 600;"><i class="fa-solid fa-file-pdf"></i> Visualizar</a>`;
                         document.getElementById('upload-status-text').textContent = 'Alterar arquivo';
                     }
+
+                    // Set Leader 1 optional status and icons correctly
+                    updateLider1Requirements();
                 }
             } catch (err) {
                 console.error('Erro ao carregar dados da área:', err);
@@ -1008,9 +1049,13 @@
         async function saveArea() {
             const nomeArea = document.getElementById('input-nome-area').value.trim();
             const inputLider = document.getElementById('input-lider');
-            const liderId = inputLider ? inputLider.getAttribute('data-id') : null;
+            const liderId = inputLider ? inputLider.getAttribute('data-id') : '0';
+            const inputLider2 = document.getElementById('input-lider-2');
+            const lider2Id = inputLider2 ? inputLider2.getAttribute('data-id') : '0';
             const subordinadoId = document.getElementById('select-subordinado').value;
             const status = document.getElementById('select-status').value;
+            const grupo = document.getElementById('select-grupo-sem-lideranca').value;
+            const staff = document.getElementById('select-area-staff').value;
             const userId = localStorage.getItem('user_id_colaborador') || null;
 
             // Client-side validation
@@ -1018,8 +1063,16 @@
                 alert('Por favor, selecione o Status.');
                 return;
             }
-            if (!liderId) {
-                alert('Por favor, selecione o Líder.');
+            if (!grupo) {
+                alert('Por favor, selecione se é Grupo sem liderança.');
+                return;
+            }
+            if (!staff) {
+                alert('Por favor, selecione se é Área staff.');
+                return;
+            }
+            if (grupo === 'Não' && (!liderId || liderId === '0')) {
+                alert('Por favor, selecione o Líder 1.');
                 return;
             }
             if (!nomeArea) {
@@ -1031,8 +1084,11 @@
                 id: mode === 'edit' ? parseInt(id) : null,
                 nome_area: nomeArea,
                 id_colaborador_lider: parseInt(liderId),
+                id_colaborador_lider_2: lider2Id ? parseInt(lider2Id) : 0,
                 subordinado_id_area: subordinadoId ? parseInt(subordinadoId) : null,
                 status: status,
+                grupo: grupo,
+                staff: staff,
                 id_colaborador_atualiza: userId ? parseInt(userId) : null,
                 nome_arquivo_atribuicoes: uploadedFileName,
                 arquivo_atribuicoes_base64: uploadedFileBase64
@@ -1047,7 +1103,7 @@
                     alert('Erro ao salvar: ' + (response.error || 'Erro desconhecido'));
                 }
             } catch (err) {
-                alert('Erro ao conectar com a API para salvar.');
+                alert('Erro ao salvar: ' + err.message);
             }
         }
 
@@ -1073,7 +1129,7 @@
                     }
                 }
             } catch (err) {
-                alert('Erro ao conectar com a API para excluir.');
+                alert('Erro ao excluir: ' + err.message);
             }
         }
 
@@ -1111,8 +1167,11 @@
             }
         }
 
+        let activeLiderInputId = 'input-lider';
+
         // Lider selection modal controllers
-        function openLiderPopup() {
+        function openLiderPopup(targetId) {
+            activeLiderInputId = targetId || 'input-lider';
             const iframe = document.getElementById('lider-modal-iframe');
             const overlay = document.getElementById('lider-modal-overlay');
             iframe.src = 'popup_colaboradores_ae.html?select_lider=true';
@@ -1127,16 +1186,79 @@
             overlay.style.display = 'none';
         }
 
+        // Clear leader 1
+        function clearLider1() {
+            const inputLider = document.getElementById('input-lider');
+            if (inputLider) {
+                inputLider.value = '';
+                inputLider.setAttribute('data-id', '0');
+            }
+            const clearIcon = document.getElementById('clear-lider-1');
+            if (clearIcon) clearIcon.style.display = 'none';
+        }
+
+        function updateClearLider1Icon() {
+            const inputLider = document.getElementById('input-lider');
+            const clearIcon = document.getElementById('clear-lider-1');
+            const isSemLideranca = document.getElementById('select-grupo-sem-lideranca').value === 'Sim';
+            if (inputLider && clearIcon) {
+                const val = inputLider.getAttribute('data-id');
+                if (val && val !== '0' && isSemLideranca) {
+                    clearIcon.style.display = 'inline-block';
+                } else {
+                    clearIcon.style.display = 'none';
+                }
+            }
+        }
+
+        // Clear optional leader 2
+        function clearLider2() {
+            const inputLider2 = document.getElementById('input-lider-2');
+            if (inputLider2) {
+                inputLider2.value = '';
+                inputLider2.setAttribute('data-id', '0');
+            }
+            const clearIcon = document.getElementById('clear-lider-2');
+            if (clearIcon) clearIcon.style.display = 'none';
+        }
+
+        function updateClearLider2Icon() {
+            const inputLider2 = document.getElementById('input-lider-2');
+            const clearIcon = document.getElementById('clear-lider-2');
+            if (inputLider2 && clearIcon) {
+                const val = inputLider2.getAttribute('data-id');
+                if (val && val !== '0') {
+                    clearIcon.style.display = 'inline-block';
+                } else {
+                    clearIcon.style.display = 'none';
+                }
+            }
+        }
+
+        function updateLider1Requirements() {
+            const isSemLideranca = document.getElementById('select-grupo-sem-lideranca').value === 'Sim';
+            const asterisk = document.getElementById('asterisk-lider-1');
+            if (asterisk) {
+                asterisk.style.display = isSemLideranca ? 'none' : 'inline';
+            }
+            updateClearLider1Icon();
+        }
+
         // Listen for postMessages from the popup iframe
         window.addEventListener('message', function (event) {
             if (event.data && event.data.action) {
                 if (event.data.action === 'close') {
                     closeLiderPopup();
                 } else if (event.data.action === 'selectLider') {
-                    const inputLider = document.getElementById('input-lider');
-                    if (inputLider) {
-                        inputLider.value = event.data.nome_colaborador;
-                        inputLider.setAttribute('data-id', event.data.id_colaborador);
+                    const targetInput = document.getElementById(activeLiderInputId);
+                    if (targetInput) {
+                        targetInput.value = event.data.nome_colaborador;
+                        targetInput.setAttribute('data-id', event.data.id_colaborador);
+                        if (activeLiderInputId === 'input-lider') {
+                            updateClearLider1Icon();
+                        } else if (activeLiderInputId === 'input-lider-2') {
+                            updateClearLider2Icon();
+                        }
                     }
                     closeLiderPopup();
                 }
