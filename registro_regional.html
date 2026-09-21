@@ -499,6 +499,122 @@
             pointer-events: none;
         }
 
+        /* Tabs Navigation Styles */
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-red);
+        }
+
+        .tab-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tab-btn:disabled:hover {
+            background-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Coordenadores Table Styles */
+        .lideranca-table-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+            margin-bottom: 25px;
+        }
+
+        .lideranca-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .lideranca-table tr {
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .lideranca-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .lideranca-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .lideranca-table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+
+        .lideranca-table td.col-delete {
+            width: 50px;
+            text-align: center;
+            border-right: 1px solid #eee;
+            padding: 12px;
+        }
+
+        .lideranca-table td.col-delete i {
+            color: #555;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .lideranca-table td.col-delete i:hover {
+            color: #333;
+        }
+
+        .lideranca-table td.col-info {
+            flex-grow: 1;
+        }
+
         /* Metadata Columns alignment */
         .metadata-container {
             display: flex;
@@ -740,67 +856,93 @@
             </div>
 
             <div class="title-divider"></div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs-container">
+                <button type="button" class="tab-btn active" onclick="switchTab(event, 'tab-identificacao')">
+                    <i class="fa-solid fa-globe"></i> IDENTIFICAÇÃO
+                </button>
+                <button type="button" class="tab-btn" id="tab-btn-coordenadores" onclick="switchTab(event, 'tab-coordenadores')">
+                    <i class="fa-solid fa-users" style="color: #f1c40f;"></i> COORDENADORES
+                    <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddCoordenador()" title="Adicionar Coordenador" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                </button>
+            </div>
+
             <form id="regional-form">
-                <!-- Row 1: Status, País, Nome da Regional, Metadata -->
-                <div class="form-row" style="align-items: flex-start;">
-                    <div class="form-group" style="flex: 0 0 130px; min-width: 110px;">
-                        <label class="form-label" for="status">Status <span style="color: var(--primary-red);">*</span></label>
-                        <div class="input-wrapper">
-                            <select id="status" class="select-field" required>
-                                <option value="Ativo" selected>Ativo</option>
-                                <option value="Inativo">Inativo</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down select-icon"></i>
-                        </div>
-                    </div>
-                    <div class="form-group" style="flex: 0 0 190px; min-width: 160px;">
-                        <label class="form-label" for="pais">País <span style="color: var(--primary-red);">*</span></label>
-                        <div class="input-wrapper">
-                            <select id="pais" class="select-field" required onchange="handlePaisChange()">
-                                <option value="" disabled selected>Selecione o país</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down select-icon"></i>
-                        </div>
-                    </div>
-                    <div class="form-group" style="flex: 2; min-width: 250px;">
-                        <label class="form-label" for="nome_regional">Nome da Regional <span style="color: var(--primary-red);">*</span></label>
-                        <input type="text" id="nome_regional" class="input-field" required maxlength="50" placeholder="Ex: REGIONAL NORTE I">
-                    </div>
-                    
-                    <!-- Metadata Container -->
-                    <div class="metadata-container">
-                        <div class="metadata-group">
-                            <label class="form-label">Incluído em</label>
-                            <span class="metadata-value" id="metadata-criado">--</span>
-                        </div>
-                        <div class="metadata-group">
-                            <label class="form-label">Atualizado em</label>
-                            <span class="metadata-value" id="metadata-atualizado">--</span>
-                        </div>
-                        <div class="metadata-group">
-                            <label class="form-label">Por</label>
-                            <span class="metadata-value" id="metadata-por">--</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Row 2: Observação -->
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label class="form-label" for="observacao">Observação</label>
-                        <input type="text" id="observacao" class="input-field" maxlength="255" placeholder="Insira observações se houver">
-                    </div>
-                </div>
-
-                <!-- Row 3: Estados Vinculados Grid Checkboxes -->
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label class="form-label">Estados Vinculados <span style="color: var(--primary-red);">*</span></label>
-                        <div class="states-container">
-                            <div id="states-list" class="states-grid">
-                                <!-- Dynamic checkboxes injected here -->
+                <!-- Tab Content: IDENTIFICAÇÃO -->
+                <div id="tab-identificacao" class="tab-content active">
+                    <!-- Row 1: Status, País, Nome da Regional, Metadata -->
+                    <div class="form-row" style="align-items: flex-start;">
+                        <div class="form-group" style="flex: 0 0 130px; min-width: 110px;">
+                            <label class="form-label" for="status">Status <span style="color: var(--primary-red);">*</span></label>
+                            <div class="input-wrapper">
+                                <select id="status" class="select-field" required>
+                                    <option value="Ativo" selected>Ativo</option>
+                                    <option value="Inativo">Inativo</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
                             </div>
                         </div>
+                        <div class="form-group" style="flex: 0 0 190px; min-width: 160px;">
+                            <label class="form-label" for="pais">País <span style="color: var(--primary-red);">*</span></label>
+                            <div class="input-wrapper">
+                                <select id="pais" class="select-field" required onchange="handlePaisChange()">
+                                    <option value="" disabled selected>Selecione o país</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex: 2; min-width: 250px;">
+                            <label class="form-label" for="nome_regional">Nome da Regional <span style="color: var(--primary-red);">*</span></label>
+                            <input type="text" id="nome_regional" class="input-field" required maxlength="50" placeholder="Ex: REGIONAL NORTE I">
+                        </div>
+                        
+                        <!-- Metadata Container -->
+                        <div class="metadata-container">
+                            <div class="metadata-group">
+                                <label class="form-label">Incluído em</label>
+                                <span class="metadata-value" id="metadata-criado">--</span>
+                            </div>
+                            <div class="metadata-group">
+                                <label class="form-label">Atualizado em</label>
+                                <span class="metadata-value" id="metadata-atualizado">--</span>
+                            </div>
+                            <div class="metadata-group">
+                                <label class="form-label">Por</label>
+                                <span class="metadata-value" id="metadata-por">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Observação -->
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label class="form-label" for="observacao">Observação</label>
+                            <input type="text" id="observacao" class="input-field" maxlength="255" placeholder="Insira observações se houver">
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Estados Vinculados Grid Checkboxes -->
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label class="form-label">Estados Vinculados <span style="color: var(--primary-red);">*</span></label>
+                            <div class="states-container">
+                                <div id="states-list" class="states-grid">
+                                    <!-- Dynamic checkboxes injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: COORDENADORES -->
+                <div id="tab-coordenadores" class="tab-content">
+                    <div class="lideranca-table-container">
+                        <table class="lideranca-table">
+                            <tbody id="coordenadores-tbody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -1046,6 +1188,7 @@
                 });
 
                 if (result.success) {
+                    localStorage.removeItem('temp_regional_coordenadores');
                     alert('Dados salvos com sucesso!');
                     const nomeParam = urlParams.get('nome') || '';
                     const cpfParam = urlParams.get('cpf') || '';
@@ -1085,11 +1228,244 @@
             }
         }
 
+        // --- Switch Tabs logic ---
+        function switchTab(event, tabId) {
+            if (tabId === 'tab-coordenadores' && (!id || mode !== 'edit')) {
+                alert("Por favor, grave os dados da aba IDENTIFICAÇÃO primeiro.");
+                return;
+            }
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            } else {
+                const btn = tabId === 'tab-coordenadores'
+                    ? document.getElementById('tab-btn-coordenadores')
+                    : Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
+                if (btn) btn.classList.add('active');
+            }
+            document.getElementById(tabId).classList.add('active');
+
+            const submitBtn = document.querySelector('.submit-btn');
+            if (submitBtn) {
+                if (tabId === 'tab-coordenadores') {
+                    submitBtn.style.display = 'none';
+                } else {
+                    submitBtn.style.display = 'block';
+                }
+            }
+        }
+
+        // --- Coordinator State Management ---
+        function extractId(val) {
+            if (val === null || val === undefined) return null;
+            let curr = val;
+            while (typeof curr === 'object' && curr !== null) {
+                if (curr.id_colaborador !== undefined) curr = curr.id_colaborador;
+                else if (curr.id !== undefined) curr = curr.id;
+                else break;
+            }
+            const num = parseInt(curr, 10);
+            return isNaN(num) ? null : num;
+        }
+
+        function formatToDDMMYYYY(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('/')) return dateStr;
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const year = date.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        async function fetchCoordenadores(id_regional) {
+            try {
+                const response = await fetch(`${API_URL}/regionais/${id_regional}/coordenadores`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const formattedCoordenadores = data.map(item => ({
+                        id_colaborador: item.id_colaborador,
+                        nome_colaborador: item.nome_colaborador,
+                        status: item.status,
+                        data_inicio_coordenador: item.data_inicio_coordenador,
+                        data_fim_coordenador: item.data_fim_coordenador
+                    }));
+                    localStorage.setItem('temp_regional_coordenadores', JSON.stringify(formattedCoordenadores));
+                    displayCoordenadores();
+                }
+            } catch (err) {
+                console.error("Erro ao carregar coordenadores da regional:", err);
+            }
+        }
+
+        function displayCoordenadores() {
+            const tbody = document.getElementById('coordenadores-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let list = JSON.parse(localStorage.getItem('temp_regional_coordenadores') || '[]');
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="2" style="text-align: center; color: #777; padding: 25px; font-style: italic; font-size: 0.95rem;">
+                            Nenhum coordenador cadastrado para esta Regional.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            list.forEach((coord, idx) => {
+                const tr = document.createElement('tr');
+                tr.onclick = () => editCoordenador(idx);
+
+                const dtInicio = formatToDDMMYYYY(coord.data_inicio_coordenador);
+                const dtFim = formatToDDMMYYYY(coord.data_fim_coordenador);
+                const periodText = (dtInicio || dtFim) ? ` (${dtInicio || ''} - ${dtFim || ''})` : '';
+
+                const colabName = coord.nome_colaborador || `Colaborador #${coord.id_colaborador}`;
+
+                tr.innerHTML = `
+                    <td class="col-delete" onclick="event.stopPropagation(); deleteCoordenador(${idx})">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </td>
+                    <td class="col-info">
+                        <div style="font-size: 0.92rem; color: #333; line-height: 1.4;">
+                            <strong>${colabName}</strong>${periodText}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddCoordenador() {
+            localStorage.setItem('temp_regional_active_tab', 'tab-coordenadores');
+            saveParentFormState();
+            const nomeParam = urlParams.get('nome') || '';
+            const cpfParam = urlParams.get('cpf') || '';
+            const regId = id ? `&id_regional=${id}` : '';
+            window.location.href = `popup_colaboradores_ae.html?nome=${encodeURIComponent(nomeParam)}&cpf=${encodeURIComponent(cpfParam)}${regId}`;
+        }
+
+        function editCoordenador(index) {
+            localStorage.setItem('temp_regional_active_tab', 'tab-coordenadores');
+            saveParentFormState();
+            const list = JSON.parse(localStorage.getItem('temp_regional_coordenadores') || '[]');
+            const coord = list[index];
+            const colabId = coord ? extractId(coord.id_colaborador) : null;
+            const nomeParam = urlParams.get('nome') || '';
+            const cpfParam = urlParams.get('cpf') || '';
+            const regId = id ? `&id_regional=${id}` : '';
+            const colabParam = colabId ? `&edit_colab_id=${colabId}` : '';
+            window.location.href = `popup_colaboradores_ae.html?nome=${encodeURIComponent(nomeParam)}&cpf=${encodeURIComponent(cpfParam)}${regId}${colabParam}`;
+        }
+
+        async function deleteCoordenador(index) {
+            if (confirm("Deseja realmente remover este coordenador?")) {
+                const list = JSON.parse(localStorage.getItem('temp_regional_coordenadores') || '[]');
+                const coord = list[index];
+                if (coord && id) {
+                    const colabId = extractId(coord.id_colaborador);
+                    if (colabId) {
+                        try {
+                            const response = await fetch(`${API_URL}/regional_coordenadores?id_regional=${id}&id_colaborador=${colabId}`, { method: 'DELETE' });
+                            if (!response.ok) {
+                                alert("Erro ao excluir coordenador do banco.");
+                                return;
+                            }
+                        } catch (err) {
+                            console.error("Erro ao excluir coordenador:", err);
+                            alert("Erro ao excluir coordenador.");
+                            return;
+                        }
+                    }
+                }
+                list.splice(index, 1);
+                localStorage.setItem('temp_regional_coordenadores', JSON.stringify(list));
+                displayCoordenadores();
+            }
+        }
+
+        function saveParentFormState() {
+            const state = {
+                status: document.getElementById('status').value,
+                pais: document.getElementById('pais').value,
+                nome_regional: document.getElementById('nome_regional').value,
+                observacao: document.getElementById('observacao').value,
+                selectedStates: Array.from(document.querySelectorAll('input[name="states"]:checked')).map(cb => parseInt(cb.value))
+            };
+            localStorage.setItem('temp_regional_form_state', JSON.stringify(state));
+        }
+
+        function restoreParentFormState() {
+            const stateStr = localStorage.getItem('temp_regional_form_state');
+            if (stateStr) {
+                try {
+                    const state = JSON.parse(stateStr);
+                    if (state.status) document.getElementById('status').value = state.status;
+                    if (state.pais) document.getElementById('pais').value = state.pais;
+                    if (state.nome_regional) document.getElementById('nome_regional').value = state.nome_regional;
+                    if (state.observacao) document.getElementById('observacao').value = state.observacao;
+                    if (state.selectedStates && Array.isArray(state.selectedStates)) {
+                        const checkboxes = document.querySelectorAll('input[name="states"]');
+                        checkboxes.forEach(cb => {
+                            if (state.selectedStates.includes(parseInt(cb.value))) {
+                                cb.checked = true;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn("Could not restore parent form state:", e);
+                }
+                localStorage.removeItem('temp_regional_form_state');
+            }
+        }
+
         window.onload = async () => {
             await loadCountries();
             // Default load states for selected country (BRASIL = 1)
             await loadStates(document.getElementById('pais').value);
-            await loadRegionalData();
+            
+            const returning = localStorage.getItem('temp_regional_form_state');
+
+            if (mode === 'edit' && id) {
+                await loadRegionalData();
+                const tabCoord = document.getElementById('tab-btn-coordenadores');
+                if (tabCoord) {
+                    tabCoord.removeAttribute('disabled');
+                    tabCoord.removeAttribute('title');
+                }
+                await fetchCoordenadores(id);
+            } else {
+                document.getElementById('page-title').innerText = 'Inclusão de Regional';
+                const tabCoord = document.getElementById('tab-btn-coordenadores');
+                if (tabCoord) {
+                    tabCoord.setAttribute('disabled', 'true');
+                    tabCoord.setAttribute('title', 'Salve os dados de identificação primeiro para liberar esta aba');
+                }
+                if (!returning) {
+                    localStorage.removeItem('temp_regional_coordenadores');
+                }
+                displayCoordenadores();
+            }
+
+            const activeTab = localStorage.getItem('temp_regional_active_tab') || 'tab-identificacao';
+            localStorage.removeItem('temp_regional_active_tab');
+
+            if (returning) {
+                restoreParentFormState();
+                displayCoordenadores();
+                switchTab(null, activeTab);
+            } else {
+                const tabParam = urlParams.get('tab');
+                if (tabParam === 'coordenadores') {
+                    switchTab(null, 'tab-coordenadores');
+                }
+            }
         };
     </script>
 </body>

@@ -237,12 +237,15 @@ async function connectDB() {
                       AND TABLE_NAME = 'divisao_arquidiocesana' 
                       AND COLUMN_NAME = 'id_colaborador_atualiza'
                 `);
-                if (divisaoCols.length > 0 && divisaoCols[0].IS_NULLABLE === 'NO') {
-                    console.log('Tornando a coluna id_colaborador_atualiza nula na tabela divisao_arquidiocesana...');
-                    await pool.query('ALTER TABLE divisao_arquidiocesana MODIFY COLUMN id_colaborador_atualiza INT NULL');
-                }
             } catch (colErr) {
                 console.error('Erro ao verificar ou migrar coluna id_colaborador_atualiza da tabela divisao_arquidiocesana:', colErr.message);
+            }
+
+            // Ensure observacoes column in table calendario is TEXT to accommodate long notes
+            try {
+                await pool.query('ALTER TABLE calendario MODIFY COLUMN observacoes TEXT DEFAULT NULL');
+            } catch (calErr) {
+                console.error('Erro ao ajustar tamanho da coluna observacoes em calendario:', calErr.message);
             }
 
             return; // Conectado com sucesso
@@ -424,6 +427,16 @@ app.get('/api/regionais/detalhes', async (req, res) => {
     }
 });
 
+// Route to get all regionais
+app.get('/api/regionais', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM regional ORDER BY nome_regional');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Route to get states by country
 app.get('/api/estados/pais/:id_pais', async (req, res) => {
     const { id_pais } = req.params;
@@ -463,6 +476,27 @@ app.get('/api/arquidioceses/estado/:id_estado', async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error('[API ERROR] GET /api/arquidioceses/estado:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to get paroquias by state
+app.get('/api/paroquias/estado/:id_estado', async (req, res) => {
+    const { id_estado } = req.params;
+    console.log(`[API] GET /api/paroquias/estado/${id_estado}`);
+    try {
+        const query = `
+            SELECT p.*, e.sigla_estado, a.nome_arquidiocese
+            FROM paroquias p
+            LEFT JOIN estados e ON p.id_estado = e.id_estado
+            LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
+            WHERE p.id_estado = ? OR a.id_estado = ?
+            ORDER BY p.nome_paroquia ASC
+        `;
+        const [rows] = await pool.query(query, [id_estado, id_estado]);
+        res.json(rows);
+    } catch (err) {
+        console.error('[API ERROR] GET /api/paroquias/estado:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -1911,7 +1945,7 @@ app.get('/api/tipos_certificados_colaborador', async (req, res) => {
 // Generic GET all for a table
 app.get('/api/:table', async (req, res) => {
     const { table } = req.params;
-    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'treinamento_instrutores', 'colaborador_lideranca', 'colaborador_certificados', 'tipos_certificados_colaborador'];
+    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'arquidiocese_coordenadores', 'regional_coordenadores', 'treinamento_instrutores', 'colaborador_lideranca', 'colaborador_certificados', 'tipos_certificados_colaborador'];
 
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Tabela não permitida' });
@@ -3110,6 +3144,332 @@ app.delete('/api/paroquia_coordenadores', async (req, res) => {
     }
 });
 
+// --- Archdiocese Coordinator Routes ---
+
+// Route to get coordinators for a specific archdiocese
+app.get('/api/arquidioceses/:id/coordenadores', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Ensure table exists
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS arquidiocese_coordenadores (
+                    id_arquidiocese INT NOT NULL,
+                    id_colaborador INT NOT NULL,
+                    data_inicio_coordenador DATE DEFAULT NULL,
+                    data_fim_coordenador DATE DEFAULT NULL,
+                    PRIMARY KEY (id_arquidiocese, id_colaborador)
+                )
+            `);
+        } catch (e) {}
+
+        const query = `
+            SELECT c.id_colaborador, c.nome_colaborador, c.apelido_colaborador, c.telefone, c.email, c.status,
+                   ac.data_inicio_coordenador, ac.data_fim_coordenador
+            FROM arquidiocese_coordenadores ac
+            INNER JOIN colaboradores c ON ac.id_colaborador = c.id_colaborador
+            WHERE ac.id_arquidiocese = ?
+            ORDER BY c.nome_colaborador ASC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar coordenadores da arquidiocese:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save archdiocese coordinators (links)
+app.post('/api/arquidiocese_coordenadores/save', async (req, res) => {
+    const { id_arquidiocese, coordenadores, data_inicio_coordenador, data_fim_coordenador } = req.body;
+    
+    let arqId = id_arquidiocese;
+    while (typeof arqId === 'object' && arqId !== null) {
+        if (arqId.id_arquidiocese !== undefined) arqId = arqId.id_arquidiocese;
+        else if (arqId.id !== undefined) arqId = arqId.id;
+        else break;
+    }
+    arqId = parseInt(arqId, 10);
+    if (!arqId || isNaN(arqId)) {
+        return res.status(400).json({ success: false, error: 'ID da arquidiocese ausente ou inválido' });
+    }
+
+    const sanitizeDateForDB = (dateStr) => {
+        if (!dateStr) return null;
+        let str = String(dateStr).trim();
+        if (!str || str === 'null' || str === 'undefined') return null;
+        if (str.includes('T')) str = str.split('T')[0];
+        if (str.includes('/')) {
+            const parts = str.split('/');
+            if (parts.length === 3 && parts[2].length === 4) {
+                str = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+            return str;
+        }
+        return null;
+    };
+
+    try {
+        // Ensure table exists
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS arquidiocese_coordenadores (
+                    id_arquidiocese INT NOT NULL,
+                    id_colaborador INT NOT NULL,
+                    data_inicio_coordenador DATE DEFAULT NULL,
+                    data_fim_coordenador DATE DEFAULT NULL,
+                    PRIMARY KEY (id_arquidiocese, id_colaborador)
+                )
+            `);
+        } catch (e) {}
+
+        // Upsert (insert or update) coordinators
+        if (coordenadores && coordenadores.length > 0) {
+            for (const id_colab of coordenadores) {
+                let dtInicio = sanitizeDateForDB(data_inicio_coordenador);
+                let dtFim = sanitizeDateForDB(data_fim_coordenador);
+
+                if (typeof id_colab === 'object' && id_colab !== null) {
+                    if (id_colab.data_inicio_coordenador !== undefined) {
+                        dtInicio = sanitizeDateForDB(id_colab.data_inicio_coordenador);
+                    }
+                    if (id_colab.data_fim_coordenador !== undefined) {
+                        dtFim = sanitizeDateForDB(id_colab.data_fim_coordenador);
+                    }
+                }
+
+                let colabId = id_colab;
+                while (typeof colabId === 'object' && colabId !== null) {
+                    if (colabId.id_colaborador !== undefined) {
+                        colabId = colabId.id_colaborador;
+                    } else if (colabId.id !== undefined) {
+                        colabId = colabId.id;
+                    } else {
+                        break;
+                    }
+                }
+                colabId = parseInt(colabId, 10);
+
+                if (isNaN(colabId)) {
+                    console.warn('ID do colaborador inválido, ignorando:', id_colab);
+                    continue;
+                }
+
+                // Check if link already exists
+                const [existing] = await pool.query(
+                    'SELECT 1 FROM arquidiocese_coordenadores WHERE id_arquidiocese = ? AND id_colaborador = ?',
+                    [arqId, colabId]
+                );
+
+                if (existing && existing.length > 0) {
+                    await pool.query(
+                        'UPDATE arquidiocese_coordenadores SET data_inicio_coordenador = ?, data_fim_coordenador = ? WHERE id_arquidiocese = ? AND id_colaborador = ?',
+                        [dtInicio, dtFim, arqId, colabId]
+                    );
+                } else {
+                    await pool.query(
+                        'INSERT INTO arquidiocese_coordenadores (id_arquidiocese, id_colaborador, data_inicio_coordenador, data_fim_coordenador) VALUES (?, ?, ?, ?)',
+                        [arqId, colabId, dtInicio, dtFim]
+                    );
+                }
+            }
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao salvar coordenadores da arquidiocese:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a single coordinator link from an archdiocese
+app.delete('/api/arquidiocese_coordenadores', async (req, res) => {
+    let arqId = req.query.id_arquidiocese || req.body?.id_arquidiocese;
+    let colabId = req.query.id_colaborador || req.body?.id_colaborador;
+
+    arqId = parseInt(arqId, 10);
+    colabId = parseInt(colabId, 10);
+
+    if (isNaN(arqId) || isNaN(colabId)) {
+        return res.status(400).json({ success: false, error: 'Parâmetros ausentes ou inválidos' });
+    }
+
+    try {
+        await pool.query(
+            'DELETE FROM arquidiocese_coordenadores WHERE id_arquidiocese = ? AND id_colaborador = ?',
+            [arqId, colabId]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir coordenador da arquidiocese:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- Regional Coordinator Routes ---
+
+// Route to get coordinators for a specific regional
+app.get('/api/regionais/:id/coordenadores', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Ensure table exists
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS regional_coordenadores (
+                    id_regional INT NOT NULL,
+                    id_colaborador INT NOT NULL,
+                    data_inicio_coordenador DATE DEFAULT NULL,
+                    data_fim_coordenador DATE DEFAULT NULL,
+                    PRIMARY KEY (id_regional, id_colaborador)
+                )
+            `);
+        } catch (e) {}
+
+        const query = `
+            SELECT c.id_colaborador, c.nome_colaborador, c.apelido_colaborador, c.telefone, c.email, c.status,
+                   rc.data_inicio_coordenador, rc.data_fim_coordenador
+            FROM regional_coordenadores rc
+            INNER JOIN colaboradores c ON rc.id_colaborador = c.id_colaborador
+            WHERE rc.id_regional = ?
+            ORDER BY c.nome_colaborador ASC
+        `;
+        const [rows] = await pool.query(query, [id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar coordenadores da regional:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route to save regional coordinators (links)
+app.post('/api/regional_coordenadores/save', async (req, res) => {
+    const { id_regional, coordenadores, data_inicio_coordenador, data_fim_coordenador } = req.body;
+    
+    let regId = id_regional;
+    while (typeof regId === 'object' && regId !== null) {
+        if (regId.id_regional !== undefined) regId = regId.id_regional;
+        else if (regId.id !== undefined) regId = regId.id;
+        else break;
+    }
+    regId = parseInt(regId, 10);
+    if (!regId || isNaN(regId)) {
+        return res.status(400).json({ success: false, error: 'ID da regional ausente ou inválido' });
+    }
+
+    const sanitizeDateForDB = (dateStr) => {
+        if (!dateStr) return null;
+        let str = String(dateStr).trim();
+        if (!str || str === 'null' || str === 'undefined') return null;
+        if (str.includes('T')) str = str.split('T')[0];
+        if (str.includes('/')) {
+            const parts = str.split('/');
+            if (parts.length === 3 && parts[2].length === 4) {
+                str = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+            return str;
+        }
+        return null;
+    };
+
+    try {
+        // Ensure table exists
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS regional_coordenadores (
+                    id_regional INT NOT NULL,
+                    id_colaborador INT NOT NULL,
+                    data_inicio_coordenador DATE DEFAULT NULL,
+                    data_fim_coordenador DATE DEFAULT NULL,
+                    PRIMARY KEY (id_regional, id_colaborador)
+                )
+            `);
+        } catch (e) {}
+
+        // Upsert (insert or update) coordinators
+        if (coordenadores && coordenadores.length > 0) {
+            for (const id_colab of coordenadores) {
+                let dtInicio = sanitizeDateForDB(data_inicio_coordenador);
+                let dtFim = sanitizeDateForDB(data_fim_coordenador);
+
+                if (typeof id_colab === 'object' && id_colab !== null) {
+                    if (id_colab.data_inicio_coordenador !== undefined) {
+                        dtInicio = sanitizeDateForDB(id_colab.data_inicio_coordenador);
+                    }
+                    if (id_colab.data_fim_coordenador !== undefined) {
+                        dtFim = sanitizeDateForDB(id_colab.data_fim_coordenador);
+                    }
+                }
+
+                let colabId = id_colab;
+                while (typeof colabId === 'object' && colabId !== null) {
+                    if (colabId.id_colaborador !== undefined) {
+                        colabId = colabId.id_colaborador;
+                    } else if (colabId.id !== undefined) {
+                        colabId = colabId.id;
+                    } else {
+                        break;
+                    }
+                }
+                colabId = parseInt(colabId, 10);
+
+                if (isNaN(colabId)) {
+                    console.warn('ID do colaborador inválido, ignorando:', id_colab);
+                    continue;
+                }
+
+                // Check if link already exists
+                const [existing] = await pool.query(
+                    'SELECT 1 FROM regional_coordenadores WHERE id_regional = ? AND id_colaborador = ?',
+                    [regId, colabId]
+                );
+
+                if (existing && existing.length > 0) {
+                    await pool.query(
+                        'UPDATE regional_coordenadores SET data_inicio_coordenador = ?, data_fim_coordenador = ? WHERE id_regional = ? AND id_colaborador = ?',
+                        [dtInicio, dtFim, regId, colabId]
+                    );
+                } else {
+                    await pool.query(
+                        'INSERT INTO regional_coordenadores (id_regional, id_colaborador, data_inicio_coordenador, data_fim_coordenador) VALUES (?, ?, ?, ?)',
+                        [regId, colabId, dtInicio, dtFim]
+                    );
+                }
+            }
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao salvar coordenadores da regional:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a single coordinator link from a regional
+app.delete('/api/regional_coordenadores', async (req, res) => {
+    let regId = req.query.id_regional || req.body?.id_regional;
+    let colabId = req.query.id_colaborador || req.body?.id_colaborador;
+
+    regId = parseInt(regId, 10);
+    colabId = parseInt(colabId, 10);
+
+    if (isNaN(regId) || isNaN(colabId)) {
+        return res.status(400).json({ success: false, error: 'Parâmetros ausentes ou inválidos' });
+    }
+
+    try {
+        await pool.query(
+            'DELETE FROM regional_coordenadores WHERE id_regional = ? AND id_colaborador = ?',
+            [regId, colabId]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir coordenador da regional:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 // --- Division Leadership Routes ---
 
@@ -4124,6 +4484,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
         endereco,
         cidade,
         id_estado,
+        id_paroquia,
         senha,
         status,
         cep,
@@ -4200,6 +4561,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
                 cidade = ?, 
                 cep = ?,
                 id_estado = ?, 
+                id_paroquia = ?,
                 status = ?,
                 talentos_colaborador = ?,
                 motivou_AE = ?,
@@ -4218,6 +4580,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
                 cidade,
                 cep,
                 id_estado,
+                id_paroquia ? parseInt(id_paroquia, 10) : null,
                 status || 'Ativo',
                 talentos_colaborador || '',
                 motivou_AE || '',
@@ -4267,6 +4630,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
                     cidade, 
                     cep,
                     id_estado, 
+                    id_paroquia,
                     senha, 
                     status,
                     talentos_colaborador,
@@ -4275,7 +4639,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
                     foto_colaborador,
                     id_colaborador_atualiza,
                     criado_em
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
                 [
                     parseInt(cod_colaborador, 10),
                     nome_colaborador,
@@ -4289,6 +4653,7 @@ app.post('/api/colaboradores/save', async (req, res) => {
                     cidade,
                     cep,
                     id_estado,
+                    id_paroquia ? parseInt(id_paroquia, 10) : null,
                     hashedPassword,
                     status || 'Ativo',
                     talentos_colaborador || '',
@@ -4797,6 +5162,74 @@ app.get('/api/pesquisa_satisfacao/status/:id_colaborador', async (req, res) => {
     } catch (err) {
         console.error('Erro ao verificar status da pesquisa:', err);
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+// Route to get all coordenações (regional, arquidiocese, paroquia) for a collaborator
+app.get('/api/colaboradores/:id/coordenacoes', async (req, res) => {
+    const { id } = req.params;
+    const colabId = parseInt(id, 10);
+    if (isNaN(colabId)) {
+        return res.status(400).json({ error: 'ID do colaborador inválido.' });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                'regional' AS tipo,
+                rc.id_regional AS entity_id,
+                r.nome_regional AS entity_name,
+                rc.id_regional AS id_regional,
+                r.nome_regional AS nome_regional,
+                NULL AS id_arquidiocese,
+                NULL AS nome_arquidiocese,
+                rc.data_inicio_coordenador,
+                rc.data_fim_coordenador
+            FROM regional_coordenadores rc
+            JOIN regional r ON rc.id_regional = r.id_regional
+            WHERE rc.id_colaborador = ?
+            
+            UNION ALL
+            
+            SELECT 
+                'arquidiocese' AS tipo,
+                ac.id_arquidiocese AS entity_id,
+                a.nome_arquidiocese AS entity_name,
+                a.id_regional AS id_regional,
+                r.nome_regional AS nome_regional,
+                ac.id_arquidiocese AS id_arquidiocese,
+                a.nome_arquidiocese AS nome_arquidiocese,
+                ac.data_inicio_coordenador,
+                ac.data_fim_coordenador
+            FROM arquidiocese_coordenadores ac
+            JOIN arquidioceses a ON ac.id_arquidiocese = a.id_arquidiocese
+            LEFT JOIN regional r ON a.id_regional = r.id_regional
+            WHERE ac.id_colaborador = ?
+            
+            UNION ALL
+            
+            SELECT 
+                'paroquia' AS tipo,
+                pc.id_paroquia AS entity_id,
+                p.nome_paroquia AS entity_name,
+                a.id_regional AS id_regional,
+                r.nome_regional AS nome_regional,
+                p.id_arquidiocese AS id_arquidiocese,
+                a.nome_arquidiocese AS nome_arquidiocese,
+                pc.data_inicio_coordenador,
+                pc.data_fim_coordenador
+            FROM paroquia_coordenadores pc
+            JOIN paroquias p ON pc.id_paroquia = p.id_paroquia
+            LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
+            LEFT JOIN regional r ON a.id_regional = r.id_regional
+            WHERE pc.id_colaborador = ?
+            
+            ORDER BY data_inicio_coordenador DESC
+        `;
+        const [rows] = await pool.query(query, [colabId, colabId, colabId]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar coordenações do colaborador:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 

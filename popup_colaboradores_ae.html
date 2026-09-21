@@ -249,6 +249,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const id_paroquia = urlParams.get('id_paroquia');
         const id_arquidiocese = urlParams.get('id_arquidiocese');
+        const id_regional = urlParams.get('id_regional');
         const edit_colab_id = urlParams.get('edit_colab_id');
         const selectLider = urlParams.get('select_lider') === 'true';
         
@@ -361,14 +362,28 @@
 
         async function loadData() {
             try {
+                const isRegional = Boolean(id_regional && !id_paroquia && !id_arquidiocese);
+                const isArquidiocese = Boolean(id_arquidiocese && !id_paroquia);
+                const tempStorageKey = isRegional 
+                    ? 'temp_regional_coordenadores' 
+                    : (isArquidiocese ? 'temp_arquidiocese_coordenadores' : 'temp_paroquia_coordenadores');
+
                 let linkedCoordinators = [];
                 if (!selectLider) {
-                    if (id_paroquia) {
+                    if (isRegional) {
+                        try {
+                            linkedCoordinators = await fetchData(`regionais/${id_regional}/coordenadores`);
+                        } catch (e) {}
+                    } else if (isArquidiocese) {
+                        try {
+                            linkedCoordinators = await fetchData(`arquidioceses/${id_arquidiocese}/coordenadores`);
+                        } catch (e) {}
+                    } else if (id_paroquia) {
                         try {
                             linkedCoordinators = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
                         } catch (e) {}
                     }
-                    const tempCoords = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
+                    const tempCoords = JSON.parse(localStorage.getItem(tempStorageKey) || '[]');
 
                     if (edit_colab_id) {
                         const parsedEditId = extractId(edit_colab_id);
@@ -505,12 +520,30 @@
             const dtInicio = formatToYYYYMMDD(inicioCoord);
             const dtFim = formatToYYYYMMDD(fimCoord);
 
-            let existingCoordinators = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
-            if (existingCoordinators.length === 0 && id_paroquia) {
-                try {
-                    const linked = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
-                    if (linked) existingCoordinators = linked;
-                } catch (e) {}
+            const isRegional = Boolean(id_regional && !id_paroquia && !id_arquidiocese);
+            const isArquidiocese = Boolean(id_arquidiocese && !id_paroquia);
+            const tempStorageKey = isRegional 
+                ? 'temp_regional_coordenadores' 
+                : (isArquidiocese ? 'temp_arquidiocese_coordenadores' : 'temp_paroquia_coordenadores');
+
+            let existingCoordinators = JSON.parse(localStorage.getItem(tempStorageKey) || '[]');
+            if (existingCoordinators.length === 0) {
+                if (isRegional) {
+                    try {
+                        const linked = await fetchData(`regionais/${id_regional}/coordenadores`);
+                        if (linked) existingCoordinators = linked;
+                    } catch (e) {}
+                } else if (isArquidiocese) {
+                    try {
+                        const linked = await fetchData(`arquidioceses/${id_arquidiocese}/coordenadores`);
+                        if (linked) existingCoordinators = linked;
+                    } catch (e) {}
+                } else if (id_paroquia) {
+                    try {
+                        const linked = await fetchData(`paroquias/${id_paroquia}/coordenadores`);
+                        if (linked) existingCoordinators = linked;
+                    } catch (e) {}
+                }
             }
 
             let finalCoordinatorsList = [];
@@ -557,7 +590,7 @@
             }
 
             // Always update localStorage
-            let currentTemp = JSON.parse(localStorage.getItem('temp_paroquia_coordenadores') || '[]');
+            let currentTemp = JSON.parse(localStorage.getItem(tempStorageKey) || '[]');
             finalCoordinatorsList.forEach(newCoord => {
                 const idx = currentTemp.findIndex(c => extractId(c.id_colaborador) === extractId(newCoord.id_colaborador));
                 if (idx >= 0) {
@@ -566,10 +599,56 @@
                     currentTemp.push(newCoord);
                 }
             });
-            localStorage.setItem('temp_paroquia_coordenadores', JSON.stringify(currentTemp));
+            localStorage.setItem(tempStorageKey, JSON.stringify(currentTemp));
 
-            // If paróquia already exists in DB, sync with backend database table
-            if (id_paroquia) {
+            // Sync with backend DB table
+            if (isRegional) {
+                const payload = {
+                    id_regional: parseInt(id_regional, 10),
+                    coordenadores: finalCoordinatorsList
+                        .map(c => ({
+                            id_colaborador: extractId(c.id_colaborador),
+                            data_inicio_coordenador: formatToYYYYMMDD(c.data_inicio_coordenador),
+                            data_fim_coordenador: formatToYYYYMMDD(c.data_fim_coordenador)
+                        }))
+                        .filter(c => c.id_colaborador !== null)
+                };
+
+                try {
+                    const response = await postData('regional_coordenadores/save', payload);
+                    if (!response.success) {
+                        alert("Erro ao salvar coordenadores no banco de dados: " + (response.error || "Erro desconhecido"));
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Erro ao salvar coordenadores no banco:", error);
+                    alert("Erro ao salvar coordenadores no banco de dados: " + (error.message || "Erro desconhecido"));
+                    return;
+                }
+            } else if (isArquidiocese) {
+                const payload = {
+                    id_arquidiocese: parseInt(id_arquidiocese, 10),
+                    coordenadores: finalCoordinatorsList
+                        .map(c => ({
+                            id_colaborador: extractId(c.id_colaborador),
+                            data_inicio_coordenador: formatToYYYYMMDD(c.data_inicio_coordenador),
+                            data_fim_coordenador: formatToYYYYMMDD(c.data_fim_coordenador)
+                        }))
+                        .filter(c => c.id_colaborador !== null)
+                };
+
+                try {
+                    const response = await postData('arquidiocese_coordenadores/save', payload);
+                    if (!response.success) {
+                        alert("Erro ao salvar coordenadores no banco de dados: " + (response.error || "Erro desconhecido"));
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Erro ao salvar coordenadores no banco:", error);
+                    alert("Erro ao salvar coordenadores no banco de dados: " + (error.message || "Erro desconhecido"));
+                    return;
+                }
+            } else if (id_paroquia) {
                 const payload = {
                     id_paroquia: parseInt(id_paroquia, 10),
                     coordenadores: finalCoordinatorsList

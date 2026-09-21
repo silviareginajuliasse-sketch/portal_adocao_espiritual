@@ -1093,6 +1093,26 @@
                 <!-- Paróquias Tab Panel -->
                 <div class="tab-panel" id="panel-paroquias">
                     
+                    <!-- Filter Bar by Regional and Arquidiocese -->
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 15px; background: white; padding: 12px 20px; border-radius: 12px; border: 1px solid #edf2f7; box-shadow: var(--card-shadow); flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <label for="select-regional" style="font-weight: 600; font-size: 0.88rem; color: #4a5568; display: flex; align-items: center; gap: 6px; margin: 0;">
+                                <i class="fa-solid fa-filter" style="color: #7b0000;"></i> Regional:
+                            </label>
+                            <select id="select-regional" onchange="onParoquiaFiltersChange('regional')" style="padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.88rem; outline: none; background: white; cursor: pointer; color: #2d3748; font-weight: 600;">
+                                <option value="">Todas as Regionais</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <label for="select-arquidiocese" style="font-weight: 600; font-size: 0.88rem; color: #4a5568; display: flex; align-items: center; gap: 6px; margin: 0;">
+                                <i class="fa-solid fa-church" style="color: #7b0000;"></i> Arquidiocese:
+                            </label>
+                            <select id="select-arquidiocese" onchange="onParoquiaFiltersChange('arquidiocese')" style="padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.88rem; outline: none; background: white; cursor: pointer; color: #2d3748; font-weight: 600; max-width: 260px;">
+                                <option value="">Todas as Arquidioceses</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- KPI Cards Grid -->
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -1722,11 +1742,26 @@
                     // Get unique regional IDs/Names
                     const uniqueRegs = {};
                     regData.forEach(r => {
-                        if (r.id_regional) {
-                            uniqueRegs[r.id_regional] = r.nome_regional;
+                        if (r.nome_regional) {
+                            uniqueRegs[r.nome_regional] = r.nome_regional;
                         }
                     });
                     allRegionals = Object.keys(uniqueRegs);
+
+                    // Populate Regional Select Filter Dropdown
+                    const selectReg = document.getElementById('select-regional');
+                    if (selectReg) {
+                        selectReg.innerHTML = '<option value="">Todas as Regionais</option>';
+                        allRegionals.sort().forEach(regName => {
+                            const opt = document.createElement('option');
+                            opt.value = regName;
+                            opt.textContent = regName;
+                            selectReg.appendChild(opt);
+                        });
+                    }
+
+                    // Populate Arquidioceses Select Filter Dropdown
+                    updateArchdiocesesFilterDropdown('');
                 }
 
                 // If currently on Paróquias tab, render immediately
@@ -1749,35 +1784,94 @@
             }
         }
 
+        // Populate/Update Arquidioceses Dropdown according to selected Regional
+        function updateArchdiocesesFilterDropdown(selectedRegional = '') {
+            const selectArq = document.getElementById('select-arquidiocese');
+            if (!selectArq) return;
+            const previousSelectedArq = selectArq.value;
+
+            let arqSet = new Set();
+            if (selectedRegional) {
+                allParishes
+                    .filter(p => p.nome_regional === selectedRegional && p.nome_arquidiocese)
+                    .forEach(p => arqSet.add(p.nome_arquidiocese));
+            } else {
+                allParishes
+                    .filter(p => p.nome_arquidiocese)
+                    .forEach(p => arqSet.add(p.nome_arquidiocese));
+            }
+
+            const sortedArqs = Array.from(arqSet).sort();
+            selectArq.innerHTML = '<option value="">Todas as Arquidioceses</option>';
+            
+            let stillValid = false;
+            sortedArqs.forEach(arqName => {
+                const opt = document.createElement('option');
+                opt.value = arqName;
+                opt.textContent = arqName;
+                if (arqName === previousSelectedArq) {
+                    opt.selected = true;
+                    stillValid = true;
+                }
+                selectArq.appendChild(opt);
+            });
+
+            if (!stillValid && previousSelectedArq) {
+                selectArq.value = '';
+            }
+        }
+
+        // Filter handler when user selects a Regional or Arquidiocese
+        function onParoquiaFiltersChange(source) {
+            const selectedReg = document.getElementById('select-regional') ? document.getElementById('select-regional').value : '';
+            
+            if (source === 'regional') {
+                updateArchdiocesesFilterDropdown(selectedReg);
+            }
+            
+            const selectedArq = document.getElementById('select-arquidiocese') ? document.getElementById('select-arquidiocese').value : '';
+
+            const filtered = allParishes.filter(p => {
+                const matchReg = !selectedReg || p.nome_regional === selectedReg;
+                const matchArq = !selectedArq || p.nome_arquidiocese === selectedArq;
+                return matchReg && matchArq;
+            });
+
+            renderParoquiasTab(filtered);
+        }
+
         // Render Paróquias Dashboard elements (KPIs, Map, Charts)
-        function renderParoquiasTab() {
-            if (allParishes.length === 0) return;
+        function renderParoquiasTab(parishList = allParishes) {
+            if (!parishList) return;
 
             // 1. UPDATE KPIs
-            const total = allParishes.length;
-            const parceiras = allParishes.filter(p => {
+            const total = parishList.length;
+            const parceiras = parishList.filter(p => {
+                const valImp = p.implantada || p.parceira;
                 return (p.data_implantacao !== null && p.data_implantacao !== undefined && p.data_implantacao !== '') ||
-                       (p.implantada && p.implantada.toLowerCase() === 'sim') ||
-                       (p.parceira && p.parceira.toLowerCase() === 'sim');
+                       (valImp && String(valImp).toLowerCase() !== 'nao' && String(valImp).toLowerCase() !== 'não');
             }).length;
             
+            const arqCount = new Set(parishList.map(p => p.nome_arquidiocese).filter(Boolean)).size;
+            const regCount = new Set(parishList.map(p => p.nome_regional).filter(Boolean)).size;
+
             document.getElementById('paroquia-total').innerText = total;
             document.getElementById('paroquia-parceiras').innerText = parceiras;
             document.getElementById('paroquia-parceiras-pct').innerText = total > 0 
                 ? `${((parceiras / total) * 100).toFixed(1)}% do total` 
                 : '0% do total';
-            document.getElementById('paroquia-arquidioceses').innerText = allArchdioceses.length || 7;
-            document.getElementById('paroquia-regionais').innerText = allRegionals.length || 21;
+            document.getElementById('paroquia-arquidioceses').innerText = arqCount || (parishList === allParishes ? (allArchdioceses.length || 7) : 0);
+            document.getElementById('paroquia-regionais').innerText = regCount || (parishList === allParishes ? (allRegionals.length || 21) : 0);
 
             // 2. RENDER MAP
-            initParoquiasMap();
+            initParoquiasMap(parishList);
 
             // 3. RENDER CHARTS
-            renderParoquiasCharts();
+            renderParoquiasCharts(parishList);
         }
 
         // Initialize and update the Leaflet Map
-        function initParoquiasMap() {
+        function initParoquiasMap(parishes = allParishes) {
             const mapContainer = document.getElementById('map-paroquias');
             if (!mapContainer) return;
 
@@ -1806,7 +1900,7 @@
             const stateNonGPSParceiras = {};
             const stateNonGPSList = {};
 
-            allParishes.forEach(p => {
+            parishes.forEach(p => {
                 const hasGPS = p.latitude !== null && p.longitude !== null;
                 const state = p.sigla_estado || 'RJ';
                 const valImp = p.implantada || p.parceira;
@@ -1979,7 +2073,7 @@
         };
 
         // Render Paróquias Chart.js charts
-        function renderParoquiasCharts() {
+        function renderParoquiasCharts(parishes = allParishes) {
             // Destroy existing instances to avoid canvas overlap warnings
             if (chartParRegionaisInstance) chartParRegionaisInstance.destroy();
             if (chartParTiposInstance) chartParTiposInstance.destroy();
@@ -1987,7 +2081,7 @@
 
             // 1. Regional distribution data aggregation
             const regionalCounts = {};
-            allParishes.forEach(p => {
+            parishes.forEach(p => {
                 const reg = p.nome_regional || 'Sem Regional';
                 regionalCounts[reg] = (regionalCounts[reg] || 0) + 1;
             });
@@ -1999,16 +2093,16 @@
 
             // 2. Type distribution data aggregation
             const typeCounts = { 'Paróquia': 0, 'Comunidade': 0 };
-            allParishes.forEach(p => {
-                const cleanType = (p.tipo && (p.tipo.includes('Com') || p.tipo.includes('com'))) ? 'Comunidade' : 'Paróquia';
-                typeCounts[cleanType]++;
+            parishes.forEach(p => {
+                const cleanTipo = (p.tipo && (p.tipo.includes('Com') || p.tipo.includes('com'))) ? 'Comunidade' : 'Paróquia';
+                typeCounts[cleanTipo]++;
             });
 
             const typeLabels = Object.keys(typeCounts);
             const typeValues = Object.values(typeCounts);
 
             // 3. Bar Chart Data Aggregation: Only paroquias where implantada='Sim' AND data_implantacao IS NOT NULL
-            const implantedWithDate = allParishes.filter(p => {
+            const implantedWithDate = parishes.filter(p => {
                 const valImp = p.implantada || p.parceira;
                 const isImp = valImp !== null && valImp !== undefined && valImp !== '' && String(valImp).toLowerCase() !== 'nao' && String(valImp).toLowerCase() !== 'não';
                 
@@ -2056,7 +2150,7 @@
             }
 
             // 4. Paróquias implantadas sem data de implantação (implantada='Sim' AND data_implantacao IS NULL)
-            const implantedNoDate = allParishes.filter(p => {
+            const implantedNoDate = parishes.filter(p => {
                 const valImp = p.implantada || p.parceira;
                 const isImp = valImp !== null && valImp !== undefined && valImp !== '' && valImp.toLowerCase() !== 'nao' && valImp.toLowerCase() !== 'não';
                 const noDate = !p.data_implantacao || p.data_implantacao === 'NULL' || p.data_implantacao === 'null' || p.data_implantacao === '';

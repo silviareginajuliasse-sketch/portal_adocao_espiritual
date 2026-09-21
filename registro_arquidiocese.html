@@ -1091,6 +1091,10 @@
                             <i class="fa-solid fa-circle-user" style="color: #00bcd4;"></i> LIDERANÇA
                             <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddLideranca()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
+                        <button type="button" class="tab-btn" id="tab-btn-coordenadores" onclick="switchTab(event, 'tab-coordenadores')">
+                            <i class="fa-solid fa-users" style="color: #f1c40f;"></i> COORDENADORES
+                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddCoordenador()" title="Adicionar Coordenador" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                        </button>
                     </div>
 
                     <form id="arquidiocese-form" onsubmit="saveArquidiocese(event)">
@@ -1216,6 +1220,18 @@
                             </div>
                         </div>
 
+                        <!-- Tab Content: COORDENADORES -->
+                        <div id="tab-coordenadores" class="tab-content">
+                            <!-- List of Coordenadores in Table structure conforming to model -->
+                            <div class="lideranca-table-container">
+                                <table class="lideranca-table">
+                                    <tbody id="coordenadores-tbody">
+                                        <!-- Dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <!-- Footer Actions -->
                         <div class="footer-actions">
                             <button type="button" class="back-btn" onclick="goBack()">
@@ -1311,7 +1327,7 @@
 
         // Switch Tabs logic
         function switchTab(event, tabId) {
-            if (tabId === 'tab-lideranca' && !id) {
+            if ((tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') && !id) {
                 alert("Por favor, grave os dados da aba IDENTIFICAÇÃO primeiro.");
                 return;
             }
@@ -1322,7 +1338,9 @@
             } else {
                 const btn = tabId === 'tab-lideranca' 
                     ? document.getElementById('tab-btn-lideranca') 
-                    : Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
+                    : (tabId === 'tab-coordenadores'
+                        ? document.getElementById('tab-btn-coordenadores')
+                        : Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId)));
                 if (btn) btn.classList.add('active');
             }
             document.getElementById(tabId).classList.add('active');
@@ -1330,7 +1348,7 @@
             // Hide/Show the Delete button depending on the active tab
             const deleteBtn = document.getElementById('delete-btn');
             if (deleteBtn) {
-                if (tabId === 'tab-lideranca') {
+                if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') {
                     deleteBtn.style.display = 'none';
                 } else {
                     if (id) {
@@ -1344,7 +1362,7 @@
             // Hide/Show the Submit (Salvar) button depending on the active tab
             const submitBtn = document.getElementById('submit-btn');
             if (submitBtn) {
-                if (tabId === 'tab-lideranca') {
+                if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') {
                     submitBtn.style.display = 'none';
                 } else {
                     submitBtn.style.display = 'block';
@@ -1653,6 +1671,7 @@
                     }
                     // Clean temp
                     localStorage.removeItem('temp_arquidiocese_lideranca');
+                    localStorage.removeItem('temp_arquidiocese_coordenadores');
                     alert("Arquidiocese salva com sucesso!");
                     if (!id) {
                         window.location.href = `registro_arquidiocese.html?id=${savedId}&mode=edit&nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}&tab=lideranca`;
@@ -2039,6 +2058,140 @@
             }
         }
 
+        // --- Coordinator State Management ---
+        function extractId(val) {
+            if (val === null || val === undefined) return null;
+            let curr = val;
+            while (typeof curr === 'object' && curr !== null) {
+                if (curr.id_colaborador !== undefined) curr = curr.id_colaborador;
+                else if (curr.id !== undefined) curr = curr.id;
+                else break;
+            }
+            const num = parseInt(curr, 10);
+            return isNaN(num) ? null : num;
+        }
+
+        function formatToDDMMYYYY(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('/')) return dateStr;
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const year = date.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        async function fetchCoordenadores(id_arquidiocese) {
+            try {
+                const response = await fetch(`${API_URL}/arquidioceses/${id_arquidiocese}/coordenadores`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const formattedCoordenadores = data.map(item => ({
+                        id_colaborador: item.id_colaborador,
+                        nome_colaborador: item.nome_colaborador,
+                        status: item.status,
+                        data_inicio_coordenador: item.data_inicio_coordenador,
+                        data_fim_coordenador: item.data_fim_coordenador
+                    }));
+                    localStorage.setItem('temp_arquidiocese_coordenadores', JSON.stringify(formattedCoordenadores));
+                    displayCoordenadores();
+                }
+            } catch (err) {
+                console.error("Erro ao carregar coordenadores da arquidiocese:", err);
+            }
+        }
+
+        function displayCoordenadores() {
+            const tbody = document.getElementById('coordenadores-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let list = JSON.parse(localStorage.getItem('temp_arquidiocese_coordenadores') || '[]');
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="2" style="text-align: center; color: #777; padding: 25px; font-style: italic; font-size: 0.95rem;">
+                            Nenhum coordenador cadastrado para esta (Arqui)Diocese.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            list.forEach((coord, idx) => {
+                const tr = document.createElement('tr');
+                tr.onclick = () => editCoordenador(idx);
+
+                const dtInicio = formatToDDMMYYYY(coord.data_inicio_coordenador);
+                const dtFim = formatToDDMMYYYY(coord.data_fim_coordenador);
+                const periodText = (dtInicio || dtFim) ? ` (${dtInicio || ''} - ${dtFim || ''})` : '';
+
+                const colabName = coord.nome_colaborador || `Colaborador #${coord.id_colaborador}`;
+
+                tr.innerHTML = `
+                    <td class="col-delete" onclick="event.stopPropagation(); deleteCoordenador(${idx})">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </td>
+                    <td class="col-info">
+                        <div style="font-size: 0.92rem; color: #333; line-height: 1.4;">
+                            <strong>${colabName}</strong>${periodText}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddCoordenador() {
+            localStorage.setItem('temp_arquidiocese_active_tab', 'tab-coordenadores');
+            saveParentFormState();
+            const nomeUser = urlParams.get('nome') || '';
+            const cpfUser = urlParams.get('cpf') || '';
+            const arqId = id ? `&id_arquidiocese=${id}` : '';
+            window.location.href = `popup_colaboradores_ae.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}${arqId}`;
+        }
+
+        function editCoordenador(index) {
+            localStorage.setItem('temp_arquidiocese_active_tab', 'tab-coordenadores');
+            saveParentFormState();
+            const list = JSON.parse(localStorage.getItem('temp_arquidiocese_coordenadores') || '[]');
+            const coord = list[index];
+            const colabId = coord ? extractId(coord.id_colaborador) : null;
+            const nomeUser = urlParams.get('nome') || '';
+            const cpfUser = urlParams.get('cpf') || '';
+            const arqId = id ? `&id_arquidiocese=${id}` : '';
+            const colabParam = colabId ? `&edit_colab_id=${colabId}` : '';
+            window.location.href = `popup_colaboradores_ae.html?nome=${encodeURIComponent(nomeUser)}&cpf=${encodeURIComponent(cpfUser)}${arqId}${colabParam}`;
+        }
+
+        async function deleteCoordenador(index) {
+            if (confirm("Deseja realmente remover este coordenador?")) {
+                const list = JSON.parse(localStorage.getItem('temp_arquidiocese_coordenadores') || '[]');
+                const coord = list[index];
+                if (coord && id) {
+                    const colabId = extractId(coord.id_colaborador);
+                    if (colabId) {
+                        try {
+                            const response = await fetch(`${API_URL}/arquidiocese_coordenadores?id_arquidiocese=${id}&id_colaborador=${colabId}`, { method: 'DELETE' });
+                            if (!response.ok) {
+                                alert("Erro ao excluir coordenador do banco.");
+                                return;
+                            }
+                        } catch (err) {
+                            console.error("Erro ao excluir coordenador:", err);
+                            alert("Erro ao excluir coordenador.");
+                            return;
+                        }
+                    }
+                }
+                list.splice(index, 1);
+                localStorage.setItem('temp_arquidiocese_coordenadores', JSON.stringify(list));
+                displayCoordenadores();
+            }
+        }
+
         window.onload = async function () {
             // Set initial metadata 'Por' value to currently logged in user
             document.getElementById('metadata-por').innerText = localStorage.getItem('user_nome') || '--';
@@ -2050,41 +2203,61 @@
 
             if (id) {
                 await loadArquidioceseData(id);
-                // Ensure LIDERANÇA tab is enabled
+                // Ensure LIDERANÇA and COORDENADORES tabs are enabled
                 const tabLideranca = document.getElementById('tab-btn-lideranca');
                 if (tabLideranca) {
                     tabLideranca.removeAttribute('disabled');
                     tabLideranca.removeAttribute('title');
                 }
+                const tabCoordenadores = document.getElementById('tab-btn-coordenadores');
+                if (tabCoordenadores) {
+                    tabCoordenadores.removeAttribute('disabled');
+                    tabCoordenadores.removeAttribute('title');
+                }
+                await fetchCoordenadores(id);
             } else {
                 // New record
                 document.getElementById('page-title-text').innerText = "Inclusão de (Arqui)Diocese";
                 const deleteBtn = document.getElementById('delete-btn');
                 if (deleteBtn) deleteBtn.style.display = 'none';
 
-                // Disable leadership tab
+                // Disable leadership and coordinator tabs
                 const tabLideranca = document.getElementById('tab-btn-lideranca');
                 if (tabLideranca) {
                     tabLideranca.setAttribute('disabled', 'true');
                     tabLideranca.setAttribute('title', 'Salve os dados de identificação primeiro para liberar esta aba');
                 }
+                const tabCoordenadores = document.getElementById('tab-btn-coordenadores');
+                if (tabCoordenadores) {
+                    tabCoordenadores.setAttribute('disabled', 'true');
+                    tabCoordenadores.setAttribute('title', 'Salve os dados de identificação primeiro para liberar esta aba');
+                }
 
                 // Load social media types for new record
                 await loadSocialMediaTypes();
 
-                // Clear temp leadership
+                // Clear temp leadership & coordinators
                 if (!returning) {
                     localStorage.removeItem('temp_arquidiocese_lideranca');
+                    localStorage.removeItem('temp_arquidiocese_coordenadores');
                 }
                 displayLiderancas();
+                displayCoordenadores();
             }
+
+            const activeTab = localStorage.getItem('temp_arquidiocese_active_tab') || 'tab-lideranca';
+            localStorage.removeItem('temp_arquidiocese_active_tab');
+
             if (returning) {
                 restoreParentFormState();
                 displayLiderancas();
-                switchTab(null, 'tab-lideranca');
+                displayCoordenadores();
+                switchTab(null, activeTab);
             } else {
                 const tabParam = urlParams.get('tab');
-                if (tabParam === 'lideranca') {
+                if (tabParam === 'coordenadores') {
+                    switchTab(null, 'tab-coordenadores');
+                } else if (tabParam === 'lideranca') {
                     switchTab(null, 'tab-lideranca');
                 }
             }

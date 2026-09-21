@@ -926,9 +926,23 @@
                         deleteParoquia(paroquia.id_paroquia, paroquia.nome_paroquia);
                     };
 
-                    const valImplantada = paroquia.implantada || paroquia.parceira;
-                    const hasSelo = (paroquia.data_implantacao !== null && paroquia.data_implantacao !== undefined && paroquia.data_implantacao !== '') ||
-                                    (valImplantada !== null && valImplantada !== undefined && valImplantada !== '' && valImplantada.toLowerCase() !== 'nao' && valImplantada.toLowerCase() !== 'não');
+                    const valImplantada = (paroquia.implantada !== undefined && paroquia.implantada !== null) ? paroquia.implantada : (paroquia.parceira || '');
+                    const rawVal = String(valImplantada || '').trim();
+                    let labelImplantada = 'Não';
+                    let impColor = '#777';
+
+                    if (rawVal.toLowerCase().includes('prospec')) {
+                        labelImplantada = 'Em prospecção';
+                        impColor = '#dd6b20';
+                    } else if (rawVal.toLowerCase() === 'sim' || rawVal.toLowerCase() === 'implantada') {
+                        labelImplantada = 'Implantada';
+                        impColor = '#2e7d32';
+                    } else if (rawVal && rawVal.toLowerCase() !== 'não' && rawVal.toLowerCase() !== 'nao') {
+                        labelImplantada = rawVal;
+                        impColor = '#2e7d32';
+                    }
+
+                    const hasSelo = (paroquia.data_implantacao !== null && paroquia.data_implantacao !== undefined && String(paroquia.data_implantacao).trim() !== '') || labelImplantada === 'Implantada';
                     
                     const seloDiv = document.createElement('div');
                     seloDiv.style.width = '30px';
@@ -991,13 +1005,13 @@
                     const cleanTipo = (rawTipo.includes('Par') || rawTipo.includes('par')) ? 'Paróquia' : 'Comunidade';
                     tipoDiv.textContent = cleanTipo;
 
-                    // Column 3: Implantada ('Sim' or 'Não')
+                    // Column 3: Implantada (Mapeado: Sim -> Implantada, Não -> Não, Em prospecção -> Em prospecção)
                     const impDiv = document.createElement('div');
-                    impDiv.style.flex = '0 0 100px';
-                    impDiv.style.minWidth = '80px';
+                    impDiv.style.flex = '0 0 110px';
+                    impDiv.style.minWidth = '90px';
                     impDiv.style.fontWeight = '500';
-                    impDiv.style.color = hasSelo ? '#2e7d32' : '#777';
-                    impDiv.textContent = hasSelo ? 'Sim' : 'Não';
+                    impDiv.style.color = impColor;
+                    impDiv.textContent = labelImplantada;
 
                     // Column 4: Data Implantação
                     const dataImpDiv = document.createElement('div');

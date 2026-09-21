@@ -1043,11 +1043,16 @@
             document.getElementById('help-overlay').classList.toggle('active');
         }
 
+        function removeAccents(str) {
+            if (!str) return '';
+            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
         function filterList() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const items = document.querySelectorAll('.list-item');
+            const query = removeAccents(document.getElementById('search-input').value).toLowerCase();
+            const items = document.querySelectorAll('#collaborators-list .list-item');
             items.forEach(item => {
-                const text = item.textContent.toLowerCase();
+                const text = removeAccents(item.textContent).toLowerCase();
                 item.style.display = text.includes(query) ? 'flex' : 'none';
             });
         }
