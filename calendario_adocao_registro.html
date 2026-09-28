@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário Adoção Espiritual - Registro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #8b1e1e;
+            --text-dark: #333;
+            --text-gray: #666;
+            --border-color: #ccc;
+            --light-red: #fdf0f0;
+            --bg-gray: #fafafa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100vh;
+            height: 100vh;
+            background-image: url('./logo_circular.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.03;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo-container img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .header-title-text {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .account-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .user-detail-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .user-detail-id {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-initials {
+            width: 32px;
+            height: 32px;
+            background-color: #9b72b6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .close-sidebar {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f5f5f5;
+            color: #1652b4;
+        }
+
+        /* Main Container */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 40px 20px;
+        }
+
+        /* Form Card */
+        .form-card {
+            background-color: white;
+            padding: 30px 35px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+            position: relative;
+        }
+
+        /* Top Header Row in Card */
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .card-title {
+            color: var(--primary-red);
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .mandatory-notice {
+            color: var(--primary-red);
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        .help-btn-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            color: #1652b4;
+            font-size: 0.8rem;
+            background: none;
+            border: none;
+        }
+
+        .help-btn-header i {
+            font-size: 1.5rem;
+            margin-bottom: 2px;
+        }
+
+        /* Form Rows & Layout */
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+
+        .form-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin-bottom: 4px;
+        }
+
+        .form-label span {
+            color: var(--primary-red);
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-field,
+        .select-field {
+            width: 100%;
+            height: 38px;
+            padding: 8px 12px;
+            border: 1px solid #777;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #555;
+            outline: none;
+            background-color: white;
+            transition: border-color 0.2s;
+        }
+
+        .textarea-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #777;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #555;
+            outline: none;
+            background-color: white;
+            transition: border-color 0.2s;
+            resize: vertical;
+            min-height: 90px;
+            font-family: inherit;
+        }
+
+        .select-field {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding-right: 30px;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.9rem;
+        }
+
+        .input-field:focus,
+        .select-field:focus,
+        .textarea-field:focus {
+            border-color: var(--primary-red);
+        }
+
+        .textarea-field {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* Remove up/down spin buttons on number input */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* Column widths on desktop matching registro_paroquias.html */
+        @media (min-width: 900px) {
+            .col-status {
+                flex: 0 0 115px !important;
+            }
+            .col-tipo-cal {
+                flex: 0 0 160px !important;
+            }
+            .col-formato {
+                flex: 0 0 160px !important;
+            }
+            .col-tipo {
+                flex: 0 0 140px !important;
+            }
+            .col-recorrente {
+                flex: 0 0 180px !important;
+            }
+            .col-ordem {
+                flex: 0 0 110px !important;
+            }
+            .col-semana-mes {
+                flex: 0 0 145px !important;
+            }
+            .col-data-unica {
+                flex: 0 0 140px !important;
+            }
+            .col-dia-mes {
+                flex: 0 0 100px !important;
+            }
+            .col-hora {
+                flex: 0 0 100px !important;
+            }
+            .col-termina-em {
+                flex: 0 0 145px !important;
+            }
+        }
+
+        #recorrenteDiaSemanaGroup:not(.is-hidden) {
+            display: flex !important;
+            gap: 15px;
+            flex: 0 0 auto;
+        }
+
+        /* Metadata Columns alignment matching registro_paroquias.html */
+        .metadata-container {
+            display: flex;
+            gap: 30px;
+            margin-left: auto;
+            align-items: flex-start;
+        }
+
+        .metadata-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .metadata-value {
+            color: #555;
+            font-size: 0.95rem;
+            font-weight: 400;
+            padding: 10px 0;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 900px) {
+            .metadata-container {
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px dashed #eee;
+            }
+        }
+
+        /* Dynamic Fields Wrapper */
+        .dynamic-fields-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* Hidden Field Class */
+        .is-hidden {
+            display: none !important;
+        }
+
+        /* Footer Actions */
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 35px;
+            padding-top: 15px;
+        }
+
+        .back-circle-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        .back-circle-btn:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            transform: scale(1.05);
+        }
+
+        .right-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-delete {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+            padding: 9px 30px;
+            border-radius: 25px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--light-red);
+        }
+
+        .btn-save {
+            background: linear-gradient(180deg, #c0392b 0%, #8b1e1e 100%);
+            color: white;
+            border: none;
+            padding: 9px 40px;
+            border-radius: 25px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+        }
+
+        .btn-save:hover {
+            background: linear-gradient(180deg, #d32f2f 0%, #a01a1a 100%);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive */
+        /* Dropdown Menu - Standardized */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            cursor: default;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-body {
+            padding: 20px 15px;
+        }
+
+        .user-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #dbe8f9;
+            color: #557db5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .profile-avatar .user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .camera-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info .full-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .profile-info .id-number {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .decorative-divider span {
+            flex: 1;
+            height: 4px;
+            background-color: #f1c40f;
+            border-radius: 2px;
+        }
+
+        .update-link {
+            color: #333;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 850px) {
+            .metadata-group-inline {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo-container">
+                <img src="https://moacap.github.io/adocao_espiritual_site/favicon.png" alt="Logo" />
+                <div class="header-title-text">Adoção<br>Espiritual</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="account-container" onclick="toggleDropdown(event)">
+                <div class="account-info">
+                    <div class="user-detail-name" id="user-display">CARREGANDO...</div>
+                    <div class="user-detail-id" id="user-id">000.000.000-00</div>
+                </div>
+                <div class="user-initials" id="user-initials">--</div>
+                <div class="account-toggle" id="account-toggle-icon">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu" onclick="event.stopPropagation()">
+                    <div class="dropdown-header">
+                        <span>Minha Conta</span>
+                        <a href="identificacao.html" class="logout-link">
+                            Sair <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                    <div class="dropdown-body">
+                        <div class="user-profile-row">
+                            <div class="profile-avatar" onclick="document.getElementById('hidden-photo-input').click()">
+                                <div id="avatar-content">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="camera-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                            </div>
+                            <input type="file" id="hidden-photo-input" style="display: none;" accept="image/*"
+                                onchange="handlePhotoUpload(event)">
+                            <div class="profile-info">
+                                <div class="full-name" id="dropdown-full-name">CARREGANDO...</div>
+                                <div class="id-number" id="dropdown-id">000.000.000-00</div>
+                            </div>
+                        </div>
+                        <div class="user-role regular">
+                            Seu perfil é <strong>Coordenador Nacional</strong>
+                        </div>
+                        <div class="decorative-divider">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <a href="registro_colaboradores.html" class="update-link"><i><u>Atualizar cadastro</u></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Menu -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu do Sistema</span>
+            <i class="fa-solid fa-xmark close-sidebar" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-list">
+            <!-- Dynamic menu options injected here by header.js -->
+        </ul>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <form id="activityForm" class="form-card">
+            <!-- Header Row -->
+            <div class="card-header-row">
+                <h1 class="card-title">Calendário Adoção Espiritual</h1>
+                <span class="mandatory-notice">Os campos assinalados com asterisco (*) são de preenchimento obrigatório.</span>
+                <button type="button" class="help-btn-header" id="helpBtn">
+                    <i class="far fa-question-circle"></i>
+                    <span>Ajuda</span>
+                </button>
+            </div>
+
+            <!-- Row 1: Status, Calendário, Formato, Incluído em, Atualizado em, Por -->
+            <div class="form-row" style="align-items: flex-start; margin-bottom: 20px;">
+                <div class="form-group col-status">
+                    <label class="form-label" for="status">Status <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="status" class="select-field" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group col-tipo-cal">
+                    <label class="form-label" for="tipo_calendario">Calendário <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="tipo_calendario" class="select-field" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group col-formato">
+                    <label class="form-label" for="formato">Formato <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="formato" class="select-field" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div class="metadata-container">
+                    <div class="metadata-group">
+                        <label class="form-label">Incluído em</label>
+                        <span class="metadata-value" id="criadoEmVal">-</span>
+                    </div>
+                    <div class="metadata-group">
+                        <label class="form-label">Atualizado em</label>
+                        <span class="metadata-value" id="atualizadoEmVal">-</span>
+                    </div>
+                    <div class="metadata-group">
+                        <label class="form-label">Por</label>
+                        <span class="metadata-value" id="autorVal">SILVIA JULIASSE</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Classificação, Recorrente, Dynamic Recorrente Fields, Hora -->
+            <div class="form-row" style="align-items: flex-end; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group col-tipo">
+                    <label class="form-label" for="tipo">Classificação <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="tipo" class="select-field" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group col-recorrente">
+                    <label class="form-label" for="recorrente">Recorrente <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="recorrente" class="select-field" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <!-- Option Única: Data -->
+                <div id="recorrenteUnicaGroup" class="form-group col-data-unica">
+                    <label class="form-label" for="data_atividade">Data <span>*</span></label>
+                    <div class="input-wrapper">
+                        <input type="date" id="data_atividade" class="input-field">
+                    </div>
+                </div>
+
+                <!-- Option Mensal dia da semana: Ordem, Semana do Mês -->
+                <div id="recorrenteDiaSemanaGroup" class="is-hidden">
+                    <div class="form-group col-ordem">
+                        <label class="form-label" for="ordem_semana">Ordem <span>*</span></label>
+                        <div class="input-wrapper">
+                            <select id="ordem_semana" class="select-field">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="form-group col-semana-mes">
+                        <label class="form-label" for="dia_semana">Semana do Mês <span>*</span></label>
+                        <div class="input-wrapper">
+                            <select id="dia_semana" class="select-field">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Option Mensal dia fixo: Dia do Mês -->
+                <div id="recorrenteDiaFixoGroup" class="form-group col-dia-mes is-hidden">
+                    <label class="form-label" for="dia_mes">Dia do Mês <span>*</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="dia_mes" class="input-field" min="1" max="31" placeholder="1 a 31">
+                    </div>
+                </div>
+
+                <!-- Shared Hora -->
+                <div class="form-group col-hora">
+                    <label class="form-label" for="hora_atividade">Hora <span>*</span></label>
+                    <div class="input-wrapper">
+                        <input type="time" id="hora_atividade" class="input-field" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Termina em, Descrição da atividade -->
+            <div class="form-row" style="align-items: flex-end; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group col-termina-em">
+                    <label class="form-label" for="data_fim">Termina em</label>
+                    <div class="input-wrapper">
+                        <input type="date" id="data_fim" class="input-field">
+                    </div>
+                </div>
+
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label" for="titulo">Descrição da atividade <span>*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="titulo" class="input-field" placeholder="Ex: Festa da Misericórdia e Adoção Espiritual" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 4: Estado, Regional, Arquidiocese -->
+            <div class="form-row" id="locationRow1">
+                <div class="form-group" id="groupEstado" style="flex: 1 1 200px;">
+                    <label class="form-label" for="id_estado">Estado <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="id_estado" class="select-field">
+                            <option value="">Selecione o estado</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group" id="groupRegional" style="flex: 1 1 220px;">
+                    <label class="form-label" for="id_regional">Regional <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="id_regional" class="select-field">
+                            <option value="">Selecione a regional</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group" id="groupArquidiocese" style="flex: 1 1 240px;">
+                    <label class="form-label" for="id_arquidiocese">Arquidiocese <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="id_arquidiocese" class="select-field">
+                            <option value="">Selecione a arquidiocese</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 5: Paróquia -->
+            <div class="form-row" id="locationRow2">
+                <div class="form-group full-width" id="groupParoquia">
+                    <label class="form-label" for="id_paroquia">Paróquia <span>*</span></label>
+                    <div class="input-wrapper">
+                        <select id="id_paroquia" class="select-field">
+                            <option value="">Selecione a paróquia</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 6: Observação -->
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label class="form-label" for="observacoes">Observação</label>
+                    <div class="input-wrapper">
+                        <textarea id="observacoes" class="textarea-field" placeholder="Observações adicionais..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="footer-actions">
+                <a href="lista_calendario_adocao.html" class="back-circle-btn" title="Voltar">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <div class="right-buttons">
+                    <button type="button" id="btnDelete" class="btn-delete is-hidden">Excluir</button>
+                    <button type="submit" id="btnSave" class="btn-save">Salvar</button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const closeSidebar = document.getElementById('closeSidebar');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            const activityForm = document.getElementById('activityForm');
+            const statusSelect = document.getElementById('status');
+            const tipoCalSelect = document.getElementById('tipo_calendario');
+            const formatoSelect = document.getElementById('formato');
+            const tipoSelect = document.getElementById('tipo');
+            const recorrenteSelect = document.getElementById('recorrente');
+
+            const recorrenteUnicaGroup = document.getElementById('recorrenteUnicaGroup');
+            const recorrenteDiaSemanaGroup = document.getElementById('recorrenteDiaSemanaGroup');
+            const recorrenteDiaFixoGroup = document.getElementById('recorrenteDiaFixoGroup');
+            
+            const ordemSemanaSelect = document.getElementById('ordem_semana');
+            const diaSemanaSelect = document.getElementById('dia_semana');
+            const diaMesInput = document.getElementById('dia_mes');
+            const dataAtividadeInput = document.getElementById('data_atividade');
+
+            const groupEstado = document.getElementById('groupEstado');
+            const groupRegional = document.getElementById('groupRegional');
+            const groupArquidiocese = document.getElementById('groupArquidiocese');
+            const groupParoquia = document.getElementById('groupParoquia');
+
+            const selectEstado = document.getElementById('id_estado');
+            const selectRegional = document.getElementById('id_regional');
+            const selectArquidiocese = document.getElementById('id_arquidiocese');
+            const selectParoquia = document.getElementById('id_paroquia');
+
+            const criadoEmVal = document.getElementById('criadoEmVal');
+            const atualizadoEmVal = document.getElementById('atualizadoEmVal');
+            const btnDelete = document.getElementById('btnDelete');
+
+            // Parse record ID if editing
+            const urlParams = new URLSearchParams(window.location.search);
+            const recordId = urlParams.get('id');
+
+            // Sidebar toggles
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', () => {
+                    sidebar.classList.add('active');
+                    sidebarOverlay.classList.add('active');
+                });
+            }
+            const hideSidebar = () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            };
+            if (closeSidebar) closeSidebar.addEventListener('click', hideSidebar);
+            if (sidebarOverlay) sidebarOverlay.addEventListener('click', hideSidebar);
+
+            const API_BASE = (window.location.protocol === 'file:' || window.location.port !== '3000') ? 'http://localhost:3000/api' : '/api';
+
+            // Load menu
+            fetch(`${API_BASE}/menu`)
+                .then(res => res.json())
+                .then(data => {
+                    const menuContainer = document.getElementById('sidebarMenu');
+                    if (!menuContainer) return;
+                    menuContainer.innerHTML = '';
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `
+                                <a href="${item.pagina}" class="sidebar-item">
+                                    <i class="${item.icone || 'fas fa-link'}"></i>
+                                    <span>${item.nome_menu}</span>
+                                </a>
+                            `;
+                            menuContainer.appendChild(li);
+                        });
+                    }
+                })
+                .catch(err => console.error('Erro ao carregar menu:', err));
+
+            // Populate ENUM Select options
+            function populateSelectOptions(selectEl, options, selectedVal = '') {
+                selectEl.innerHTML = '<option value="">Selecione...</option>';
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    if (opt === selectedVal) option.selected = true;
+                    selectEl.appendChild(option);
+                });
+            }
+
+            // Fetch ENUMs strictly from database table definition
+            fetch(`${API_BASE}/atividades_calendario/enums`)
+                .then(res => res.json())
+                .then(enums => {
+                    if (enums.status && Array.isArray(enums.status)) {
+                        populateSelectOptions(statusSelect, enums.status);
+                    }
+                    if (enums.tipo_calendario && Array.isArray(enums.tipo_calendario)) {
+                        populateSelectOptions(tipoCalSelect, enums.tipo_calendario);
+                    }
+                    const formatoOpts = enums.formato || enums.tipo_formato;
+                    if (formatoOpts && Array.isArray(formatoOpts)) {
+                        populateSelectOptions(formatoSelect, formatoOpts);
+                    }
+                    if (enums.tipo && Array.isArray(enums.tipo)) {
+                        populateSelectOptions(tipoSelect, enums.tipo);
+                    }
+                    if (enums.recorrente && Array.isArray(enums.recorrente)) {
+                        populateSelectOptions(recorrenteSelect, enums.recorrente);
+                    }
+                    if (enums.ordem_semana && Array.isArray(enums.ordem_semana)) {
+                        populateSelectOptions(ordemSemanaSelect, enums.ordem_semana);
+                    }
+                    if (enums.dia_semana && Array.isArray(enums.dia_semana)) {
+                        populateSelectOptions(diaSemanaSelect, enums.dia_semana);
+                    }
+                    
+                    if (recordId) {
+                        loadExistingRecord(recordId);
+                    }
+                })
+                .catch(err => {
+                    console.error('Erro ao buscar ENUMs da tabela do banco de dados:', err);
+                    if (recordId) {
+                        loadExistingRecord(recordId);
+                    }
+                });
+
+            // Handle Recorrente Dynamic Fields (Requirements 6.1, 6.2, 6.3)
+            recorrenteSelect.addEventListener('change', updateRecorrenteVisibility);
+
+            function updateRecorrenteVisibility() {
+                const val = recorrenteSelect.value;
+                recorrenteUnicaGroup.classList.add('is-hidden');
+                recorrenteDiaSemanaGroup.classList.add('is-hidden');
+                recorrenteDiaFixoGroup.classList.add('is-hidden');
+
+                dataAtividadeInput.required = false;
+                ordemSemanaSelect.required = false;
+                diaSemanaSelect.required = false;
+                diaMesInput.required = false;
+
+                if (val === 'Única') {
+                    recorrenteUnicaGroup.classList.remove('is-hidden');
+                    dataAtividadeInput.required = true;
+                } else if (val === 'Mensal dia da semana') {
+                    recorrenteDiaSemanaGroup.classList.remove('is-hidden');
+                    ordemSemanaSelect.required = true;
+                    diaSemanaSelect.required = true;
+                } else if (val === 'Mensal dia fixo') {
+                    recorrenteDiaFixoGroup.classList.remove('is-hidden');
+                    diaMesInput.required = true;
+                }
+            }
+
+            // Ensure dia_mes input allows only numbers between 1 and 31 (Requirement 6.3)
+            diaMesInput.addEventListener('input', (e) => {
+                let v = parseInt(e.target.value, 10);
+                if (isNaN(v)) e.target.value = '';
+                else if (v < 1) e.target.value = 1;
+                else if (v > 31) e.target.value = 31;
+            });
+
+            const locationRow1 = document.getElementById('locationRow1');
+            const locationRow2 = document.getElementById('locationRow2');
+
+            // Handle Location Fields Visibility (Requirement 7)
+            tipoCalSelect.addEventListener('change', updateLocationVisibility);
+
+            function updateLocationVisibility() {
+                const calVal = tipoCalSelect.value;
+
+                if (locationRow1) locationRow1.classList.remove('is-hidden');
+                if (locationRow2) locationRow2.classList.remove('is-hidden');
+
+                groupEstado.classList.remove('is-hidden');
+                groupRegional.classList.remove('is-hidden');
+                groupArquidiocese.classList.remove('is-hidden');
+                groupParoquia.classList.remove('is-hidden');
+
+                selectEstado.required = true;
+                selectRegional.required = true;
+                selectArquidiocese.required = true;
+                selectParoquia.required = true;
+
+                if (calVal === 'Nacional') {
+                    // 7.1. 'Nacional' ocultar Estado, Regional, Arquidiocese e Paróquia
+                    if (locationRow1) locationRow1.classList.add('is-hidden');
+                    if (locationRow2) locationRow2.classList.add('is-hidden');
+
+                    groupEstado.classList.add('is-hidden');
+                    groupRegional.classList.add('is-hidden');
+                    groupArquidiocese.classList.add('is-hidden');
+                    groupParoquia.classList.add('is-hidden');
+
+                    selectEstado.required = false;
+                    selectRegional.required = false;
+                    selectArquidiocese.required = false;
+                    selectParoquia.required = false;
+                } else if (calVal === 'Regional') {
+                    // 'Regional' ocultar Arquidiocese e Paróquia
+                    if (locationRow2) locationRow2.classList.add('is-hidden');
+
+                    groupArquidiocese.classList.add('is-hidden');
+                    groupParoquia.classList.add('is-hidden');
+
+                    selectArquidiocese.required = false;
+                    selectParoquia.required = false;
+                } else if (calVal === 'Arquidiocese') {
+                    // 7.2. 'Arquidiocese' ocultar Paróquia
+                    if (locationRow2) locationRow2.classList.add('is-hidden');
+
+                    groupParoquia.classList.add('is-hidden');
+
+                    selectParoquia.required = false;
+                }
+            }
+
+            // Load Estados on initial page load
+            function loadEstados() {
+                return fetch(`${API_BASE}/estados`)
+                    .then(res => res.json())
+                    .then(data => {
+                        selectEstado.innerHTML = '<option value="">Selecione o estado</option>';
+                        if (Array.isArray(data)) {
+                            data.forEach(item => {
+                                selectEstado.innerHTML += `<option value="${item.id_estado}">${item.nome_estado || item.sigla}</option>`;
+                            });
+                        }
+                    }).catch(err => console.error('Erro ao carregar estados:', err));
+            }
+
+            // Load Regionais for selected Estado
+            function loadRegionais(estadoId) {
+                selectRegional.innerHTML = '<option value="">Selecione a regional</option>';
+                selectArquidiocese.innerHTML = '<option value="">Selecione a arquidiocese</option>';
+                selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
+                if (!estadoId) return Promise.resolve();
+
+                return fetch(`${API_BASE}/regionais/estado/${estadoId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        selectRegional.innerHTML = '<option value="">Selecione a regional</option>';
+                        if (Array.isArray(data) && data.length > 0) {
+                            data.forEach(item => {
+                                selectRegional.innerHTML += `<option value="${item.id_regional}">${item.nome_regional}</option>`;
+                            });
+                        } else {
+                            // Fallback to fetch all regionais if endpoint filtered is empty
+                            return fetch(`${API_BASE}/regionais`)
+                                .then(res => res.json())
+                                .then(all => {
+                                    if (Array.isArray(all)) {
+                                        all.forEach(item => {
+                                            selectRegional.innerHTML += `<option value="${item.id_regional}">${item.nome_regional}</option>`;
+                                        });
+                                    }
+                                });
+                        }
+                    })
+                    .catch(err => console.error('Erro ao carregar regionais:', err));
+            }
+
+            // Load Arquidioceses for selected Regional or Estado
+            function loadArquidioceses(regionalId, estadoId) {
+                selectArquidiocese.innerHTML = '<option value="">Selecione a arquidiocese</option>';
+                selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
+                if (!regionalId && !estadoId) return Promise.resolve();
+
+                let url = `${API_BASE}/arquidioceses`;
+                if (regionalId) {
+                    url = `${API_BASE}/arquidioceses/regional/${regionalId}`;
+                } else if (estadoId) {
+                    url = `${API_BASE}/arquidioceses/estado/${estadoId}`;
+                }
+
+                return fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        selectArquidiocese.innerHTML = '<option value="">Selecione a arquidiocese</option>';
+                        if (Array.isArray(data) && data.length > 0) {
+                            data.forEach(item => {
+                                selectArquidiocese.innerHTML += `<option value="${item.id_arquidiocese}">${item.nome_arquidiocese}</option>`;
+                            });
+                        }
+                    })
+                    .catch(err => console.error('Erro ao carregar arquidioceses:', err));
+            }
+
+            // Load Paroquias for selected Arquidiocese
+            function loadParoquias(arqId) {
+                selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
+                if (!arqId) return Promise.resolve();
+
+                return fetch(`${API_BASE}/paroquias/arquidiocese/${arqId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
+                        if (Array.isArray(data) && data.length > 0) {
+                            data.forEach(item => {
+                                selectParoquia.innerHTML += `<option value="${item.id_paroquia || item.id}">${item.nome_paroquia}</option>`;
+                            });
+                        }
+                    })
+                    .catch(err => console.error('Erro ao carregar paróquias:', err));
+            }
+
+            // Load Initial Estados
+            loadEstados();
+
+            // Cascading Dropdown Listeners
+            selectEstado.addEventListener('change', () => {
+                loadRegionais(selectEstado.value);
+            });
+
+            selectRegional.addEventListener('change', () => {
+                loadArquidioceses(selectRegional.value, selectEstado.value);
+            });
+
+            selectArquidiocese.addEventListener('change', () => {
+                loadParoquias(selectArquidiocese.value);
+            });
+
+            // Date format helper for display
+            function formatDateDisplay(dtStr) {
+                if (!dtStr) return '-';
+                const d = new Date(dtStr);
+                if (isNaN(d.getTime())) return dtStr;
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const mins = String(d.getMinutes()).padStart(2, '0');
+                return `${day}/${month}/${year} ${hours}:${mins}`;
+            }
+
+            // Load Existing Record if editing
+            function loadExistingRecord(id) {
+                btnDelete.classList.remove('is-hidden');
+                fetch(`${API_BASE}/atividades_calendario/${id}`)
+                    .then(res => res.json())
+                    .then(async data => {
+                        if (!data || data.error) return;
+
+                        if (data.status) statusSelect.value = data.status;
+                        if (data.tipo_calendario) tipoCalSelect.value = data.tipo_calendario;
+                        if (data.formato) formatoSelect.value = data.formato;
+                        if (data.tipo) tipoSelect.value = data.tipo;
+                        if (data.recorrente) recorrenteSelect.value = data.recorrente;
+
+                        updateRecorrenteVisibility();
+                        updateLocationVisibility();
+
+                        if (data.ordem_semana) ordemSemanaSelect.value = data.ordem_semana;
+                        if (data.dia_semana) diaSemanaSelect.value = data.dia_semana;
+                        if (data.dia_mes) diaMesInput.value = data.dia_mes;
+
+                        if (data.data_atividade) {
+                            const d = new Date(data.data_atividade);
+                            if (!isNaN(d.getTime())) {
+                                dataAtividadeInput.value = d.toISOString().split('T')[0];
+                            }
+                        }
+
+                        if (data.hora_atividade) document.getElementById('hora_atividade').value = data.hora_atividade;
+                        if (data.data_fim) {
+                            const dF = new Date(data.data_fim);
+                            if (!isNaN(dF.getTime())) {
+                                document.getElementById('data_fim').value = dF.toISOString().split('T')[0];
+                            }
+                        }
+
+                        if (data.titulo) document.getElementById('titulo').value = data.titulo;
+                        if (data.observacoes) document.getElementById('observacoes').value = data.observacoes;
+
+                        if (data.id_estado) {
+                            selectEstado.value = data.id_estado;
+                            await loadRegionais(data.id_estado);
+                            if (data.id_regional) {
+                                selectRegional.value = data.id_regional;
+                                await loadArquidioceses(data.id_regional, data.id_estado);
+                                if (data.id_arquidiocese) {
+                                    selectArquidiocese.value = data.id_arquidiocese;
+                                    await loadParoquias(data.id_arquidiocese);
+                                    if (data.id_paroquia) {
+                                        selectParoquia.value = data.id_paroquia;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (data.criado_em) criadoEmVal.textContent = formatDateDisplay(data.criado_em);
+                        if (data.atualizado_em) atualizadoEmVal.textContent = formatDateDisplay(data.atualizado_em);
+                    })
+                    .catch(err => console.error('Erro ao carregar registro:', err));
+            }
+
+            // Save Form Submit
+            activityForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const payload = {
+                    id_atividade: recordId || null,
+                    status: statusSelect.value,
+                    tipo_calendario: tipoCalSelect.value,
+                    formato: formatoSelect.value,
+                    tipo: tipoSelect.value,
+                    recorrente: recorrenteSelect.value,
+                    ordem_semana: ordemSemanaSelect.value || null,
+                    dia_semana: diaSemanaSelect.value || null,
+                    dia_mes: diaMesInput.value ? parseInt(diaMesInput.value, 10) : null,
+                    data_atividade: dataAtividadeInput.value || null,
+                    hora_atividade: document.getElementById('hora_atividade').value || null,
+                    data_fim: document.getElementById('data_fim').value || null,
+                    titulo: document.getElementById('titulo').value,
+                    id_estado: selectEstado.value ? parseInt(selectEstado.value, 10) : null,
+                    id_regional: selectRegional.value ? parseInt(selectRegional.value, 10) : null,
+                    id_arquidiocese: selectArquidiocese.value ? parseInt(selectArquidiocese.value, 10) : null,
+                    id_paroquia: selectParoquia.value ? parseInt(selectParoquia.value, 10) : null,
+                    observacoes: document.getElementById('observacoes').value || null,
+                    id_colaborador_atualiza: 2
+                };
+
+                fetch(`${API_BASE}/atividades_calendario/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Registro salvo com sucesso!');
+                        window.location.href = 'lista_calendario_adocao.html';
+                    } else {
+                        alert('Erro ao salvar registro: ' + (data.error || 'Erro desconhecido.'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Erro ao salvar:', err);
+                    alert('Erro ao se comunicar com o servidor.');
+                });
+            });
+
+            // Delete Action
+            if (btnDelete) {
+                btnDelete.addEventListener('click', () => {
+                    if (!recordId) return;
+                    if (confirm('Tem certeza que deseja excluir este registro do calendário?')) {
+                        fetch(`${API_BASE}/atividades_calendario/${recordId}`, {
+                            method: 'DELETE'
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success || data.ok) {
+                                alert('Registro excluído com sucesso.');
+                                window.location.href = 'lista_calendario_adocao.html';
+                            } else {
+                                alert('Erro ao excluir registro: ' + (data.error || 'Erro desconhecido.'));
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Erro ao excluir:', err);
+                            alert('Erro ao conectar ao servidor para exclusão.');
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="assets/js/header.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('dropdown-menu').classList.toggle('show');
+        }
+
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('dropdown-menu');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+
+</html>

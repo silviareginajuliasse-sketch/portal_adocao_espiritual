@@ -977,7 +977,7 @@
                         <i class="fa-solid fa-sliders" title="Filtrar"
                             style="color: #1a3a6b; font-size: 1.2rem; cursor: pointer;" onclick="openFilterModal()"></i>
                         <div class="export-separator"></div>
-                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel"></i>
+                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel" onclick="exportToExcel()"></i>
                         <div class="export-separator"></div>
                     </div>
 
@@ -1147,17 +1147,26 @@
                 collaborators.forEach(c => {
                     const listItem = document.createElement('div');
                     listItem.className = 'list-item';
+                    listItem._colaboradorData = c;
                     
-                    // Format descriptive label: nome_colaborador, cidade, telefone, nome_estado, nome_pais
+                    // Format descriptive label: nome_colaborador, cidade, sigla_estado, telefone, arquidiocese, divisão arquidiocesana, paróquia
                     const parts = [];
                     if (c.nome_colaborador) parts.push(c.nome_colaborador);
                     if (c.cidade) parts.push(c.cidade);
-                    if (c.nome_estado) parts.push(c.nome_estado);
-                    if (c.nome_pais) parts.push(c.nome_pais);
+                    if (c.sigla_estado || c.nome_estado) parts.push(c.sigla_estado || c.nome_estado);
                     
                     let label = parts.join(', ');
                     if (c.telefone) {
                         label += ` - Tel: ${c.telefone}`;
+                    }
+
+                    const entityParts = [];
+                    if (c.nome_arquidiocese) entityParts.push(c.nome_arquidiocese);
+                    if (c.nome_divisao_arquidiocesana) entityParts.push(c.nome_divisao_arquidiocesana);
+                    if (c.nome_paroquia) entityParts.push(c.nome_paroquia);
+
+                    if (entityParts.length > 0) {
+                        label += ` | ${entityParts.join(' | ')}`;
                     }
 
                     const avatarHtml = getAvatarHtml(c);
@@ -1223,6 +1232,147 @@
                 console.error('Erro ao excluir:', err);
                 alert('Erro ao excluir colaborador.');
             }
+        }
+
+        function exportToExcel() {
+            const listItems = document.querySelectorAll('#collaborators-list .list-item');
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const fileName = `colaboradores_${timestamp}.xls`;
+
+            const visibleCollaborators = [];
+            listItems.forEach(item => {
+                if (window.getComputedStyle(item).display !== 'none' && item._colaboradorData) {
+                    visibleCollaborators.push(item._colaboradorData);
+                }
+            });
+
+            if (visibleCollaborators.length === 0) {
+                alert("Não há dados para exportar com o filtro atual.");
+                return;
+            }
+
+            const headerBg = "#1652b4";
+            const headerTextColor = "#ffffff";
+
+            function escapeXml(str) {
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            let htmlContent = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <x:ExcelWorkbook>
+                            <x:ExcelWorksheets>
+                                <x:ExcelWorksheet>
+                                    <x:Name>Colaboradores</x:Name>
+                                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                                </x:ExcelWorksheet>
+                            </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                    </xml>
+                    <![endif]-->
+                    <style>
+                        table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
+                        .header-row th {
+                            background-color: ${headerBg} !important;
+                            color: ${headerTextColor} !important;
+                            font-weight: bold;
+                            font-size: 13px;
+                            height: 35px;
+                            text-align: left;
+                            vertical-align: middle;
+                            border: 0.5pt solid #0d3b82;
+                            padding: 8px 12px;
+                        }
+                        .data-row td {
+                            border: 0.5pt solid #cccccc;
+                            padding: 6px 10px;
+                            color: #333333;
+                            font-size: 12px;
+                            vertical-align: middle;
+                        }
+                        .data-row:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <table>
+                        <thead>
+                            <tr class="header-row">
+                                <th>Código</th>
+                                <th>Nome</th>
+                                <th>Apelido</th>
+                                <th>Perfil</th>
+                                <th>Status</th>
+                                <th>Telefone</th>
+                                <th>E-mail</th>
+                                <th>Cidade</th>
+                                <th>UF</th>
+                                <th>Arquidiocese</th>
+                                <th>Divisão Arquidiocesana</th>
+                                <th>Paróquia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            visibleCollaborators.forEach(c => {
+                const cod = c.cod_colaborador || '';
+                const nome = c.nome_colaborador || '';
+                const apelido = c.apelido_colaborador || '';
+                const perfil = c.nome_perfil || '';
+                const status = c.status || '';
+                const tel = c.telefone || '';
+                const email = c.email || '';
+                const cidade = c.cidade || '';
+                const uf = c.sigla_estado || c.nome_estado || '';
+                const arq = c.nome_arquidiocese || '';
+                const div = c.nome_divisao_arquidiocesana || '';
+                const par = c.nome_paroquia || '';
+
+                htmlContent += `
+                    <tr class="data-row">
+                        <td>${escapeXml(cod)}</td>
+                        <td>${escapeXml(nome)}</td>
+                        <td>${escapeXml(apelido)}</td>
+                        <td>${escapeXml(perfil)}</td>
+                        <td>${escapeXml(status)}</td>
+                        <td>${escapeXml(tel)}</td>
+                        <td>${escapeXml(email)}</td>
+                        <td>${escapeXml(cidade)}</td>
+                        <td>${escapeXml(uf)}</td>
+                        <td>${escapeXml(arq)}</td>
+                        <td>${escapeXml(div)}</td>
+                        <td>${escapeXml(par)}</td>
+                    </tr>
+                `;
+            });
+
+            htmlContent += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         // Initialize on load

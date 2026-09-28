@@ -248,6 +248,76 @@ async function connectDB() {
                 console.error('Erro ao ajustar tamanho da coluna observacoes em calendario:', calErr.message);
             }
 
+            // Ensure columns in atividades_calendario table exist
+            try {
+                const [acColsList] = await pool.query(`
+                    SELECT COLUMN_NAME 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                      AND TABLE_NAME = 'atividades_calendario'
+                `);
+                const acColNames = acColsList.map(c => (c.COLUMN_NAME || c.column_name || c.Field || c.field || '').toLowerCase());
+
+                if (!acColNames.includes('tipo_calendario')) {
+                    console.log('Adicionando coluna tipo_calendario na tabela atividades_calendario...');
+                    await pool.query("ALTER TABLE atividades_calendario ADD COLUMN tipo_calendario ENUM('Nacional', 'Regional', 'Arquidiocese', 'Paroquial') NULL");
+                }
+                if (!acColNames.includes('formato')) {
+                    console.log('Adicionando coluna formato na tabela atividades_calendario...');
+                    await pool.query("ALTER TABLE atividades_calendario ADD COLUMN formato ENUM('Presencial', 'On-line') NULL");
+                }
+                if (!acColNames.includes('tipo')) {
+                    console.log('Adicionando coluna tipo na tabela atividades_calendario...');
+                    await pool.query("ALTER TABLE atividades_calendario ADD COLUMN tipo ENUM('Evento', 'Reunião', 'Missa', 'Treinamento', 'Outro') NULL");
+                }
+                if (!acColNames.includes('recorrente')) {
+                    console.log('Adicionando coluna recorrente na tabela atividades_calendario...');
+                    await pool.query("ALTER TABLE atividades_calendario ADD COLUMN recorrente ENUM('Única', 'Mensal dia da semana', 'Mensal dia fixo') NULL");
+                }
+                if (!acColNames.includes('hora_atividade')) {
+                    await pool.query('ALTER TABLE atividades_calendario ADD COLUMN hora_atividade VARCHAR(20) NULL');
+                }
+                if (!acColNames.includes('ordem_semana')) {
+                    await pool.query("ALTER TABLE atividades_calendario ADD COLUMN ordem_semana ENUM('Primeira', 'Segunda', 'Terceira', 'Quarta', 'Última') NULL");
+                }
+                if (!acColNames.includes('dia_semana')) {
+                    await pool.query("ALTER TABLE atividades_calendario ADD COLUMN dia_semana ENUM('Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado') NULL");
+                }
+                if (!acColNames.includes('dia_mes')) {
+                    await pool.query('ALTER TABLE atividades_calendario ADD COLUMN dia_mes INT NULL');
+                }
+                if (!acColNames.includes('data_fim')) {
+                    await pool.query('ALTER TABLE atividades_calendario ADD COLUMN data_fim DATE NULL');
+                }
+                if (!acColNames.includes('id_regional')) {
+                    await pool.query('ALTER TABLE atividades_calendario ADD COLUMN id_regional INT NULL');
+                }
+                if (!acColNames.includes('id_arquidiocese')) {
+                    await pool.query('ALTER TABLE atividades_calendario ADD COLUMN id_arquidiocese INT NULL');
+                }
+                if (!acColNames.includes('id_estado')) {
+                    await pool.query('ALTER TABLE atividades_calendario ADD COLUMN id_estado INT NULL');
+                }
+                if (!acColNames.includes('status')) {
+                    await pool.query("ALTER TABLE atividades_calendario ADD COLUMN status ENUM('Ativo', 'Inativo') DEFAULT 'Ativo'");
+                }
+
+                // Restore ENUM column definitions in MySQL
+                try {
+                    await pool.query("ALTER TABLE atividades_calendario MODIFY COLUMN status ENUM('Ativo', 'Inativo') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Ativo'");
+                    await pool.query("ALTER TABLE atividades_calendario MODIFY COLUMN tipo_calendario ENUM('Nacional', 'Regional', 'Arquidiocese', 'Paroquial') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL");
+                    await pool.query("ALTER TABLE atividades_calendario MODIFY COLUMN formato ENUM('Presencial', 'On-line') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL");
+                    await pool.query("ALTER TABLE atividades_calendario MODIFY COLUMN tipo ENUM('Evento', 'Reunião', 'Missa', 'Treinamento', 'Outro') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL");
+                    await pool.query("ALTER TABLE atividades_calendario MODIFY COLUMN recorrente ENUM('Única', 'Mensal dia da semana', 'Mensal dia fixo') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL");
+                    await pool.query("ALTER TABLE atividades_calendario MODIFY COLUMN ordem_semana ENUM('Primeira', 'Segunda', 'Terceira', 'Quarta', 'Última') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL");
+                    await pool.query("ALTER TABLE atividades_calendario MODIFY COLUMN dia_semana ENUM('Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL");
+                } catch (modErr) {
+                    console.log('Aviso ao restaurar ENUMs de atividades_calendario:', modErr.message);
+                }
+            } catch (acErr) {
+                console.error('Erro ao verificar/migrar colunas de atividades_calendario:', acErr.message);
+            }
+
             return; // Conectado com sucesso
         } catch (err) {
             attempts++;
@@ -546,11 +616,14 @@ app.get('/api/colaboradores', async (req, res) => {
              SELECT c.id_colaborador, c.cod_colaborador, c.nome_colaborador, c.apelido_colaborador, c.cidade, c.telefone, c.email,
                     ${photoField} e.nome_estado, e.sigla_estado, p.nome_pais, c.perfil AS nome_perfil,
                     c.atualizado_em, c.criado_em, c.status, c.perfil AS id_perfil, pa.nome_paroquia,
+                    arq.nome_arquidiocese, da.nome_divisao_arquidiocesana,
                     c.selo_colaborador, pa.id_arquidiocese, pa.id_arquidiocese AS paroquia_id_arquidiocese, c.id_paroquia
              FROM colaboradores c
              LEFT JOIN estados e ON c.id_estado = e.id_estado
              LEFT JOIN pais p ON e.id_pais = p.id_pais
              LEFT JOIN paroquias pa ON c.id_paroquia = pa.id_paroquia
+             LEFT JOIN arquidioceses arq ON pa.id_arquidiocese = arq.id_arquidiocese
+             LEFT JOIN divisao_arquidiocesana da ON pa.id_divisao_arquidiocesana = da.id_divisao_arquidiocesana
              ORDER BY c.nome_colaborador ASC
         `;
         const [rows] = await pool.query(query);
@@ -771,7 +844,7 @@ app.get('/api/colaboradores/:id/atividades', async (req, res) => {
         const query = `
             SELECT ar.id_atividade, ar.titulo, ar.data_atividade, p.nome_paroquia
             FROM atividades_realizadas_participantes arp
-            INNER JOIN atividades_realizadas ar ON arp.id_atividade = ar.id_atividade
+            INNER JOIN atividades_calendario ar ON arp.id_atividade = ar.id_atividade
             LEFT JOIN paroquias p ON ar.paroquia_id = p.id_paroquia
             WHERE arp.id_colaborador = ?
             ORDER BY ar.data_atividade DESC, ar.titulo ASC
@@ -1942,10 +2015,85 @@ app.get('/api/tipos_certificados_colaborador', async (req, res) => {
     }
 });
 
+// Route to get all atividades_calendario for list display
+app.get(['/api/atividades_calendario', '/api/atividades_calendario/lista'], async (req, res) => {
+    try {
+        const [columnsList] = await pool.query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = 'atividades_calendario'
+        `);
+        const colNames = columnsList.map(c => (c.COLUMN_NAME || c.column_name || '').toLowerCase());
+
+        const idCol = colNames.includes('id_atividade') ? 'ar.id_atividade' : (colNames.includes('id') ? 'ar.id' : '1');
+        const selectTipoCal = colNames.includes('tipo_calendario') ? 'ar.tipo_calendario' : (colNames.includes('tipo') ? 'ar.tipo' : "'Geral'");
+        const selectFormato = colNames.includes('formato') ? 'ar.formato' : "'-'";
+        const selectTipo = colNames.includes('tipo') ? 'ar.tipo' : "'-'";
+        const selectRecorrente = colNames.includes('recorrente') ? 'ar.recorrente' : "'Não'";
+        const selectStatus = colNames.includes('status') ? 'ar.status' : "'Ativo'";
+        const selectObs = colNames.includes('observacoes') ? 'ar.observacoes' : "NULL";
+        const selectDataAtividade = colNames.includes('data_atividade') ? 'ar.data_atividade' : "NULL";
+        const selectTitulo = colNames.includes('titulo') ? 'ar.titulo' : "'-'";
+        const paroquiaFkCol = colNames.includes('id_paroquia') ? 'ar.id_paroquia' : (colNames.includes('paroquia_id') ? 'ar.paroquia_id' : 'NULL');
+
+        // Check if tables paroquias / arquidioceses or paroquia / arquidiocese exist
+        const [tablesList] = await pool.query(`
+            SELECT TABLE_NAME 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_SCHEMA = DATABASE()
+        `);
+        const tableNames = tablesList.map(t => (t.TABLE_NAME || t.table_name || '').toLowerCase());
+
+        const paroquiaTable = tableNames.includes('paroquias') ? 'paroquias' : (tableNames.includes('paroquia') ? 'paroquia' : null);
+        const paroquiaIdCol = paroquiaTable === 'paroquias' ? 'id_paroquia' : 'id_paroquia';
+        
+        const arqTable = tableNames.includes('arquidioceses') ? 'arquidioceses' : (tableNames.includes('arquidiocese') ? 'arquidiocese' : null);
+
+        let joinQuery = '';
+        let paroquiaSelect = "'-' AS nome_paroquia";
+        let arqSelect = "'-' AS nome_arquidiocese";
+
+        if (paroquiaTable) {
+            joinQuery += ` LEFT JOIN ${paroquiaTable} p ON ${paroquiaFkCol} = p.${paroquiaIdCol} `;
+            paroquiaSelect = "p.nome_paroquia AS nome_paroquia";
+
+            if (arqTable) {
+                joinQuery += ` LEFT JOIN ${arqTable} a ON p.id_arquidiocese = a.id_arquidiocese `;
+                arqSelect = "a.nome_arquidiocese AS nome_arquidiocese";
+            }
+        }
+
+        const query = `
+            SELECT 
+                ${idCol} AS id_atividade,
+                ${idCol} AS id,
+                ${selectTipoCal} AS tipo_calendario,
+                ${selectFormato} AS formato,
+                ${selectTipo} AS tipo,
+                ${selectRecorrente} AS recorrente,
+                ${selectDataAtividade} AS data_atividade,
+                ${selectTitulo} AS titulo,
+                ${selectStatus} AS status,
+                ${selectObs} AS observacoes,
+                ${paroquiaSelect},
+                ${arqSelect}
+            FROM atividades_calendario ar
+            ${joinQuery}
+            ORDER BY ${colNames.includes('data_atividade') ? 'ar.data_atividade DESC,' : ''} ${idCol} DESC
+        `;
+        const [rows] = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao listar atividades_calendario:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Generic GET all for a table
 app.get('/api/:table', async (req, res) => {
     const { table } = req.params;
-    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'arquidiocese_coordenadores', 'regional_coordenadores', 'treinamento_instrutores', 'colaborador_lideranca', 'colaborador_certificados', 'tipos_certificados_colaborador'];
+    const allowedTables = ['regional', 'arquidiocese', 'paroquia', 'funcao', 'situacao', 'estados', 'pais', 'colaboradores', 'tipos_redes_sociais', 'subdivisao_arquidiocesana', 'subdivisoes_arquidiocesanas', 'divisao_arquidiocesana', 'divisoes_arquidiocesanas', 'divisao_arquidiocesana_lideranca', 'paroquia_lideranca', 'paroquia_coordenadores', 'arquidiocese_coordenadores', 'regional_coordenadores', 'treinamento_instrutores', 'colaborador_lideranca', 'colaborador_certificados', 'tipos_certificados_colaborador', 'atividades_calendario'];
 
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Tabela não permitida' });
@@ -2383,7 +2531,7 @@ app.get('/api/atividades/detalhes', async (req, res) => {
                 a.nome_arquidiocese,
                 p.nome_paroquia,
                 ar.titulo
-            FROM atividades_realizadas ar
+            FROM atividades_calendario ar
             LEFT JOIN paroquias p ON ar.id_paroquia = p.id_paroquia
             LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
             ORDER BY ar.data_atividade DESC
@@ -2408,9 +2556,39 @@ app.delete('/api/atividades_realizadas/:id', async (req, res) => {
             return res.status(400).json({ error: 'Não é possível excluir a atividade pois ela possui participantes vinculados.' });
         }
 
-        await pool.query('DELETE FROM atividades_realizadas WHERE id_atividade = ?', [id]);
+        await pool.query('DELETE FROM atividades_calendario WHERE id_atividade = ?', [id]);
         res.json({ success: true });
     } catch (err) {
+        res.status(500).json({ error: 'Erro ao excluir atividade no banco de dados.' });
+    }
+});
+
+app.delete('/api/atividades_calendario/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [columnsList] = await pool.query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = 'atividades_calendario'
+        `);
+        const colNames = columnsList.map(c => (c.COLUMN_NAME || c.column_name || '').toLowerCase());
+        const idCol = colNames.includes('id_atividade') ? 'id_atividade' : 'id';
+
+        try {
+            const [participants] = await pool.query(
+                `SELECT COUNT(*) as count FROM atividades_realizadas_participantes WHERE ${idCol} = ? OR id_atividade = ?`,
+                [id, id]
+            );
+            if (participants && participants[0] && participants[0].count > 0) {
+                return res.status(400).json({ error: 'Não é possível excluir a atividade pois ela possui participantes vinculados.' });
+            }
+        } catch (_) {}
+
+        await pool.query(`DELETE FROM atividades_calendario WHERE ${idCol} = ?`, [id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir atividade_calendario:', err);
         res.status(500).json({ error: 'Erro ao excluir atividade no banco de dados.' });
     }
 });
@@ -2463,6 +2641,59 @@ app.get('/api/paroquias/arquidiocese/:id_arquidiocese', async (req, res) => {
     }
 });
 
+// Route to get enum values for recorrente in atividades_calendario
+app.get(['/api/atividades_calendario/recorrente/valores', '/api/atividades_realizadas/recorrente/valores'], async (req, res) => {
+    try {
+        const [rows] = await pool.query("SHOW COLUMNS FROM atividades_calendario LIKE 'recorrente'");
+        if (rows.length > 0) {
+            const type = rows[0].Type; // e.g. enum('Sim','Não')
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                const values = match[1].split(',').map(v => v.replace(/^'(.*)'$/, '$1'));
+                return res.json(values);
+            }
+        }
+        res.json(['Não', 'Sim']);
+    } catch (err) {
+        console.error('Erro ao obter valores do ENUM recorrente:', err);
+        res.json(['Não', 'Sim']);
+    }
+});
+
+// Helper to extract ENUM values from a database table column
+async function getEnumValuesFromTable(tableName, columnName) {
+    try {
+        const [rows] = await pool.query(`SHOW COLUMNS FROM \`${tableName}\` LIKE ?`, [columnName]);
+        if (rows && rows.length > 0) {
+            const type = rows[0].Type || rows[0].type || rows[0].TYPE || '';
+            const match = type.match(/^enum\((.*)\)$/i);
+            if (match) {
+                return match[1].split(',').map(v => v.trim().replace(/^'(.*)'$/, '$1').replace(/\\'/g, "'"));
+            }
+        }
+    } catch (err) {
+        console.error(`Erro ao obter ENUM para ${tableName}.${columnName}:`, err.message);
+    }
+    return [];
+}
+
+// Endpoint to fetch all ENUM field options for atividades_calendario directly from table definition
+app.get(['/api/atividades_calendario/enums', '/api/atividades_realizadas/enums'], async (req, res) => {
+    try {
+        const enumColumns = ['status', 'tipo_calendario', 'formato', 'tipo', 'recorrente', 'ordem_semana', 'dia_semana'];
+        const result = {};
+        for (const col of enumColumns) {
+            result[col] = await getEnumValuesFromTable('atividades_calendario', col);
+        }
+        result.tipo_formato = result.formato;
+        res.json(result);
+    } catch (err) {
+        console.error('Erro ao buscar enums de atividades_calendario:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 // Route to get a single Atividade Realizada by ID with relational info for edits
 app.get('/api/atividades_realizadas/:id', async (req, res) => {
     const { id } = req.params;
@@ -2472,7 +2703,7 @@ app.get('/api/atividades_realizadas/:id', async (req, res) => {
                 ar.*,
                 p.id_arquidiocese,
                 a.id_regional
-            FROM atividades_realizadas ar
+            FROM atividades_calendario ar
             LEFT JOIN paroquias p ON ar.id_paroquia = p.id_paroquia
             LEFT JOIN arquidioceses a ON p.id_arquidiocese = a.id_arquidiocese
             WHERE ar.id_atividade = ?
@@ -2509,7 +2740,7 @@ app.post('/api/atividades_realizadas/save', async (req, res) => {
         if (id_atividade) {
             // Update
             await pool.query(
-                `UPDATE atividades_realizadas SET 
+                `UPDATE atividades_calendario SET 
                     status = ?, 
                     titulo = ?, 
                     data_atividade = ?, 
@@ -2529,7 +2760,7 @@ app.post('/api/atividades_realizadas/save', async (req, res) => {
         } else {
             // Insert
             const [result] = await pool.query(
-                `INSERT INTO atividades_realizadas (
+                `INSERT INTO atividades_calendario (
                     status, 
                     titulo, 
                     data_atividade, 
@@ -2549,7 +2780,189 @@ app.post('/api/atividades_realizadas/save', async (req, res) => {
             res.status(201).json({ success: true, id: result.insertId });
         }
     } catch (err) {
-        console.error('Erro ao salvar atividade realizada:', err);
+        console.error('Erro ao salvar atividade:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/atividades_calendario/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [columnsList] = await pool.query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = 'atividades_calendario'
+        `);
+        const colNames = columnsList.map(c => (c.COLUMN_NAME || c.column_name || '').toLowerCase());
+        const idCol = colNames.includes('id_atividade') ? 'ar.id_atividade' : 'ar.id';
+
+        const [tablesList] = await pool.query(`
+            SELECT TABLE_NAME 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_SCHEMA = DATABASE()
+        `);
+        const tableNames = tablesList.map(t => (t.TABLE_NAME || t.table_name || '').toLowerCase());
+
+        const paroquiaTable = tableNames.includes('paroquias') ? 'paroquias' : (tableNames.includes('paroquia') ? 'paroquia' : null);
+        const paroquiaFkCol = colNames.includes('id_paroquia') ? 'ar.id_paroquia' : (colNames.includes('paroquia_id') ? 'ar.paroquia_id' : 'NULL');
+        const arqTable = tableNames.includes('arquidioceses') ? 'arquidioceses' : (tableNames.includes('arquidiocese') ? 'arquidiocese' : null);
+
+        let joinQuery = '';
+        let extraCols = '';
+
+        if (paroquiaTable) {
+            joinQuery += ` LEFT JOIN ${paroquiaTable} p ON ${paroquiaFkCol} = p.id_paroquia `;
+            extraCols += ', p.id_arquidiocese ';
+            if (arqTable) {
+                joinQuery += ` LEFT JOIN ${arqTable} a ON p.id_arquidiocese = a.id_arquidiocese `;
+                extraCols += ', a.id_regional ';
+            }
+        }
+
+        const query = `
+            SELECT 
+                ar.*
+                ${extraCols}
+            FROM atividades_calendario ar
+            ${joinQuery}
+            WHERE ${idCol} = ?
+        `;
+        const [rows] = await pool.query(query, [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Atividade não encontrada' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Erro ao obter atividade do calendário:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
+app.post('/api/atividades_calendario/save', async (req, res) => {
+    const {
+        id_atividade,
+        tipo_calendario,
+        status,
+        titulo,
+        data_atividade,
+        hora_atividade,
+        formato,
+        tipo_formato,
+        tipo,
+        recorrente,
+        ordem_semana,
+        dia_semana,
+        dia_mes,
+        data_fim,
+        id_estado,
+        id_regional,
+        id_arquidiocese,
+        id_paroquia,
+        observacoes,
+        id_colaborador_atualiza
+    } = req.body;
+
+    const formatoFinal = formato || tipo_formato || 'Presencial';
+
+    try {
+        if (id_atividade) {
+            await pool.query(
+                `UPDATE atividades_calendario SET 
+                    tipo_calendario = ?, 
+                    status = ?, 
+                    titulo = ?, 
+                    data_atividade = ?, 
+                    hora_atividade = ?, 
+                    formato = ?, 
+                    tipo = ?, 
+                    recorrente = ?, 
+                    ordem_semana = ?, 
+                    dia_semana = ?, 
+                    dia_mes = ?, 
+                    data_fim = ?, 
+                    id_estado = ?, 
+                    id_regional = ?, 
+                    id_arquidiocese = ?, 
+                    id_paroquia = ?, 
+                    observacoes = ?, 
+                    id_colaborador_atualiza = ?, 
+                    atualizado_em = NOW() 
+                 WHERE id_atividade = ?`,
+                [
+                    tipo_calendario || null,
+                    status || 'Ativo',
+                    titulo,
+                    data_atividade || null,
+                    hora_atividade || null,
+                    formatoFinal,
+                    tipo || null,
+                    recorrente || null,
+                    ordem_semana || null,
+                    dia_semana || null,
+                    dia_mes || null,
+                    data_fim || null,
+                    id_estado || null,
+                    id_regional || null,
+                    id_arquidiocese || null,
+                    id_paroquia || null,
+                    observacoes || null,
+                    id_colaborador_atualiza || null,
+                    id_atividade
+                ]
+            );
+            res.json({ success: true, id: id_atividade });
+        } else {
+            const [result] = await pool.query(
+                `INSERT INTO atividades_calendario (
+                    tipo_calendario,
+                    status, 
+                    titulo, 
+                    data_atividade, 
+                    hora_atividade, 
+                    formato, 
+                    tipo, 
+                    recorrente, 
+                    ordem_semana,
+                    dia_semana,
+                    dia_mes,
+                    data_fim,
+                    id_estado, 
+                    id_regional,
+                    id_arquidiocese,
+                    id_paroquia, 
+                    observacoes, 
+                    id_colaborador_atualiza, 
+                    criado_em,
+                    atualizado_em
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL)`,
+                [
+                    tipo_calendario || null,
+                    status || 'Ativo',
+                    titulo,
+                    data_atividade || null,
+                    hora_atividade || null,
+                    formatoFinal,
+                    tipo || null,
+                    recorrente || null,
+                    ordem_semana || null,
+                    dia_semana || null,
+                    dia_mes || null,
+                    data_fim || null,
+                    id_estado || null,
+                    id_regional || null,
+                    id_arquidiocese || null,
+                    id_paroquia || null,
+                    observacoes || null,
+                    id_colaborador_atualiza || null
+                ]
+            );
+            res.status(201).json({ success: true, id: result.insertId });
+        }
+    } catch (err) {
+        console.error('Erro ao salvar atividade:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

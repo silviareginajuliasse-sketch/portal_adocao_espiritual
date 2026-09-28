@@ -2268,20 +2268,73 @@
                 }
             });
 
-            // Render Semester Evolution Bar Chart (Specific count per semester)
+            // Custom 3D Bar Plugin for Chart.js
+            const chart3DBarPlugin = {
+                id: 'chart3DBarPlugin',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta || !meta.data || meta.data.length === 0) return;
+
+                    const dx = 10;
+                    const dy = 10;
+
+                    ctx.save();
+
+                    meta.data.forEach(bar => {
+                        const { x, y, width, height } = bar;
+                        if (!height || height <= 0) return;
+
+                        const left = x - width / 2;
+                        const right = x + width / 2;
+                        const top = y;
+                        const bottom = y + height;
+
+                        // 1. Draw 3D Top Face (bright top cap)
+                        ctx.fillStyle = '#5cc867';
+                        ctx.beginPath();
+                        ctx.moveTo(left, top);
+                        ctx.lineTo(left + dx, top - dy);
+                        ctx.lineTo(right + dx, top - dy);
+                        ctx.lineTo(right, top);
+                        ctx.closePath();
+                        ctx.fill();
+
+                        // 2. Draw 3D Right Side Wall (dark shadow side)
+                        ctx.fillStyle = '#26542c';
+                        ctx.beginPath();
+                        ctx.moveTo(right, top);
+                        ctx.lineTo(right + dx, top - dy);
+                        ctx.lineTo(right + dx, bottom - dy);
+                        ctx.lineTo(right, bottom);
+                        ctx.closePath();
+                        ctx.fill();
+
+                        // 3. Draw 3D Front Face (front wall with smooth vertical gradient)
+                        const frontGradient = ctx.createLinearGradient(0, top, 0, bottom);
+                        frontGradient.addColorStop(0, '#438a4b');
+                        frontGradient.addColorStop(1, '#326b3a');
+                        ctx.fillStyle = frontGradient;
+                        ctx.fillRect(left, top, width, height);
+                    });
+
+                    ctx.restore();
+                }
+            };
+
+            // Render Semester Evolution Bar Chart (Specific count per semester with 3D Effect)
             const ctxSem = document.getElementById('chart-evolucao-implantadas').getContext('2d');
             chartEvolucaoImplantadasInstance = new Chart(ctxSem, {
                 type: 'bar',
+                plugins: [chart3DBarPlugin],
                 data: {
                     labels: semLabels,
                     datasets: [
                         {
                             label: 'Paróquias Implantadas no Semestre',
                             data: semValuesNew,
-                            backgroundColor: '#438a4b',
-                            borderColor: '#7b0000',
-                            borderWidth: 1.5,
-                            borderRadius: 5,
+                            backgroundColor: 'transparent',
+                            borderWidth: 0,
                             maxBarThickness: 45
                         }
                     ]
@@ -2302,6 +2355,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
+                            grace: '15%',
                             ticks: {
                                 stepSize: 1,
                                 precision: 0

@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS treinamento_participantes (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabela de Atividades Realizadas
-CREATE TABLE IF NOT EXISTS atividades_realizadas (
+CREATE TABLE IF NOT EXISTS atividades_calendario (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     descricao TEXT,
