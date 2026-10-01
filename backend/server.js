@@ -2077,7 +2077,8 @@ app.get(['/api/atividades_calendario', '/api/atividades_calendario/lista'], asyn
                 ${selectStatus} AS status,
                 ${selectObs} AS observacoes,
                 ${paroquiaSelect},
-                ${arqSelect}
+                ${arqSelect},
+                ${paroquiaTable ? 'p.implantada AS implantada' : "NULL AS implantada"}
             FROM atividades_calendario ar
             ${joinQuery}
             ORDER BY ${colNames.includes('data_atividade') ? 'ar.data_atividade DESC,' : ''} ${idCol} DESC

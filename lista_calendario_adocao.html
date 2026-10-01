@@ -670,6 +670,444 @@
             background-color: #a01a1a;
         }
 
+        /* Export Button & Modal Styles */
+        .btn-export-pill {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 6px 24px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-style: italic;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(139, 30, 30, 0.3);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-export-pill:hover {
+            background: #a01a1a;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(139, 30, 30, 0.4);
+        }
+
+        .export-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .export-overlay.active {
+            display: flex;
+        }
+
+        .export-card {
+            background: white;
+            width: 100%;
+            max-width: 950px;
+            max-height: calc(100vh - 60px);
+            border-radius: 12px;
+            padding: 22px 26px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .export-card-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 1.3rem;
+            color: #444;
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .export-card-close:hover {
+            color: var(--primary-red);
+        }
+
+        .export-card-title {
+            font-size: 1.2rem;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+
+        .export-fields-box {
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            background-color: #fff;
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1 1 auto;
+            max-height: calc(100vh - 200px);
+            transition: padding-bottom 0.25s ease;
+        }
+
+        .export-fields-box.has-open-dropdown {
+            padding-bottom: 230px;
+        }
+
+        .export-fields-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .export-fields-box::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        .export-fields-box::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        .export-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            align-items: flex-end;
+        }
+
+        .export-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .export-group.full-width {
+            width: 100%;
+        }
+
+        .export-label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .export-label span {
+            color: var(--primary-red);
+        }
+
+        .export-input,
+        .export-select {
+            width: 100%;
+            height: 36px;
+            padding: 6px 10px;
+            border: 1px solid #777;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #333;
+            outline: none;
+            background-color: white;
+        }
+
+        .export-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .export-select-wrapper select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding-right: 28px;
+        }
+
+        .export-select-wrapper .select-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.85rem;
+        }
+
+        .export-freq-header {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .export-freq-header span {
+            color: var(--primary-red);
+        }
+
+        .export-divider {
+            border-bottom: 1px solid #b0b0b0;
+            margin-bottom: 8px;
+        }
+
+        .export-freq-options {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            height: 36px;
+            margin-bottom: 0;
+        }
+
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .custom-chk {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid #8b1e1e;
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        .custom-chk:checked {
+            background-color: #8b1e1e;
+            border-color: #8b1e1e;
+        }
+
+        .custom-chk:checked::after {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 11px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .export-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 45px;
+            margin-top: 5px;
+            flex-shrink: 0;
+            padding: 5px 0;
+        }
+
+        .export-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .export-icon-btn:hover {
+            transform: scale(1.18);
+            opacity: 0.85;
+        }
+
+        .export-icon-btn i {
+            font-size: 2.2rem;
+        }
+
+        .export-icon-btn .excel-icon {
+            color: #1d6f42; /* Excel Green matching colaboradores.html */
+        }
+
+        .export-icon-btn .pdf-icon {
+            color: #d9534f; /* PDF Red */
+        }
+
+        .export-icon-btn .whatsapp-icon {
+            color: #25d366; /* WhatsApp Green */
+        }
+
+        .is-hidden {
+            display: none !important;
+        }
+
+        /* Searchable Paróquia Autocomplete for Export Modal */
+        .autocomplete-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .autocomplete-wrapper .export-input {
+            padding-right: 32px;
+        }
+
+        .autocomplete-wrapper .select-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.85rem;
+            transition: transform 0.2s;
+        }
+
+        .autocomplete-wrapper .select-icon.open {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: calc(100% + 2px);
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #999;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+            z-index: 1000;
+            display: none;
+        }
+
+        .autocomplete-dropdown.visible {
+            display: block;
+        }
+
+        .ac-header-count {
+            padding: 6px 12px;
+            background-color: #f4f6f8;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.78rem;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .autocomplete-dropdown .ac-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.15s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .autocomplete-dropdown .ac-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-dropdown .ac-item:hover,
+        .autocomplete-dropdown .ac-item.active {
+            background-color: #fff5f5;
+            border-left-color: var(--primary-red);
+        }
+
+        .ac-item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 3px;
+        }
+
+        .ac-item-header .ac-icon {
+            color: var(--primary-red);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .ac-item-header .ac-name {
+            font-weight: 600;
+            color: #222;
+            font-size: 0.92rem;
+            line-height: 1.3;
+        }
+
+        .ac-details {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding-left: 20px;
+            font-size: 0.8rem;
+        }
+
+        .ac-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background-color: #eef4ff;
+            color: #1652b4;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .ac-addr-text {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        mark.ac-highlight {
+            background-color: #ffe58f;
+            color: #000;
+            padding: 0 3px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+
+        .autocomplete-dropdown .ac-empty {
+            padding: 14px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        .ac-clear-btn {
+            position: absolute;
+            right: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 2px 4px;
+            display: none;
+        }
+
+        .ac-clear-btn:hover {
+            color: var(--primary-red);
+        }
+
         @media (min-width: 768px) {
             .search-input {
                 width: 250px;
@@ -757,9 +1195,12 @@
     <main class="main-container">
         <!-- Search & Title Header (Matching paroquias.html) -->
         <div class="search-row" id="header-search-row">
-            <div class="subtitle-with-icon" onclick="window.location.href='calendario_adocao_registro.html'" style="cursor: pointer;">
-                <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
-                Calendário Adoção Espiritual
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="subtitle-with-icon" onclick="window.location.href='calendario_adocao_registro.html'" style="cursor: pointer;">
+                    <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
+                    Calendário Adoção Espiritual
+                </div>
+                <button type="button" class="btn-export-pill" onclick="openExportModal()">Exportar</button>
             </div>
             <div style="display: flex; align-items: center; gap: 20px;">
                 <div class="search-container">
@@ -806,6 +1247,153 @@
         </div>
     </div>
 
+    <!-- Modal de Exportação do Calendário (Conforme Figura) -->
+    <div class="export-overlay" id="export-overlay">
+        <div class="export-card">
+            <i class="fa-solid fa-xmark export-card-close" onclick="closeExportModal()"></i>
+            <h2 class="export-card-title">Exportação de Calendário Adoção Espiritual</h2>
+            
+            <div class="export-fields-box">
+                <!-- Row 1: Ano, Mês inicial, Mês final, Calendário, Frequência -->
+                <div class="export-row" id="export-row-1">
+                    <div class="export-group" style="flex: 0 0 75px;">
+                        <label class="export-label" for="export-ano">Ano <span>*</span></label>
+                        <input type="number" id="export-ano" class="export-input" placeholder="2026" min="2000" max="2100">
+                    </div>
+                    <div class="export-group" style="flex: 1; min-width: 110px;">
+                        <label class="export-label" for="export-mes-inicio">Mês inicial <span>*</span></label>
+                        <div class="export-select-wrapper">
+                            <select id="export-mes-inicio" class="export-select">
+                                <option value="">Selecione...</option>
+                                <option value="1">Janeiro</option>
+                                <option value="2">Fevereiro</option>
+                                <option value="3">Março</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Maio</option>
+                                <option value="6">Junho</option>
+                                <option value="7">Julho</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="export-group" style="flex: 1; min-width: 110px;">
+                        <label class="export-label" for="export-mes-fim">Mês final</label>
+                        <div class="export-select-wrapper">
+                            <select id="export-mes-fim" class="export-select">
+                                <option value="">Selecione...</option>
+                                <option value="1">Janeiro</option>
+                                <option value="2">Fevereiro</option>
+                                <option value="3">Março</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Maio</option>
+                                <option value="6">Junho</option>
+                                <option value="7">Julho</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="export-group" style="flex: 1; min-width: 130px;">
+                        <label class="export-label" for="export-calendario">Calendário <span>*</span></label>
+                        <div class="export-select-wrapper">
+                            <select id="export-calendario" class="export-select" onchange="updateExportLocationVisibility()">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="export-group" style="flex: 1.5; min-width: 210px;">
+                        <div class="export-freq-header">Frequência <span>*</span></div>
+                        <div class="export-divider"></div>
+                        <div class="export-freq-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="freq-todas" class="custom-chk" checked onchange="toggleExportFreq('todas')">
+                                <span>Todas</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="freq-unica" class="custom-chk" onchange="toggleExportFreq('unica')">
+                                <span>Única</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="freq-recorrente" class="custom-chk" onchange="toggleExportFreq('recorrente')">
+                                <span>Recorrente</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Estado + Regional -->
+                <div class="export-row" id="export-row-2">
+                    <div class="export-group" id="export-group-estado" style="flex: 1; min-width: 200px;">
+                        <label class="export-label" for="export-estado">Estado <span>*</span></label>
+                        <div class="export-select-wrapper">
+                            <select id="export-estado" class="export-select" onchange="onExportEstadoChange()">
+                                <option value="">Selecione o estado</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="export-group" id="export-group-regional" style="flex: 1; min-width: 200px;">
+                        <label class="export-label" for="export-regional">Regional <span>*</span></label>
+                        <div class="export-select-wrapper">
+                            <select id="export-regional" class="export-select" onchange="onExportRegionalChange()">
+                                <option value="">Selecione a regional</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Arquidiocese + Paróquia -->
+                <div class="export-row" id="export-row-3">
+                    <div class="export-group" id="export-group-arquidiocese" style="flex: 1; min-width: 200px;">
+                        <label class="export-label" for="export-arquidiocese">Arquidiocese <span>*</span></label>
+                        <div class="export-select-wrapper">
+                            <select id="export-arquidiocese" class="export-select" onchange="onExportArquidioceseChange()">
+                                <option value="">Selecione a arquidiocese</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="export-group" id="export-group-paroquia" style="flex: 1; min-width: 200px;">
+                        <label class="export-label" for="export-paroquia-search">Paróquia <span>*</span></label>
+                        <div class="autocomplete-wrapper" id="exportParoquiaAutocompleteWrapper">
+                            <input type="text" id="export-paroquia-search" class="export-input" placeholder="Digite para buscar a paróquia..." autocomplete="off" />
+                            <input type="hidden" id="export-paroquia" name="export-paroquia" />
+                            <button type="button" class="ac-clear-btn" id="exportParoquiaClearBtn" title="Limpar seleção">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            <i class="fa-solid fa-chevron-down select-icon" id="exportParoquiaChevron"></i>
+                            <div class="autocomplete-dropdown" id="exportParoquiaDropdown"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Export Icons -->
+            <div class="export-actions">
+                <button type="button" class="export-icon-btn" title="Exportar para Excel" onclick="doExport('excel')">
+                    <i class="fa-solid fa-file-excel excel-icon"></i>
+                </button>
+                <button type="button" class="export-icon-btn" title="Exportar para PDF" onclick="doExport('pdf')">
+                    <i class="fa-solid fa-file-pdf pdf-icon"></i>
+                </button>
+                <button type="button" class="export-icon-btn" title="Compartilhar no WhatsApp" onclick="doExport('whatsapp')">
+                    <i class="fa-brands fa-whatsapp whatsapp-icon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let allActivities = [];
 
@@ -820,19 +1408,887 @@
             const searchInput = document.getElementById('search-input') || document.getElementById('searchInput');
             if (!searchInput) return;
             const term = searchInput.value.toLowerCase().trim();
+            if (!term) {
+                renderTable(allActivities);
+                return;
+            }
+
+            const formatDt = (dateStr) => {
+                if (!dateStr) return '';
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return String(dateStr);
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}/${month}/${year}`;
+            };
+
             const filtered = allActivities.filter(item => {
-                const titulo = (item.titulo || '').toLowerCase();
-                const formato = (item.formato || '').toLowerCase();
-                const tipo = (item.tipo || '').toLowerCase();
-                const tipoCal = (item.tipo_calendario || '').toLowerCase();
-                const recorrente = (item.recorrente || '').toLowerCase();
-                return titulo.includes(term) || formato.includes(term) || tipo.includes(term) || tipoCal.includes(term) || recorrente.includes(term);
+                const titulo = String(item.titulo || '').toLowerCase();
+                const formato = String(item.formato || '').toLowerCase();
+                const tipo = String(item.tipo || '').toLowerCase();
+                const tipoCal = String(item.tipo_calendario || '').toLowerCase();
+                const recorrente = String(item.recorrente || '').toLowerCase();
+                const obs = String(item.observacoes || '').toLowerCase();
+                const paroquia = String(item.nome_paroquia || '').toLowerCase();
+                const arquidiocese = String(item.nome_arquidiocese || '').toLowerCase();
+                const dataRaw = String(item.data_atividade || '').toLowerCase();
+                const dataFormatted = formatDt(item.data_atividade).toLowerCase();
+
+                return titulo.includes(term) ||
+                       formato.includes(term) ||
+                       tipo.includes(term) ||
+                       tipoCal.includes(term) ||
+                       recorrente.includes(term) ||
+                       obs.includes(term) ||
+                       paroquia.includes(term) ||
+                       arquidiocese.includes(term) ||
+                       dataRaw.includes(term) ||
+                       dataFormatted.includes(term);
             });
             renderTable(filtered);
         }
 
+        /* --- Export Modal Script Logic --- */
+        let isExportDataLoaded = false;
+
+        function openExportModal() {
+            const overlay = document.getElementById('export-overlay');
+            if (overlay) overlay.classList.add('active');
+            if (!isExportDataLoaded) {
+                initExportModalData();
+            }
+        }
+
+        function closeExportModal() {
+            const overlay = document.getElementById('export-overlay');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        function toggleExportFreq(selected) {
+            const chkTodas = document.getElementById('freq-todas');
+            const chkUnica = document.getElementById('freq-unica');
+            const chkRecorrente = document.getElementById('freq-recorrente');
+
+            if (selected === 'todas') {
+                chkTodas.checked = true;
+                chkUnica.checked = false;
+                chkRecorrente.checked = false;
+            } else if (selected === 'unica') {
+                chkTodas.checked = false;
+                chkUnica.checked = true;
+                chkRecorrente.checked = false;
+            } else if (selected === 'recorrente') {
+                chkTodas.checked = false;
+                chkUnica.checked = false;
+                chkRecorrente.checked = true;
+            }
+        }
+
+        function updateExportLocationVisibility() {
+            const calSelect = document.getElementById('export-calendario');
+            if (!calSelect) return;
+            const calVal = calSelect.value;
+
+            const grpEstado = document.getElementById('export-group-estado');
+            const grpRegional = document.getElementById('export-group-regional');
+            const grpArquidiocese = document.getElementById('export-group-arquidiocese');
+            const grpParoquia = document.getElementById('export-group-paroquia');
+            const row2 = document.getElementById('export-row-2');
+            const row3 = document.getElementById('export-row-3');
+
+            if (grpEstado) grpEstado.classList.remove('is-hidden');
+            if (grpRegional) grpRegional.classList.remove('is-hidden');
+            if (grpArquidiocese) grpArquidiocese.classList.remove('is-hidden');
+            if (grpParoquia) grpParoquia.classList.remove('is-hidden');
+            if (row2) row2.classList.remove('is-hidden');
+            if (row3) row3.classList.remove('is-hidden');
+
+            if (!calVal || calVal === 'Nacional') {
+                if (grpEstado) grpEstado.classList.add('is-hidden');
+                if (grpRegional) grpRegional.classList.add('is-hidden');
+                if (grpArquidiocese) grpArquidiocese.classList.add('is-hidden');
+                if (grpParoquia) grpParoquia.classList.add('is-hidden');
+                if (row2) row2.classList.add('is-hidden');
+                if (row3) row3.classList.add('is-hidden');
+            } else if (calVal === 'Estadual') {
+                if (grpRegional) grpRegional.classList.add('is-hidden');
+                if (grpArquidiocese) grpArquidiocese.classList.add('is-hidden');
+                if (grpParoquia) grpParoquia.classList.add('is-hidden');
+                if (row3) row3.classList.add('is-hidden');
+            } else if (calVal === 'Regional') {
+                if (grpArquidiocese) grpArquidiocese.classList.add('is-hidden');
+                if (grpParoquia) grpParoquia.classList.add('is-hidden');
+                if (row3) row3.classList.add('is-hidden');
+            } else if (calVal === 'Arquidiocese') {
+                if (grpParoquia) grpParoquia.classList.add('is-hidden');
+            }
+        }
+
+        function initExportModalData() {
+            const API_BASE = (window.location.protocol === 'file:' || window.location.port !== '3000') ? 'http://localhost:3000/api' : '/api';
+            const anoInput = document.getElementById('export-ano');
+            if (anoInput && !anoInput.value) {
+                anoInput.value = new Date().getFullYear();
+            }
+
+            // Load Calendário ENUM options matching calendario_adocao_registro.html
+            fetch(`${API_BASE}/atividades_calendario/enums`)
+                .then(res => res.json())
+                .then(enums => {
+                    const calSelect = document.getElementById('export-calendario');
+                    if (calSelect && enums.tipo_calendario && Array.isArray(enums.tipo_calendario)) {
+                        calSelect.innerHTML = '<option value="">Selecione...</option>';
+                        enums.tipo_calendario.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt;
+                            option.textContent = opt;
+                            calSelect.appendChild(option);
+                        });
+                        calSelect.value = '';
+                    }
+                    updateExportLocationVisibility();
+                }).catch(err => {
+                    console.error('Erro ao carregar ENUMs no modal de exportação:', err);
+                    updateExportLocationVisibility();
+                });
+
+            // Load Estados
+            fetch(`${API_BASE}/estados`)
+                .then(res => res.json())
+                .then(data => {
+                    const estadoSelect = document.getElementById('export-estado');
+                    if (estadoSelect && Array.isArray(data)) {
+                        estadoSelect.innerHTML = '<option value="">Selecione o estado</option>';
+                        data.forEach(item => {
+                            const opt = document.createElement('option');
+                            opt.value = item.id_estado;
+                            opt.textContent = item.nome_estado || item.sigla;
+                            estadoSelect.appendChild(opt);
+                        });
+                        estadoSelect.value = '';
+                    }
+                }).catch(err => console.error('Erro ao carregar estados no modal:', err));
+
+            isExportDataLoaded = true;
+        }
+
+        let exportAllParoquias = [];
+        let exportAcActiveIndex = -1;
+
+        function onExportEstadoChange() {
+            const API_BASE = (window.location.protocol === 'file:' || window.location.port !== '3000') ? 'http://localhost:3000/api' : '/api';
+            const estadoId = document.getElementById('export-estado').value;
+            const regionalSelect = document.getElementById('export-regional');
+            const arqSelect = document.getElementById('export-arquidiocese');
+
+            regionalSelect.innerHTML = '<option value="">Selecione a regional</option>';
+            arqSelect.innerHTML = '<option value="">Selecione a arquidiocese</option>';
+            clearExportParoquiaSelection();
+
+            if (!estadoId) return;
+
+            fetch(`${API_BASE}/regionais/estado/${estadoId}`)
+                .then(res => res.json())
+                .then(data => {
+                    let list = Array.isArray(data) ? data : [];
+                    if (list.length === 0) {
+                        return fetch(`${API_BASE}/regionais`).then(r => r.json());
+                    }
+                    return list;
+                })
+                .then(regionais => {
+                    if (Array.isArray(regionais)) {
+                        regionalSelect.innerHTML = '<option value="">Selecione a regional</option>';
+                        regionais.forEach(item => {
+                            const opt = document.createElement('option');
+                            opt.value = item.id_regional;
+                            opt.textContent = item.nome_regional;
+                            regionalSelect.appendChild(opt);
+                        });
+                        regionalSelect.value = '';
+                    }
+                }).catch(err => console.error('Erro ao carregar regionais no modal:', err));
+        }
+
+        function onExportRegionalChange() {
+            const API_BASE = (window.location.protocol === 'file:' || window.location.port !== '3000') ? 'http://localhost:3000/api' : '/api';
+            const regionalId = document.getElementById('export-regional').value;
+            const estadoId = document.getElementById('export-estado').value;
+            const arqSelect = document.getElementById('export-arquidiocese');
+
+            arqSelect.innerHTML = '<option value="">Selecione a arquidiocese</option>';
+            clearExportParoquiaSelection();
+
+            if (!regionalId && !estadoId) return;
+
+            let url = `${API_BASE}/arquidioceses`;
+            if (regionalId) {
+                url = `${API_BASE}/arquidioceses/regional/${regionalId}`;
+            } else if (estadoId) {
+                url = `${API_BASE}/arquidioceses/estado/${estadoId}`;
+            }
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        arqSelect.innerHTML = '<option value="">Selecione a arquidiocese</option>';
+                        data.forEach(item => {
+                            const opt = document.createElement('option');
+                            opt.value = item.id_arquidiocese;
+                            opt.textContent = item.nome_arquidiocese;
+                            arqSelect.appendChild(opt);
+                        });
+                        arqSelect.value = '';
+                    }
+                }).catch(err => console.error('Erro ao carregar arquidioceses no modal:', err));
+        }
+
+        function onExportArquidioceseChange() {
+            const API_BASE = (window.location.protocol === 'file:' || window.location.port !== '3000') ? 'http://localhost:3000/api' : '/api';
+            const arqId = document.getElementById('export-arquidiocese').value;
+            exportAllParoquias = [];
+            clearExportParoquiaSelection();
+
+            if (!arqId) return;
+
+            fetch(`${API_BASE}/paroquias/arquidiocese/${arqId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        exportAllParoquias = data.map(item => ({
+                            id: item.id_paroquia || item.id,
+                            nome: item.nome_paroquia || '',
+                            endereco: item.endereco || '',
+                            bairro: item.bairro || '',
+                            cidade: item.cidade || '',
+                            cep: item.cep || ''
+                        }));
+                        exportAllParoquias.sort((a, b) => a.nome.localeCompare(b.nome));
+                    }
+                })
+                .catch(err => console.error('Erro ao carregar paróquias no modal:', err));
+        }
+
+        function buildExportAddressStr(p) {
+            const parts = [];
+            if (p.endereco) parts.push(p.endereco);
+            if (p.bairro) parts.push(p.bairro);
+            if (p.cidade) parts.push(p.cidade);
+            if (p.cep) parts.push('CEP ' + p.cep);
+            return parts.join(' — ');
+        }
+
+        function highlightMatch(text, query) {
+            if (!text) return '';
+            if (!query || !query.trim()) return escapeXml(text);
+            const normText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const normQuery = query.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const idx = normText.toLowerCase().indexOf(normQuery.toLowerCase());
+            if (idx === -1) return escapeXml(text);
+            
+            const before = text.slice(0, idx);
+            const matched = text.slice(idx, idx + query.trim().length);
+            const after = text.slice(idx + query.trim().length);
+            
+            return `${escapeXml(before)}<mark class="ac-highlight">${escapeXml(matched)}</mark>${escapeXml(after)}`;
+        }
+
+        function closeExportParoquiaDropdown() {
+            const dropdown = document.getElementById('exportParoquiaDropdown');
+            const chevron = document.getElementById('exportParoquiaChevron');
+            const fieldsBox = document.querySelector('.export-fields-box');
+            if (dropdown) dropdown.classList.remove('visible');
+            if (chevron) chevron.classList.remove('open');
+            if (fieldsBox) fieldsBox.classList.remove('has-open-dropdown');
+        }
+
+        function renderExportParoquiaDropdown(filter = '') {
+            const dropdown = document.getElementById('exportParoquiaDropdown');
+            const chevron = document.getElementById('exportParoquiaChevron');
+            const fieldsBox = document.querySelector('.export-fields-box');
+            if (!dropdown) return;
+
+            const normalizedFilter = filter.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const filtered = exportAllParoquias.filter(p => {
+                if (!normalizedFilter) return true;
+                const searchable = (p.nome + ' ' + (p.endereco || '') + ' ' + (p.bairro || '') + ' ' + (p.cidade || '') + ' ' + (p.cep || ''))
+                    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                return searchable.includes(normalizedFilter);
+            });
+
+            dropdown.innerHTML = '';
+            exportAcActiveIndex = -1;
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="ac-empty">Nenhuma paróquia encontrada</div>';
+            } else {
+                const countHeader = document.createElement('div');
+                countHeader.className = 'ac-header-count';
+                countHeader.textContent = `${filtered.length} ${filtered.length === 1 ? 'paróquia encontrada' : 'paróquias encontradas'}`;
+                dropdown.appendChild(countHeader);
+
+                filtered.forEach((p, idx) => {
+                    const div = document.createElement('div');
+                    div.classList.add('ac-item');
+                    div.dataset.id = p.id;
+                    div.dataset.index = idx;
+
+                    const highlightedName = highlightMatch(p.nome, filter);
+                    const locParts = [];
+                    if (p.bairro) locParts.push(p.bairro);
+                    if (p.cidade) locParts.push(p.cidade);
+                    const locStr = locParts.join(' — ');
+
+                    const highlightedAddr = p.endereco ? highlightMatch(p.endereco, filter) : '';
+
+                    div.innerHTML = `
+                        <div class="ac-item-header">
+                            <i class="fa-solid fa-church ac-icon"></i>
+                            <span class="ac-name">${highlightedName}</span>
+                        </div>
+                        <div class="ac-details">
+                            ${locStr ? `<span class="ac-badge"><i class="fa-solid fa-location-dot"></i> ${escapeXml(locStr)}</span>` : ''}
+                            ${highlightedAddr ? `<span class="ac-addr-text">${highlightedAddr}</span>` : ''}
+                        </div>
+                    `;
+                    div.addEventListener('click', () => selectExportParoquiaItem(p));
+                    dropdown.appendChild(div);
+                });
+            }
+
+            dropdown.classList.add('visible');
+            if (chevron) chevron.classList.add('open');
+            if (fieldsBox) {
+                fieldsBox.classList.add('has-open-dropdown');
+                setTimeout(() => {
+                    fieldsBox.scrollTo({ top: fieldsBox.scrollHeight, behavior: 'smooth' });
+                }, 50);
+            }
+        }
+
+        function selectExportParoquiaItem(p) {
+            const hiddenParoquia = document.getElementById('export-paroquia');
+            const searchInput = document.getElementById('export-paroquia-search');
+            const clearBtn = document.getElementById('exportParoquiaClearBtn');
+
+            if (hiddenParoquia) hiddenParoquia.value = p.id;
+            const addr = buildExportAddressStr(p);
+            if (searchInput) searchInput.value = p.nome + (addr ? ' — ' + addr : '');
+            closeExportParoquiaDropdown();
+            if (clearBtn) clearBtn.style.display = 'block';
+        }
+
+        function clearExportParoquiaSelection() {
+            const hiddenParoquia = document.getElementById('export-paroquia');
+            const searchInput = document.getElementById('export-paroquia-search');
+            const clearBtn = document.getElementById('exportParoquiaClearBtn');
+
+            if (hiddenParoquia) hiddenParoquia.value = '';
+            if (searchInput) searchInput.value = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+            closeExportParoquiaDropdown();
+        }
+
+        function updateExportAcActiveItem(items) {
+            items.forEach(el => el.classList.remove('active'));
+            if (exportAcActiveIndex >= 0 && exportAcActiveIndex < items.length) {
+                items[exportAcActiveIndex].classList.add('active');
+                items[exportAcActiveIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+
+        function getRecurrentWeekdayDate(year, month, ordem, diaSemanaStr) {
+            const dayMap = {
+                'domingo': 0, 'dom': 0,
+                'segunda': 1, 'segunda-feira': 1, 'seg': 1,
+                'terça': 2, 'terça-feira': 2, 'terca': 2, 'terca-feira': 2, 'ter': 2,
+                'quarta': 3, 'quarta-feira': 3, 'qua': 3,
+                'quinta': 4, 'quinta-feira': 4, 'qui': 4,
+                'sexta': 5, 'sexta-feira': 5, 'sex': 5,
+                'sábado': 6, 'sabado': 6, 'sab': 6, 'sáb': 6
+            };
+
+            const cleanDay = (diaSemanaStr || '').toLowerCase().trim();
+            let targetDay = dayMap[cleanDay];
+            if (targetDay === undefined) {
+                if (cleanDay.includes('dom')) targetDay = 0;
+                else if (cleanDay.includes('seg')) targetDay = 1;
+                else if (cleanDay.includes('ter')) targetDay = 2;
+                else if (cleanDay.includes('qua')) targetDay = 3;
+                else if (cleanDay.includes('qui')) targetDay = 4;
+                else if (cleanDay.includes('sex')) targetDay = 5;
+                else if (cleanDay.includes('sab') || cleanDay.includes('sáb')) targetDay = 6;
+            }
+            if (targetDay === undefined) return null;
+
+            const normOrdem = (ordem || '').toLowerCase().trim();
+
+            if (normOrdem === 'última' || normOrdem === 'ultima' || normOrdem.includes('últim') || normOrdem.includes('ultim')) {
+                const lastDay = new Date(year, month, 0).getDate();
+                for (let day = lastDay; day >= 1; day--) {
+                    const d = new Date(year, month - 1, day);
+                    if (d.getDay() === targetDay) return d;
+                }
+            } else {
+                const orderMap = {
+                    'primeira': 1, 'primeiro': 1, '1ª': 1, '1a': 1, '1': 1,
+                    'segunda': 2, 'segundo': 2, '2ª': 2, '2a': 2, '2': 2,
+                    'terceira': 3, 'terceiro': 3, '3ª': 3, '3a': 3, '3': 3,
+                    'quarta': 4, 'quarto': 4, '4ª': 4, '4a': 4, '4': 4
+                };
+                let orderNum = orderMap[normOrdem];
+                if (!orderNum) {
+                    if (normOrdem.includes('primeir') || normOrdem.includes('1')) orderNum = 1;
+                    else if (normOrdem.includes('segund') || normOrdem.includes('2')) orderNum = 2;
+                    else if (normOrdem.includes('terceir') || normOrdem.includes('3')) orderNum = 3;
+                    else if (normOrdem.includes('quart') || normOrdem.includes('4')) orderNum = 4;
+                    else orderNum = 1;
+                }
+
+                let count = 0;
+                const lastDay = new Date(year, month, 0).getDate();
+                for (let day = 1; day <= lastDay; day++) {
+                    const d = new Date(year, month - 1, day);
+                    if (d.getDay() === targetDay) {
+                        count++;
+                        if (count === orderNum) return d;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function getRecurrentFixedDayDate(year, month, diaMes) {
+            if (!diaMes) return null;
+            const maxDays = new Date(year, month, 0).getDate();
+            const day = Math.min(parseInt(diaMes, 10), maxDays);
+            return new Date(year, month - 1, day);
+        }
+
+        function formatIsoDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function parseDateParts(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) {
+                if (isNaN(dateStr.getTime())) return null;
+                return { year: dateStr.getFullYear(), month: dateStr.getMonth() + 1, day: dateStr.getDate() };
+            }
+            const str = String(dateStr).trim();
+            const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (isoMatch) {
+                return {
+                    year: parseInt(isoMatch[1], 10),
+                    month: parseInt(isoMatch[2], 10),
+                    day: parseInt(isoMatch[3], 10)
+                };
+            }
+            const brMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+            if (brMatch) {
+                return {
+                    year: parseInt(brMatch[3], 10),
+                    month: parseInt(brMatch[2], 10),
+                    day: parseInt(brMatch[1], 10)
+                };
+            }
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+            }
+            return null;
+        }
+
+        function formatDateStr(dateStr) {
+            const parts = parseDateParts(dateStr);
+            if (!parts) return dateStr || '-';
+            return `${String(parts.day).padStart(2, '0')}/${String(parts.month).padStart(2, '0')}/${parts.year}`;
+        }
+
+        function getFilteredExportActivities() {
+            const ano = document.getElementById('export-ano').value.trim();
+            const targetYear = ano ? parseInt(ano, 10) : new Date().getFullYear();
+
+            const mesInicioSelect = document.getElementById('export-mes-inicio') || document.getElementById('export-mes');
+            const mesFimSelect = document.getElementById('export-mes-fim');
+            const mesInicio = mesInicioSelect ? mesInicioSelect.value : '';
+            const mesFim = mesFimSelect ? mesFimSelect.value : '';
+
+            const startMonth = mesInicio ? parseInt(mesInicio, 10) : 1;
+            const endMonth = mesFim ? parseInt(mesFim, 10) : 12;
+
+            const cal = document.getElementById('export-calendario').value;
+            const chkUnica = document.getElementById('freq-unica').checked;
+            const chkRecorrente = document.getElementById('freq-recorrente').checked;
+            const estadoId = document.getElementById('export-estado') ? document.getElementById('export-estado').value : '';
+            const regionalId = document.getElementById('export-regional') ? document.getElementById('export-regional').value : '';
+            const arquidioceseId = document.getElementById('export-arquidiocese') ? document.getElementById('export-arquidiocese').value : '';
+            const paroquiaId = document.getElementById('export-paroquia') ? document.getElementById('export-paroquia').value : '';
+
+            const result = [];
+
+            allActivities.forEach(item => {
+                // Location Filters according to selected Calendário
+                if (cal) {
+                    const tipoCal = (item.tipo_calendario || item.tipo || '').toLowerCase().trim();
+                    const targetCal = cal.toLowerCase().trim();
+                    if (targetCal === 'paroquial' || targetCal === 'paróquia') {
+                        if (tipoCal !== 'paroquial' && tipoCal !== 'paróquia' && tipoCal !== '') return;
+                    } else if (tipoCal !== targetCal) {
+                        return;
+                    }
+                }
+
+                if (cal === 'Estadual') {
+                    if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                } else if (cal === 'Regional') {
+                    if (regionalId && item.id_regional && String(item.id_regional) !== String(regionalId)) return;
+                    else if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                } else if (cal === 'Arquidiocese') {
+                    const itemArq = item.id_arquidiocese || item.paroquia_id_arquidiocese;
+                    if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) return;
+                    else if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                } else if (cal === 'Paroquial' || cal === 'Paróquia') {
+                    if (paroquiaId && item.id_paroquia && String(item.id_paroquia) !== String(paroquiaId)) return;
+                    const itemArq = item.id_arquidiocese || item.paroquia_id_arquidiocese;
+                    if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) return;
+                    if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                }
+
+                // Frequency Filter (Única vs Recorrente)
+                const recStr = (item.recorrente || '').toLowerCase().trim();
+                const isRecurrentType = recStr.includes('mensal') || 
+                                        recStr.includes('recorrente') || 
+                                        recStr.includes('semana') || 
+                                        recStr.includes('fixo') || 
+                                        Boolean(item.ordem_semana) || 
+                                        Boolean(item.dia_semana) || 
+                                        Boolean(item.dia_mes) || 
+                                        Boolean(item.dia_fixo);
+
+                if (chkUnica && isRecurrentType) return;
+                if (chkRecorrente && !isRecurrentType) return;
+
+                // Check if activity is Recurrent or Static Date
+                if (isRecurrentType || !item.data_atividade) {
+                    // Recurring activity: generate occurrence dates for each month in range [startMonth, endMonth] for targetYear
+                    for (let m = startMonth; m <= endMonth; m++) {
+                        let dt = null;
+                        const isWeekdayRec = recStr.includes('semana') || (item.ordem_semana && item.dia_semana);
+                        const isFixedDayRec = recStr.includes('fixo') || item.dia_mes || item.dia_fixo;
+
+                        if (isWeekdayRec) {
+                            dt = getRecurrentWeekdayDate(targetYear, m, item.ordem_semana, item.dia_semana);
+                        } else if (isFixedDayRec) {
+                            dt = getRecurrentFixedDayDate(targetYear, m, item.dia_fixo || item.dia_mes);
+                        } else if (item.data_atividade) {
+                            const pItem = parseDateParts(item.data_atividade);
+                            if (pItem && pItem.year === targetYear && pItem.month === m) {
+                                dt = new Date(pItem.year, pItem.month - 1, pItem.day);
+                            }
+                        }
+
+                        if (dt) {
+                            // Check start date & end date constraints if present
+                            if (item.data_atividade) {
+                                const pStart = parseDateParts(item.data_atividade);
+                                if (pStart) {
+                                    const startLimit = new Date(pStart.year, pStart.month - 1, pStart.day, 0, 0, 0);
+                                    if (dt < startLimit) continue;
+                                }
+                            }
+                            const endDateVal = item.data_fim || item.termina_em;
+                            if (endDateVal) {
+                                const pEnd = parseDateParts(endDateVal);
+                                if (pEnd) {
+                                    const endLimit = new Date(pEnd.year, pEnd.month - 1, pEnd.day, 23, 59, 59);
+                                    if (dt > endLimit) continue;
+                                }
+                            }
+
+                            result.push({
+                                ...item,
+                                data_atividade: formatIsoDate(dt)
+                            });
+                        }
+                    }
+                } else {
+                    // Static activity with fixed date
+                    const parts = parseDateParts(item.data_atividade);
+                    if (parts) {
+                        if (parts.year === targetYear && parts.month >= startMonth && parts.month <= endMonth) {
+                            result.push(item);
+                        }
+                    }
+                }
+            });
+
+            // Sort results by date ascending
+            result.sort((a, b) => {
+                const pa = parseDateParts(a.data_atividade);
+                const pb = parseDateParts(b.data_atividade);
+                if (pa && pb) {
+                    if (pa.year !== pb.year) return pa.year - pb.year;
+                    if (pa.month !== pb.month) return pa.month - pb.month;
+                    return pa.day - pb.day;
+                }
+                return 0;
+            });
+            return result;
+        }
+
+        function escapeXml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function doExport(format) {
+            const items = getFilteredExportActivities();
+            if (items.length === 0) {
+                alert('Não há registros para exportar com os filtros selecionados.');
+                return;
+            }
+
+            const formatDt = (dateStr) => formatDateStr(dateStr);
+
+            if (format === 'excel') {
+                const timestamp = new Date().toISOString().slice(0, 10);
+                const fileName = `calendario_adocao_${timestamp}.xls`;
+                const headerBg = "#8b1e1e";
+                const headerTextColor = "#ffffff";
+
+                let htmlContent = `
+                    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                    <head>
+                        <meta charset="utf-8">
+                        <!--[if gte mso 9]>
+                        <xml>
+                            <x:ExcelWorkbook>
+                                <x:ExcelWorksheets>
+                                    <x:ExcelWorksheet>
+                                        <x:Name>Calendário Adoção Espiritual</x:Name>
+                                        <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                                    </x:ExcelWorksheet>
+                                </x:ExcelWorksheets>
+                            </x:ExcelWorkbook>
+                        </xml>
+                        <![endif]-->
+                        <style>
+                            table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
+                            .header-row th {
+                                background-color: ${headerBg} !important;
+                                color: ${headerTextColor} !important;
+                                font-weight: bold;
+                                font-size: 13px;
+                                height: 35px;
+                                text-align: left;
+                                vertical-align: middle;
+                                border: 0.5pt solid #5a1414;
+                                padding: 8px 12px;
+                            }
+                            .data-row td {
+                                border: 0.5pt solid #cccccc;
+                                padding: 6px 10px;
+                                color: #333333;
+                                font-size: 12px;
+                                vertical-align: middle;
+                            }
+                            .data-row:nth-child(even) {
+                                background-color: #f9f9f9;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>Exportação de Calendário Adoção Espiritual</h2>
+                        <table>
+                            <thead>
+                                <tr class="header-row">
+                                    <th>Calendário</th>
+                                    <th>Formato</th>
+                                    <th>Classificação</th>
+                                    <th>Recorrente</th>
+                                    <th>Data Atividade</th>
+                                    <th>Título</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                items.forEach(item => {
+                    htmlContent += `
+                        <tr class="data-row">
+                            <td>${escapeXml(item.tipo_calendario || item.tipo || '-')}</td>
+                            <td>${escapeXml(item.formato || '-')}</td>
+                            <td>${escapeXml(item.tipo || '-')}</td>
+                            <td>${escapeXml(item.recorrente || 'Não')}</td>
+                            <td>${escapeXml(formatDt(item.data_atividade))}</td>
+                            <td>${escapeXml(item.titulo || '-')}</td>
+                        </tr>
+                    `;
+                });
+
+                htmlContent += `
+                            </tbody>
+                        </table>
+                    </body>
+                    </html>
+                `;
+
+                const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else if (format === 'pdf') {
+                const printWin = window.open('', '_blank');
+                let rowsHtml = items.map(item => `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.tipo_calendario || item.tipo || '-')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.formato || '-')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.tipo || '-')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.recorrente || 'Não')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(formatDt(item.data_atividade))}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;"><strong>${escapeXml(item.titulo || '-')}</strong></td>
+                    </tr>
+                `).join('');
+
+                printWin.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Exportação de Calendário Adoção Espiritual</title>
+                        <style>
+                            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333; }
+                            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #8b1e1e; padding-bottom: 10px; margin-bottom: 20px; }
+                            h1 { color: #8b1e1e; margin: 0; font-size: 1.4rem; }
+                            .meta-info { font-size: 0.85rem; color: #666; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+                            th { background-color: #8b1e1e; color: white; border: 1px solid #8b1e1e; padding: 10px; text-align: left; }
+                            td { border: 1px solid #ddd; padding: 8px; }
+                            tr:nth-child(even) { background-color: #f9f9f9; }
+                            .no-print-bar { margin-bottom: 15px; display: flex; gap: 10px; }
+                            .btn-print { background: #8b1e1e; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+                            @media print {
+                                .no-print-bar { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="no-print-bar">
+                            <button class="btn-print" onclick="window.print()">Baixar / Salvar em PDF</button>
+                        </div>
+                        <div class="header">
+                            <h1>Exportação de Calendário Adoção Espiritual</h1>
+                            <div class="meta-info">Data do Relatório: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Calendário</th>
+                                    <th>Formato</th>
+                                    <th>Classificação</th>
+                                    <th>Recorrente</th>
+                                    <th>Data Atividade</th>
+                                    <th>Título</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                        <script>
+                            window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+                printWin.document.close();
+            } else if (format === 'whatsapp') {
+                let msg = `*Exportação de Calendário Adoção Espiritual*\n\n`;
+                items.slice(0, 15).forEach((item, idx) => {
+                    msg += `${idx + 1}. *${item.titulo || 'Sem título'}*\n   - Data: ${formatDt(item.data_atividade)}\n   - Calendário: ${item.tipo_calendario || item.tipo || '-'}\n   - Recorrente: ${item.recorrente || 'Não'}\n\n`;
+                });
+                if (items.length > 15) {
+                    msg += `... e mais ${items.length - 15} atividades.`;
+                }
+                const encoded = encodeURIComponent(msg);
+                window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const API_BASE = (window.location.protocol === 'file:' || window.location.port !== '3000') ? 'http://localhost:3000/api' : '/api';
+
+            // Autocomplete Paróquia Event Listeners for Export Modal
+            const exportSearchInput = document.getElementById('export-paroquia-search');
+            const exportDropdown = document.getElementById('exportParoquiaDropdown');
+            const exportChevron = document.getElementById('exportParoquiaChevron');
+            const exportClearBtn = document.getElementById('exportParoquiaClearBtn');
+            const exportHiddenParoquia = document.getElementById('export-paroquia');
+
+            if (exportSearchInput) {
+                exportSearchInput.addEventListener('focus', () => {
+                    renderExportParoquiaDropdown(exportSearchInput.value && !exportHiddenParoquia.value ? exportSearchInput.value : '');
+                });
+
+                exportSearchInput.addEventListener('input', () => {
+                    if (exportHiddenParoquia) exportHiddenParoquia.value = '';
+                    if (exportClearBtn) exportClearBtn.style.display = 'none';
+                    renderExportParoquiaDropdown(exportSearchInput.value);
+                });
+
+                exportSearchInput.addEventListener('keydown', (e) => {
+                    if (!exportDropdown) return;
+                    const items = exportDropdown.querySelectorAll('.ac-item');
+                    if (!items.length) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        exportAcActiveIndex = Math.min(exportAcActiveIndex + 1, items.length - 1);
+                        updateExportAcActiveItem(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        exportAcActiveIndex = Math.max(exportAcActiveIndex - 1, 0);
+                        updateExportAcActiveItem(items);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (exportAcActiveIndex >= 0 && exportAcActiveIndex < items.length) {
+                            items[exportAcActiveIndex].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        closeExportParoquiaDropdown();
+                    }
+                });
+            }
+
+            if (exportClearBtn) {
+                exportClearBtn.addEventListener('click', () => {
+                    clearExportParoquiaSelection();
+                    if (exportSearchInput) exportSearchInput.focus();
+                });
+            }
+
+            document.addEventListener('click', (e) => {
+                const wrapper = document.getElementById('exportParoquiaAutocompleteWrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    closeExportParoquiaDropdown();
+                }
+            });
 
             // Fetch Header/Sidebar menu items from backend API
             fetch(`${API_BASE}/menu`)
@@ -875,13 +2331,7 @@
 
             // Format date string for standard display
             function formatDate(dateStr) {
-                if (!dateStr) return '-';
-                const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return dateStr;
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const year = d.getFullYear();
-                return `${day}/${month}/${year}`;
+                return formatDateStr(dateStr);
             }
 
             // Render list records matching paroquias.html list-item layout
@@ -910,6 +2360,12 @@
                         window.location.href = `calendario_adocao_registro.html?id=${id}`;
                     };
 
+                    const implantada = item.implantada || '';
+                    const isImplantada = tipoCal === 'Paroquial' && String(implantada).trim().toLowerCase() === 'sim';
+                    const seloHtml = isImplantada
+                        ? `<img src="./logo_circular_vermelho.png" alt="Selo" title="Paróquia Parceira Adoção" style="width: 22px; height: 22px; object-fit: contain; margin-left: 8px; vertical-align: middle;">`
+                        : '';
+
                     itemDiv.innerHTML = `
                         <i class="fa-regular fa-trash-can trash-icon" style="width: 35px; flex-shrink: 0; text-align: center;" title="Excluir" onclick="event.stopPropagation(); deleteRecord(${id});"></i>
                         <div style="flex: 0 0 130px; min-width: 100px; color: #444; font-weight: 500;">${tipoCal}</div>
@@ -917,7 +2373,7 @@
                         <div style="flex: 0 0 130px; min-width: 100px; color: #555;">${tipoClassificacao}</div>
                         <div style="flex: 0 0 110px; min-width: 80px; color: #555;">${recorrente}</div>
                         <div style="flex: 0 0 130px; min-width: 100px; color: #555;">${dataAtividade}</div>
-                        <div style="flex: 1 1 auto; min-width: 180px; font-weight: bold; color: #333;">${titulo}</div>
+                        <div style="flex: 1 1 auto; min-width: 180px; font-weight: bold; color: #333; display: flex; align-items: center;">${titulo}${seloHtml}</div>
                     `;
                     container.appendChild(itemDiv);
                 });
@@ -968,6 +2424,10 @@
             const helpOverlay = document.getElementById('help-overlay');
             if (e.target === helpOverlay) {
                 helpOverlay.classList.remove('active');
+            }
+            const exportOverlay = document.getElementById('export-overlay');
+            if (e.target === exportOverlay) {
+                exportOverlay.classList.remove('active');
             }
         });
     </script>

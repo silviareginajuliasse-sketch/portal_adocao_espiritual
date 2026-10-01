@@ -681,6 +681,116 @@
                 gap: 8px;
             }
         }
+
+        /* Searchable Paróquia Autocomplete */
+        .autocomplete-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .autocomplete-wrapper .input-field {
+            padding-right: 30px;
+        }
+
+        .autocomplete-wrapper .select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+            font-size: 0.9rem;
+            transition: transform 0.2s;
+        }
+
+        .autocomplete-wrapper .select-icon.open {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 280px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #aaa;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            z-index: 500;
+            display: none;
+        }
+
+        .autocomplete-dropdown.visible {
+            display: block;
+        }
+
+        .autocomplete-dropdown .ac-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+        }
+
+        .autocomplete-dropdown .ac-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-dropdown .ac-item:hover,
+        .autocomplete-dropdown .ac-item.active {
+            background-color: #fdf0f0;
+        }
+
+        .autocomplete-dropdown .ac-item .ac-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .autocomplete-dropdown .ac-item .ac-address {
+            font-size: 0.8rem;
+            color: #888;
+            line-height: 1.3;
+        }
+
+        .autocomplete-dropdown .ac-empty {
+            padding: 14px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        .autocomplete-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+        .autocomplete-dropdown::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        .autocomplete-dropdown::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        .ac-clear-btn {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 2px 4px;
+            display: none;
+        }
+        .ac-clear-btn:hover {
+            color: var(--primary-red);
+        }
     </style>
 </head>
 
@@ -939,15 +1049,18 @@
                 </div>
             </div>
 
-            <!-- Row 5: Paróquia -->
+            <!-- Row 5: Paróquia (Searchable Autocomplete) -->
             <div class="form-row" id="locationRow2">
                 <div class="form-group full-width" id="groupParoquia">
-                    <label class="form-label" for="id_paroquia">Paróquia <span>*</span></label>
-                    <div class="input-wrapper">
-                        <select id="id_paroquia" class="select-field">
-                            <option value="">Selecione a paróquia</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    <label class="form-label" for="paroquia_search">Paróquia <span>*</span></label>
+                    <div class="autocomplete-wrapper" id="paroquiaAutocompleteWrapper">
+                        <input type="text" id="paroquia_search" class="input-field" placeholder="Digite para buscar a paróquia..." autocomplete="off" />
+                        <input type="hidden" id="id_paroquia" name="id_paroquia" />
+                        <button type="button" class="ac-clear-btn" id="paroquiaClearBtn" title="Limpar seleção">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <i class="fa-solid fa-chevron-down select-icon" id="paroquiaChevron"></i>
+                        <div class="autocomplete-dropdown" id="paroquiaDropdown"></div>
                     </div>
                 </div>
             </div>
@@ -1006,7 +1119,13 @@
             const selectEstado = document.getElementById('id_estado');
             const selectRegional = document.getElementById('id_regional');
             const selectArquidiocese = document.getElementById('id_arquidiocese');
-            const selectParoquia = document.getElementById('id_paroquia');
+            const hiddenParoquia = document.getElementById('id_paroquia');
+            const paroquiaSearchInput = document.getElementById('paroquia_search');
+            const paroquiaDropdown = document.getElementById('paroquiaDropdown');
+            const paroquiaChevron = document.getElementById('paroquiaChevron');
+            const paroquiaClearBtn = document.getElementById('paroquiaClearBtn');
+            let allParoquias = []; // holds fetched paroquias for autocomplete
+            let acActiveIndex = -1; // keyboard navigation index
 
             const criadoEmVal = document.getElementById('criadoEmVal');
             const atualizadoEmVal = document.getElementById('atualizadoEmVal');
@@ -1159,7 +1278,7 @@
                 selectEstado.required = true;
                 selectRegional.required = true;
                 selectArquidiocese.required = true;
-                selectParoquia.required = true;
+                paroquiaSearchInput.required = true;
 
                 if (calVal === 'Nacional') {
                     // 7.1. 'Nacional' ocultar Estado, Regional, Arquidiocese e Paróquia
@@ -1174,7 +1293,8 @@
                     selectEstado.required = false;
                     selectRegional.required = false;
                     selectArquidiocese.required = false;
-                    selectParoquia.required = false;
+                    paroquiaSearchInput.required = false;
+                    clearParoquiaSelection();
                 } else if (calVal === 'Regional') {
                     // 'Regional' ocultar Arquidiocese e Paróquia
                     if (locationRow2) locationRow2.classList.add('is-hidden');
@@ -1183,14 +1303,16 @@
                     groupParoquia.classList.add('is-hidden');
 
                     selectArquidiocese.required = false;
-                    selectParoquia.required = false;
+                    paroquiaSearchInput.required = false;
+                    clearParoquiaSelection();
                 } else if (calVal === 'Arquidiocese') {
                     // 7.2. 'Arquidiocese' ocultar Paróquia
                     if (locationRow2) locationRow2.classList.add('is-hidden');
 
                     groupParoquia.classList.add('is-hidden');
 
-                    selectParoquia.required = false;
+                    paroquiaSearchInput.required = false;
+                    clearParoquiaSelection();
                 }
             }
 
@@ -1212,7 +1334,8 @@
             function loadRegionais(estadoId) {
                 selectRegional.innerHTML = '<option value="">Selecione a regional</option>';
                 selectArquidiocese.innerHTML = '<option value="">Selecione a arquidiocese</option>';
-                selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
+                allParoquias = [];
+                clearParoquiaSelection();
                 if (!estadoId) return Promise.resolve();
 
                 return fetch(`${API_BASE}/regionais/estado/${estadoId}`)
@@ -1242,7 +1365,8 @@
             // Load Arquidioceses for selected Regional or Estado
             function loadArquidioceses(regionalId, estadoId) {
                 selectArquidiocese.innerHTML = '<option value="">Selecione a arquidiocese</option>';
-                selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
+                allParoquias = [];
+                clearParoquiaSelection();
                 if (!regionalId && !estadoId) return Promise.resolve();
 
                 let url = `${API_BASE}/arquidioceses`;
@@ -1265,23 +1389,164 @@
                     .catch(err => console.error('Erro ao carregar arquidioceses:', err));
             }
 
-            // Load Paroquias for selected Arquidiocese
+            // Load Paroquias for selected Arquidiocese (for autocomplete)
             function loadParoquias(arqId) {
-                selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
+                allParoquias = [];
+                clearParoquiaSelection();
                 if (!arqId) return Promise.resolve();
 
                 return fetch(`${API_BASE}/paroquias/arquidiocese/${arqId}`)
                     .then(res => res.json())
                     .then(data => {
-                        selectParoquia.innerHTML = '<option value="">Selecione a paróquia</option>';
                         if (Array.isArray(data) && data.length > 0) {
-                            data.forEach(item => {
-                                selectParoquia.innerHTML += `<option value="${item.id_paroquia || item.id}">${item.nome_paroquia}</option>`;
-                            });
+                            allParoquias = data.map(item => ({
+                                id: item.id_paroquia || item.id,
+                                nome: item.nome_paroquia || '',
+                                endereco: item.endereco || '',
+                                bairro: item.bairro || '',
+                                cidade: item.cidade || '',
+                                cep: item.cep || ''
+                            }));
+                            allParoquias.sort((a, b) => a.nome.localeCompare(b.nome));
                         }
                     })
                     .catch(err => console.error('Erro ao carregar paróquias:', err));
             }
+
+            // Build address string for display
+            function buildAddressStr(p) {
+                const parts = [];
+                if (p.endereco) parts.push(p.endereco);
+                if (p.bairro) parts.push(p.bairro);
+                if (p.cidade) parts.push(p.cidade);
+                if (p.cep) parts.push('CEP ' + p.cep);
+                return parts.join(' — ');
+            }
+
+            // Render the autocomplete dropdown items
+            function renderParoquiaDropdown(filter = '') {
+                const normalizedFilter = filter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const filtered = allParoquias.filter(p => {
+                    const searchable = (p.nome + ' ' + p.endereco + ' ' + p.bairro + ' ' + p.cidade + ' ' + p.cep)
+                        .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    return searchable.includes(normalizedFilter);
+                });
+
+                paroquiaDropdown.innerHTML = '';
+                acActiveIndex = -1;
+
+                if (filtered.length === 0) {
+                    paroquiaDropdown.innerHTML = '<div class="ac-empty">Nenhuma paróquia encontrada</div>';
+                } else {
+                    filtered.forEach((p, idx) => {
+                        const div = document.createElement('div');
+                        div.classList.add('ac-item');
+                        div.dataset.id = p.id;
+                        div.dataset.index = idx;
+                        const addr = buildAddressStr(p);
+                        div.innerHTML = `<div class="ac-name">${p.nome}</div>${addr ? '<div class="ac-address">' + addr + '</div>' : ''}`;
+                        div.addEventListener('click', () => selectParoquiaItem(p));
+                        paroquiaDropdown.appendChild(div);
+                    });
+                }
+                paroquiaDropdown.classList.add('visible');
+                paroquiaChevron.classList.add('open');
+            }
+
+            // Select a paroquia from the dropdown
+            function selectParoquiaItem(p) {
+                hiddenParoquia.value = p.id;
+                const addr = buildAddressStr(p);
+                paroquiaSearchInput.value = p.nome + (addr ? ' — ' + addr : '');
+                paroquiaDropdown.classList.remove('visible');
+                paroquiaChevron.classList.remove('open');
+                paroquiaClearBtn.style.display = 'block';
+                // Remove required validation error since we have a value
+                paroquiaSearchInput.setCustomValidity('');
+            }
+
+            // Clear selection
+            function clearParoquiaSelection() {
+                hiddenParoquia.value = '';
+                paroquiaSearchInput.value = '';
+                paroquiaClearBtn.style.display = 'none';
+                paroquiaDropdown.classList.remove('visible');
+                paroquiaChevron.classList.remove('open');
+            }
+
+            // Event: focus on search input => show dropdown
+            paroquiaSearchInput.addEventListener('focus', () => {
+                renderParoquiaDropdown(paroquiaSearchInput.value && !hiddenParoquia.value ? paroquiaSearchInput.value : '');
+            });
+
+            // Event: typing in search input => filter dropdown
+            paroquiaSearchInput.addEventListener('input', () => {
+                // If user types, clear the current selection
+                hiddenParoquia.value = '';
+                paroquiaClearBtn.style.display = 'none';
+                renderParoquiaDropdown(paroquiaSearchInput.value);
+            });
+
+            // Event: keyboard navigation in dropdown
+            paroquiaSearchInput.addEventListener('keydown', (e) => {
+                const items = paroquiaDropdown.querySelectorAll('.ac-item');
+                if (!items.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    acActiveIndex = Math.min(acActiveIndex + 1, items.length - 1);
+                    updateAcActiveItem(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    acActiveIndex = Math.max(acActiveIndex - 1, 0);
+                    updateAcActiveItem(items);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (acActiveIndex >= 0 && acActiveIndex < items.length) {
+                        items[acActiveIndex].click();
+                    }
+                } else if (e.key === 'Escape') {
+                    paroquiaDropdown.classList.remove('visible');
+                    paroquiaChevron.classList.remove('open');
+                }
+            });
+
+            function updateAcActiveItem(items) {
+                items.forEach(el => el.classList.remove('active'));
+                if (acActiveIndex >= 0 && acActiveIndex < items.length) {
+                    items[acActiveIndex].classList.add('active');
+                    items[acActiveIndex].scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            // Event: clear button
+            paroquiaClearBtn.addEventListener('click', () => {
+                clearParoquiaSelection();
+                paroquiaSearchInput.focus();
+            });
+
+            // Event: click outside to close dropdown
+            document.addEventListener('click', (e) => {
+                const wrapper = document.getElementById('paroquiaAutocompleteWrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    paroquiaDropdown.classList.remove('visible');
+                    paroquiaChevron.classList.remove('open');
+                    // If user typed but didn't select, and there's no value, clear
+                    if (!hiddenParoquia.value) {
+                        paroquiaSearchInput.value = '';
+                    }
+                }
+            });
+
+            // Custom validation: ensure a paroquia is selected
+            activityForm.addEventListener('submit', function checkParoquiaValidation() {
+                if (paroquiaSearchInput.required && !hiddenParoquia.value) {
+                    paroquiaSearchInput.setCustomValidity('Selecione uma paróquia da lista.');
+                    paroquiaSearchInput.reportValidity();
+                } else {
+                    paroquiaSearchInput.setCustomValidity('');
+                }
+            }, true); // capture phase to run before the main submit handler
 
             // Load Initial Estados
             loadEstados();
@@ -1361,7 +1626,13 @@
                                     selectArquidiocese.value = data.id_arquidiocese;
                                     await loadParoquias(data.id_arquidiocese);
                                     if (data.id_paroquia) {
-                                        selectParoquia.value = data.id_paroquia;
+                                        // Find the matching paroquia and select it in the autocomplete
+                                        const matchP = allParoquias.find(p => p.id == data.id_paroquia);
+                                        if (matchP) {
+                                            selectParoquiaItem(matchP);
+                                        } else {
+                                            hiddenParoquia.value = data.id_paroquia;
+                                        }
                                     }
                                 }
                             }
@@ -1394,7 +1665,7 @@
                     id_estado: selectEstado.value ? parseInt(selectEstado.value, 10) : null,
                     id_regional: selectRegional.value ? parseInt(selectRegional.value, 10) : null,
                     id_arquidiocese: selectArquidiocese.value ? parseInt(selectArquidiocese.value, 10) : null,
-                    id_paroquia: selectParoquia.value ? parseInt(selectParoquia.value, 10) : null,
+                    id_paroquia: hiddenParoquia.value ? parseInt(hiddenParoquia.value, 10) : null,
                     observacoes: document.getElementById('observacoes').value || null,
                     id_colaborador_atualiza: 2
                 };
