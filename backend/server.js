@@ -52,6 +52,46 @@ async function connectDB() {
             await pool.query('SELECT 1');
             console.log('Conectado ao MySQL!');
 
+            // Ensure table calendario_feriados exists (table calendario renamed and calendario_datas removed)
+            try {
+                await pool.query(`
+                    CREATE TABLE IF NOT EXISTS calendario_feriados (
+                        id_calendario INT AUTO_INCREMENT PRIMARY KEY,
+                        nome_evento VARCHAR(255) NOT NULL,
+                        data VARCHAR(10) DEFAULT NULL,
+                        feriado VARCHAR(10) DEFAULT 'Não',
+                        calendario_religioso VARCHAR(10) DEFAULT 'Não',
+                        observacoes TEXT DEFAULT NULL,
+                        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        atualizado_em TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        id_colaborador_atualiza INT DEFAULT NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                `);
+            } catch (cfErr) {
+                console.error('Erro ao criar tabela calendario_feriados:', cfErr.message);
+            }
+
+            // Check if id_evento column in table calendario_feriados is NOT NULL without default
+            try {
+                const [idEvCols] = await pool.query(`
+                    SELECT COLUMN_NAME, IS_NULLABLE 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                      AND TABLE_NAME = 'calendario_feriados' 
+                      AND COLUMN_NAME = 'id_evento'
+                `);
+                if (idEvCols.length > 0 && idEvCols[0].IS_NULLABLE === 'NO') {
+                    console.log('Ajustando coluna id_evento da tabela calendario_feriados para permitir NULL...');
+                    await pool.query(`
+                        ALTER TABLE calendario_feriados 
+                        MODIFY COLUMN id_evento INT NULL DEFAULT NULL
+                    `);
+                    console.log('Coluna id_evento ajustada com sucesso.');
+                }
+            } catch (idEvErr) {
+                console.error('Erro ao verificar/ajustar coluna id_evento:', idEvErr.message);
+            }
+
             // Check if criado_em in table treinamentos has implicit "on update CURRENT_TIMESTAMP"
             const [columns] = await pool.query(`
                 SELECT EXTRA 
@@ -2015,6 +2055,187 @@ app.get('/api/tipos_certificados_colaborador', async (req, res) => {
     }
 });
 
+// --- Calendário Feriados e Dias Santos Routes ---
+app.get(['/api/calendario_feriados', '/api/calendario'], async (req, res) => {
+    try {
+        const [tables] = await pool.query(`
+            SELECT TABLE_NAME 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME IN ('calendario_feriados', 'calendario')
+        `);
+        const tableName = tables.find(t => t.TABLE_NAME === 'calendario_feriados') 
+            ? 'calendario_feriados' 
+            : (tables.find(t => t.TABLE_NAME === 'calendario') ? 'calendario' : 'calendario_feriados');
+
+        const [colabCols] = await pool.query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = ? 
+              AND COLUMN_NAME = 'id_colaborador_atualiza'
+        `, [tableName]);
+
+        let query = `SELECT cf.* FROM ${tableName} cf ORDER BY cf.id_calendario DESC`;
+        if (colabCols.length > 0) {
+            query = `
+                SELECT cf.*, c.nome_colaborador AS nome_colaborador_atualiza 
+                FROM ${tableName} cf
+                LEFT JOIN colaboradores c ON cf.id_colaborador_atualiza = c.id_colaborador
+                ORDER BY cf.id_calendario DESC
+            `;
+        }
+        const [rows] = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao listar calendario_feriados:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get(['/api/calendario_feriados/:id', '/api/calendario/:id'], async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [tables] = await pool.query(`
+            SELECT TABLE_NAME 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME IN ('calendario_feriados', 'calendario')
+        `);
+        const tableName = tables.find(t => t.TABLE_NAME === 'calendario_feriados') 
+            ? 'calendario_feriados' 
+            : (tables.find(t => t.TABLE_NAME === 'calendario') ? 'calendario' : 'calendario_feriados');
+
+        const [colabCols] = await pool.query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = ? 
+              AND COLUMN_NAME = 'id_colaborador_atualiza'
+        `, [tableName]);
+
+        let query = `SELECT cf.* FROM ${tableName} cf WHERE cf.id_calendario = ?`;
+        if (colabCols.length > 0) {
+            query = `
+                SELECT cf.*, c.nome_colaborador AS nome_colaborador_atualiza 
+                FROM ${tableName} cf
+                LEFT JOIN colaboradores c ON cf.id_colaborador_atualiza = c.id_colaborador
+                WHERE cf.id_calendario = ?
+            `;
+        }
+        const [rows] = await pool.query(query, [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Registro de calendário não encontrado.' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Erro ao buscar calendario_feriados:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post(['/api/calendario_feriados/save', '/api/calendario/save'], async (req, res) => {
+    const {
+        id_calendario,
+        nome_evento,
+        identificacao,
+        data,
+        feriado,
+        calendario_religioso,
+        observacoes,
+        id_colaborador_atualiza
+    } = req.body;
+
+    const nomeFinal = (nome_evento || identificacao || '').trim();
+    if (!nomeFinal) {
+        return res.status(400).json({ success: false, error: 'O campo Identificação é obrigatório.' });
+    }
+    if (!data || String(data).trim() === '') {
+        return res.status(400).json({ success: false, error: 'O campo Data é obrigatório.' });
+    }
+
+    const feriadoVal = (feriado === 'Sim' || feriado === true || feriado === 1) ? 'Sim' : 'Não';
+    const religVal = (calendario_religioso === 'Sim' || calendario_religioso === true || calendario_religioso === 1) ? 'Sim' : 'Não';
+    const colabId = id_colaborador_atualiza ? parseInt(id_colaborador_atualiza, 10) : 2;
+
+    if (feriadoVal === 'Não' && religVal === 'Não') {
+        return res.status(400).json({ success: false, error: 'É necessário selecionar ao menos uma das opções: Feriado e/ou Data religiosa.' });
+    }
+
+    try {
+        if (id_calendario) {
+            await pool.query(
+                `UPDATE calendario_feriados SET
+                    nome_evento = ?,
+                    data = ?,
+                    feriado = ?,
+                    calendario_religioso = ?,
+                    observacoes = ?,
+                    id_colaborador_atualiza = ?,
+                    atualizado_em = NOW()
+                 WHERE id_calendario = ?`,
+                [nomeFinal, String(data).trim(), feriadoVal, religVal, observacoes || null, colabId, id_calendario]
+            );
+            res.json({ success: true, id: id_calendario });
+        } else {
+            const [hasIdEv] = await pool.query(`
+                SELECT COLUMN_NAME, IS_NULLABLE 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'calendario_feriados' 
+                  AND COLUMN_NAME = 'id_evento'
+            `);
+
+            if (hasIdEv.length > 0) {
+                const [result] = await pool.query(
+                    `INSERT INTO calendario_feriados (
+                        id_evento,
+                        nome_evento,
+                        data,
+                        feriado,
+                        calendario_religioso,
+                        observacoes,
+                        id_colaborador_atualiza,
+                        criado_em,
+                        atualizado_em
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NULL)`,
+                    [req.body.id_evento || 0, nomeFinal, String(data).trim(), feriadoVal, religVal, observacoes || null, colabId]
+                );
+                res.status(201).json({ success: true, id: result.insertId });
+            } else {
+                const [result] = await pool.query(
+                    `INSERT INTO calendario_feriados (
+                        nome_evento,
+                        data,
+                        feriado,
+                        calendario_religioso,
+                        observacoes,
+                        id_colaborador_atualiza,
+                        criado_em,
+                        atualizado_em
+                    ) VALUES (?, ?, ?, ?, ?, ?, NOW(), NULL)`,
+                    [nomeFinal, String(data).trim(), feriadoVal, religVal, observacoes || null, colabId]
+                );
+                res.status(201).json({ success: true, id: result.insertId });
+            }
+        }
+    } catch (err) {
+        console.error('Erro ao salvar calendario_feriados:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete(['/api/calendario_feriados/:id', '/api/calendario/:id'], async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM calendario_feriados WHERE id_calendario = ?', [id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao excluir calendario_feriados:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Route to get all atividades_calendario for list display
 app.get(['/api/atividades_calendario', '/api/atividades_calendario/lista'], async (req, res) => {
     try {
@@ -2034,8 +2255,17 @@ app.get(['/api/atividades_calendario', '/api/atividades_calendario/lista'], asyn
         const selectStatus = colNames.includes('status') ? 'ar.status' : "'Ativo'";
         const selectObs = colNames.includes('observacoes') ? 'ar.observacoes' : "NULL";
         const selectDataAtividade = colNames.includes('data_atividade') ? 'ar.data_atividade' : "NULL";
+        const selectHoraAtividade = colNames.includes('hora_atividade') ? 'ar.hora_atividade' : (colNames.includes('hora') ? 'ar.hora' : "NULL");
         const selectTitulo = colNames.includes('titulo') ? 'ar.titulo' : "'-'";
         const paroquiaFkCol = colNames.includes('id_paroquia') ? 'ar.id_paroquia' : (colNames.includes('paroquia_id') ? 'ar.paroquia_id' : 'NULL');
+
+        const selectOrdemSemana = colNames.includes('ordem_semana') ? 'ar.ordem_semana' : "NULL";
+        const selectDiaSemana = colNames.includes('dia_semana') ? 'ar.dia_semana' : "NULL";
+        const selectDiaMes = colNames.includes('dia_mes') ? 'ar.dia_mes' : (colNames.includes('dia_fixo') ? 'ar.dia_fixo' : "NULL");
+        const selectDataFim = colNames.includes('data_fim') ? 'ar.data_fim' : "NULL";
+        const selectIdRegional = colNames.includes('id_regional') ? 'ar.id_regional' : "NULL";
+        const selectIdArquidiocese = colNames.includes('id_arquidiocese') ? 'ar.id_arquidiocese' : "NULL";
+        const selectIdEstado = colNames.includes('id_estado') ? 'ar.id_estado' : "NULL";
 
         // Check if tables paroquias / arquidioceses or paroquia / arquidiocese exist
         const [tablesList] = await pool.query(`
@@ -2051,12 +2281,12 @@ app.get(['/api/atividades_calendario', '/api/atividades_calendario/lista'], asyn
         const arqTable = tableNames.includes('arquidioceses') ? 'arquidioceses' : (tableNames.includes('arquidiocese') ? 'arquidiocese' : null);
 
         let joinQuery = '';
-        let paroquiaSelect = "'-' AS nome_paroquia";
+        let paroquiaSelect = "'-' AS nome_paroquia, NULL AS endereco_paroquia, NULL AS bairro_paroquia, NULL AS cidade_paroquia, NULL AS cep_paroquia, NULL AS paroquia_id_arquidiocese";
         let arqSelect = "'-' AS nome_arquidiocese";
 
         if (paroquiaTable) {
             joinQuery += ` LEFT JOIN ${paroquiaTable} p ON ${paroquiaFkCol} = p.${paroquiaIdCol} `;
-            paroquiaSelect = "p.nome_paroquia AS nome_paroquia";
+            paroquiaSelect = "p.nome_paroquia AS nome_paroquia, p.endereco AS endereco_paroquia, p.bairro AS bairro_paroquia, p.cidade AS cidade_paroquia, p.cep AS cep_paroquia, p.id_arquidiocese AS paroquia_id_arquidiocese";
 
             if (arqTable) {
                 joinQuery += ` LEFT JOIN ${arqTable} a ON p.id_arquidiocese = a.id_arquidiocese `;
@@ -2068,14 +2298,25 @@ app.get(['/api/atividades_calendario', '/api/atividades_calendario/lista'], asyn
             SELECT 
                 ${idCol} AS id_atividade,
                 ${idCol} AS id,
+                ${paroquiaFkCol} AS id_paroquia,
                 ${selectTipoCal} AS tipo_calendario,
                 ${selectFormato} AS formato,
                 ${selectTipo} AS tipo,
                 ${selectRecorrente} AS recorrente,
                 ${selectDataAtividade} AS data_atividade,
+                ${selectHoraAtividade} AS hora_atividade,
+                ${selectHoraAtividade} AS hora,
                 ${selectTitulo} AS titulo,
                 ${selectStatus} AS status,
                 ${selectObs} AS observacoes,
+                ${selectOrdemSemana} AS ordem_semana,
+                ${selectDiaSemana} AS dia_semana,
+                ${selectDiaMes} AS dia_mes,
+                ${selectDiaMes} AS dia_fixo,
+                ${selectDataFim} AS data_fim,
+                ${selectIdRegional} AS id_regional,
+                ${selectIdArquidiocese} AS id_arquidiocese,
+                ${selectIdEstado} AS id_estado,
                 ${paroquiaSelect},
                 ${arqSelect},
                 ${paroquiaTable ? 'p.implantada AS implantada' : "NULL AS implantada"}
@@ -2087,6 +2328,81 @@ app.get(['/api/atividades_calendario', '/api/atividades_calendario/lista'], asyn
         res.json(rows);
     } catch (err) {
         console.error('Erro ao listar atividades_calendario:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Endpoint to generate database SQL backup inside BD directory
+app.get(['/api/backup_sql', '/api/admin/backup'], async (req, res) => {
+    try {
+        const dbName = dbConfig.database || 'adocao_espiritual';
+        let sql = `-- Backup do Banco de Dados: ${dbName}\n`;
+        sql += `-- Data: ${new Date().toISOString()}\n`;
+        sql += `-- Servidor: MySQL / MariaDB\n\n`;
+        sql += `SET FOREIGN_KEY_CHECKS = 0;\n`;
+        sql += `SET NAMES utf8mb4;\n\n`;
+
+        const [tables] = await pool.query('SHOW TABLES');
+        const tableKey = Object.keys(tables[0])[0];
+
+        for (const row of tables) {
+            const tableName = row[tableKey];
+            sql += `-- ------------------------------------------------------\n`;
+            sql += `-- Estrutura da tabela \`${tableName}\`\n`;
+            sql += `-- ------------------------------------------------------\n`;
+            sql += `DROP TABLE IF EXISTS \`${tableName}\`;\n`;
+
+            const [createRows] = await pool.query(`SHOW CREATE TABLE \`${tableName}\``);
+            sql += createRows[0]['Create Table'] + ';\n\n';
+
+            const [dataRows] = await pool.query(`SELECT * FROM \`${tableName}\``);
+            if (dataRows.length > 0) {
+                sql += `-- Dados da tabela \`${tableName}\`\n`;
+                const columns = Object.keys(dataRows[0]).map(c => `\`${c}\``).join(', ');
+                
+                for (const dRow of dataRows) {
+                    const values = Object.values(dRow).map(val => {
+                        if (val === null || val === undefined) return 'NULL';
+                        if (typeof val === 'number') return val;
+                        if (typeof val === 'boolean') return val ? 1 : 0;
+                        if (val instanceof Date) return `'${val.toISOString().slice(0, 19).replace('T', ' ')}'`;
+                        if (Buffer.isBuffer(val)) return `X'${val.toString('hex')}'`;
+                        const escaped = String(val)
+                            .replace(/\\/g, '\\\\')
+                            .replace(/'/g, "\\'")
+                            .replace(/\n/g, '\\n')
+                            .replace(/\r/g, '\\r')
+                            .replace(/\t/g, '\\t');
+                        return `'${escaped}'`;
+                    }).join(', ');
+
+                    sql += `INSERT INTO \`${tableName}\` (${columns}) VALUES (${values});\n`;
+                }
+                sql += `\n`;
+            }
+        }
+
+        sql += `SET FOREIGN_KEY_CHECKS = 1;\n`;
+        sql += `-- Fim do Backup\n`;
+
+        // Save to file in BD directory
+        try {
+            const bdDir = path.join(__dirname, '..', 'BD');
+            if (!fs.existsSync(bdDir)) fs.mkdirSync(bdDir, { recursive: true });
+            fs.writeFileSync(path.join(bdDir, 'backup_adocao_espiritual.sql'), sql, 'utf8');
+        } catch (fsErr) {
+            console.error('Erro ao salvar arquivo de backup em disco:', fsErr);
+        }
+
+        if (req.query.download === 'true') {
+            res.setHeader('Content-Type', 'application/sql');
+            res.setHeader('Content-Disposition', 'attachment; filename="backup_adocao_espiritual.sql"');
+            return res.send(sql);
+        }
+
+        res.json({ success: true, message: 'Backup gerado com sucesso na pasta BD do projeto.', size: sql.length });
+    } catch (err) {
+        console.error('Erro ao gerar backup SQL:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -5646,7 +5962,6 @@ app.get('/api/colaboradores/:id/coordenacoes', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
 
 // Start server
 app.listen(port, async () => {

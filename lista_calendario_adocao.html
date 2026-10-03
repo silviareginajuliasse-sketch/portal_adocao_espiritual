@@ -7,6 +7,7 @@
     <title>Calendário Adoção Espiritual</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         :root {
             --primary-red: #8b1e1e;
@@ -1218,10 +1219,9 @@
             <div class="list-header">
                 <div style="width: 35px; flex-shrink: 0; text-align: center;"></div>
                 <div style="flex: 0 0 130px; min-width: 100px;">Calendário</div>
-                <div style="flex: 0 0 110px; min-width: 90px;">Formato</div>
-                <div style="flex: 0 0 130px; min-width: 100px;">Classificação</div>
-                <div style="flex: 0 0 110px; min-width: 80px;">Recorrente</div>
-                <div style="flex: 0 0 130px; min-width: 100px;">Data Atividade</div>
+                <div style="flex: 0 0 140px; min-width: 110px;">Classificação</div>
+                <div style="flex: 0 0 110px; min-width: 85px;">Recorrente</div>
+                <div style="flex: 0 0 160px; min-width: 130px;">Data e hora</div>
                 <div style="flex: 1 1 auto; min-width: 180px;">Título</div>
             </div>
             <div id="calendario-list">
@@ -1282,7 +1282,7 @@
                         </div>
                     </div>
                     <div class="export-group" style="flex: 1; min-width: 110px;">
-                        <label class="export-label" for="export-mes-fim">Mês final</label>
+                        <label class="export-label" for="export-mes-fim">Mês final <span>*</span></label>
                         <div class="export-select-wrapper">
                             <select id="export-mes-fim" class="export-select">
                                 <option value="">Selecione...</option>
@@ -1404,6 +1404,29 @@
             }
         }
 
+        function formatHora(horaStr) {
+            if (!horaStr) return '-';
+            const str = String(horaStr).trim();
+            if (!str || str === '-') return '-';
+            const match = str.match(/^(\d{1,2}):(\d{2})/);
+            if (match) {
+                const hh = String(match[1]).padStart(2, '0');
+                const mm = match[2];
+                return `${hh}:${mm}`;
+            }
+            return str;
+        }
+
+        function getFormatoIconHtml(formatoVal) {
+            const norm = String(formatoVal || '').trim().toLowerCase();
+            if (norm.includes('online') || norm.includes('on-line')) {
+                return `<i class="fa-solid fa-video" style="color: #2563eb; margin-right: 6px; font-size: 0.9rem;" title="On-line"></i>`;
+            } else if (norm.includes('presencial')) {
+                return `<i class="fa-solid fa-users" style="color: #4a5568; margin-right: 6px; font-size: 0.9rem;" title="Presencial"></i>`;
+            }
+            return '';
+        }
+
         function filterList() {
             const searchInput = document.getElementById('search-input') || document.getElementById('searchInput');
             if (!searchInput) return;
@@ -1431,9 +1454,11 @@
                 const recorrente = String(item.recorrente || '').toLowerCase();
                 const obs = String(item.observacoes || '').toLowerCase();
                 const paroquia = String(item.nome_paroquia || '').toLowerCase();
+                const enderecoPar = String(item.endereco_paroquia || item.endereco || '').toLowerCase();
                 const arquidiocese = String(item.nome_arquidiocese || '').toLowerCase();
                 const dataRaw = String(item.data_atividade || '').toLowerCase();
                 const dataFormatted = formatDt(item.data_atividade).toLowerCase();
+                const horaFormatted = formatHora(item.hora_atividade || item.hora).toLowerCase();
 
                 return titulo.includes(term) ||
                        formato.includes(term) ||
@@ -1442,9 +1467,11 @@
                        recorrente.includes(term) ||
                        obs.includes(term) ||
                        paroquia.includes(term) ||
+                       enderecoPar.includes(term) ||
                        arquidiocese.includes(term) ||
                        dataRaw.includes(term) ||
-                       dataFormatted.includes(term);
+                       dataFormatted.includes(term) ||
+                       horaFormatted.includes(term);
             });
             renderTable(filtered);
         }
@@ -1912,28 +1939,37 @@
         }
 
         function getFilteredExportActivities() {
-            const ano = document.getElementById('export-ano').value.trim();
-            const targetYear = ano ? parseInt(ano, 10) : new Date().getFullYear();
+            const anoInput = document.getElementById('export-ano').value.trim();
+            const targetYear = anoInput ? parseInt(anoInput, 10) : new Date().getFullYear();
 
             const mesInicioSelect = document.getElementById('export-mes-inicio') || document.getElementById('export-mes');
             const mesFimSelect = document.getElementById('export-mes-fim');
-            const mesInicio = mesInicioSelect ? mesInicioSelect.value : '';
-            const mesFim = mesFimSelect ? mesFimSelect.value : '';
+            const mesInicioVal = mesInicioSelect ? mesInicioSelect.value : '';
+            const mesFimVal = mesFimSelect ? mesFimSelect.value : '';
 
-            const startMonth = mesInicio ? parseInt(mesInicio, 10) : 1;
-            const endMonth = mesFim ? parseInt(mesFim, 10) : 12;
+            const startMonth = mesInicioVal ? parseInt(mesInicioVal, 10) : 1;
+            const endMonth = mesFimVal ? parseInt(mesFimVal, 10) : (mesInicioVal ? startMonth : 12);
 
             const cal = document.getElementById('export-calendario').value;
-            const chkUnica = document.getElementById('freq-unica').checked;
-            const chkRecorrente = document.getElementById('freq-recorrente').checked;
+            const chkUnica = document.getElementById('freq-unica') ? document.getElementById('freq-unica').checked : false;
+            const chkRecorrente = document.getElementById('freq-recorrente') ? document.getElementById('freq-recorrente').checked : false;
             const estadoId = document.getElementById('export-estado') ? document.getElementById('export-estado').value : '';
             const regionalId = document.getElementById('export-regional') ? document.getElementById('export-regional').value : '';
             const arquidioceseId = document.getElementById('export-arquidiocese') ? document.getElementById('export-arquidiocese').value : '';
             const paroquiaId = document.getElementById('export-paroquia') ? document.getElementById('export-paroquia').value : '';
 
+            const periodStart = new Date(targetYear, startMonth - 1, 1, 0, 0, 0);
+            const lastDayEnd = new Date(targetYear, endMonth, 0).getDate();
+            const periodEnd = new Date(targetYear, endMonth - 1, lastDayEnd, 23, 59, 59);
+
             const result = [];
 
             allActivities.forEach(item => {
+                const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
+                const itemArq = item.id_arquidiocese || item.paroquia_id_arquidiocese || parInfo.id_arquidiocese;
+                const itemReg = item.id_regional || parInfo.id_regional;
+                const itemEst = item.id_estado || parInfo.id_estado;
+
                 // Location Filters according to selected Calendário
                 if (cal) {
                     const tipoCal = (item.tipo_calendario || item.tipo || '').toLowerCase().trim();
@@ -1946,64 +1982,43 @@
                 }
 
                 if (cal === 'Estadual') {
-                    if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
                 } else if (cal === 'Regional') {
-                    if (regionalId && item.id_regional && String(item.id_regional) !== String(regionalId)) return;
-                    else if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                    if (regionalId && itemReg && String(itemReg) !== String(regionalId)) return;
+                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
                 } else if (cal === 'Arquidiocese') {
-                    const itemArq = item.id_arquidiocese || item.paroquia_id_arquidiocese;
                     if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) return;
-                    else if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
                 } else if (cal === 'Paroquial' || cal === 'Paróquia') {
                     if (paroquiaId && item.id_paroquia && String(item.id_paroquia) !== String(paroquiaId)) return;
-                    const itemArq = item.id_arquidiocese || item.paroquia_id_arquidiocese;
                     if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) return;
-                    if (estadoId && item.id_estado && String(item.id_estado) !== String(estadoId)) return;
+                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
                 }
 
                 // Frequency Filter (Única vs Recorrente)
                 const recStr = (item.recorrente || '').toLowerCase().trim();
-                const isRecurrentType = recStr.includes('mensal') || 
-                                        recStr.includes('recorrente') || 
-                                        recStr.includes('semana') || 
-                                        recStr.includes('fixo') || 
-                                        Boolean(item.ordem_semana) || 
-                                        Boolean(item.dia_semana) || 
-                                        Boolean(item.dia_mes) || 
-                                        Boolean(item.dia_fixo);
+                const hasWeekdayRec = Boolean(item.ordem_semana && item.dia_semana);
+                const hasFixedDayRec = Boolean(item.dia_fixo || item.dia_mes);
+                const isRecurrentType = recStr.includes('mensal') || recStr.includes('recorrente') || recStr.includes('semana') || recStr.includes('fixo') || hasWeekdayRec || hasFixedDayRec;
 
                 if (chkUnica && isRecurrentType) return;
                 if (chkRecorrente && !isRecurrentType) return;
 
-                // Check if activity is Recurrent or Static Date
-                if (isRecurrentType || !item.data_atividade) {
-                    // Recurring activity: generate occurrence dates for each month in range [startMonth, endMonth] for targetYear
+                // Rule a.1: Check termina_em / data_fim constraint
+                const endDateVal = item.data_fim || item.termina_em;
+                if (endDateVal) {
+                    const pEnd = parseDateParts(endDateVal);
+                    if (pEnd) {
+                        const endLimit = new Date(pEnd.year, pEnd.month - 1, pEnd.day, 23, 59, 59);
+                        if (endLimit < periodStart) return; // Terminated before requested period
+                    }
+                }
+
+                // Rule a.4: Recurrent Weekday Activity
+                if (hasWeekdayRec || recStr.includes('semana')) {
                     for (let m = startMonth; m <= endMonth; m++) {
-                        let dt = null;
-                        const isWeekdayRec = recStr.includes('semana') || (item.ordem_semana && item.dia_semana);
-                        const isFixedDayRec = recStr.includes('fixo') || item.dia_mes || item.dia_fixo;
-
-                        if (isWeekdayRec) {
-                            dt = getRecurrentWeekdayDate(targetYear, m, item.ordem_semana, item.dia_semana);
-                        } else if (isFixedDayRec) {
-                            dt = getRecurrentFixedDayDate(targetYear, m, item.dia_fixo || item.dia_mes);
-                        } else if (item.data_atividade) {
-                            const pItem = parseDateParts(item.data_atividade);
-                            if (pItem && pItem.year === targetYear && pItem.month === m) {
-                                dt = new Date(pItem.year, pItem.month - 1, pItem.day);
-                            }
-                        }
-
-                        if (dt) {
-                            // Check start date & end date constraints if present
-                            if (item.data_atividade) {
-                                const pStart = parseDateParts(item.data_atividade);
-                                if (pStart) {
-                                    const startLimit = new Date(pStart.year, pStart.month - 1, pStart.day, 0, 0, 0);
-                                    if (dt < startLimit) continue;
-                                }
-                            }
-                            const endDateVal = item.data_fim || item.termina_em;
+                        const dt = getRecurrentWeekdayDate(targetYear, m, item.ordem_semana, item.dia_semana);
+                        if (dt && dt >= periodStart && dt <= periodEnd) {
                             if (endDateVal) {
                                 const pEnd = parseDateParts(endDateVal);
                                 if (pEnd) {
@@ -2011,15 +2026,32 @@
                                     if (dt > endLimit) continue;
                                 }
                             }
-
                             result.push({
                                 ...item,
                                 data_atividade: formatIsoDate(dt)
                             });
                         }
                     }
-                } else {
-                    // Static activity with fixed date
+                } else if (hasFixedDayRec || recStr.includes('fixo')) {
+                    // Rule a.5: Recurrent Fixed Day Activity
+                    for (let m = startMonth; m <= endMonth; m++) {
+                        const dt = getRecurrentFixedDayDate(targetYear, m, item.dia_fixo || item.dia_mes);
+                        if (dt && dt >= periodStart && dt <= periodEnd) {
+                            if (endDateVal) {
+                                const pEnd = parseDateParts(endDateVal);
+                                if (pEnd) {
+                                    const endLimit = new Date(pEnd.year, pEnd.month - 1, pEnd.day, 23, 59, 59);
+                                    if (dt > endLimit) continue;
+                                }
+                            }
+                            result.push({
+                                ...item,
+                                data_atividade: formatIsoDate(dt)
+                            });
+                        }
+                    }
+                } else if (item.data_atividade) {
+                    // Rule a.3: Single / Fixed Date Activity
                     const parts = parseDateParts(item.data_atividade);
                     if (parts) {
                         if (parts.year === targetYear && parts.month >= startMonth && parts.month <= endMonth) {
@@ -2040,6 +2072,7 @@
                 }
                 return 0;
             });
+
             return result;
         }
 
@@ -2063,108 +2096,177 @@
 
             if (format === 'excel') {
                 const timestamp = new Date().toISOString().slice(0, 10);
-                const fileName = `calendario_adocao_${timestamp}.xls`;
-                const headerBg = "#8b1e1e";
-                const headerTextColor = "#ffffff";
+                const fileName = `calendario_adocao_${timestamp}.xlsx`;
 
-                let htmlContent = `
-                    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                    <head>
-                        <meta charset="utf-8">
-                        <!--[if gte mso 9]>
-                        <xml>
-                            <x:ExcelWorkbook>
-                                <x:ExcelWorksheets>
-                                    <x:ExcelWorksheet>
-                                        <x:Name>Calendário Adoção Espiritual</x:Name>
-                                        <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-                                    </x:ExcelWorksheet>
-                                </x:ExcelWorksheets>
-                            </x:ExcelWorkbook>
-                        </xml>
-                        <![endif]-->
-                        <style>
-                            table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
-                            .header-row th {
-                                background-color: ${headerBg} !important;
-                                color: ${headerTextColor} !important;
-                                font-weight: bold;
-                                font-size: 13px;
-                                height: 35px;
-                                text-align: left;
-                                vertical-align: middle;
-                                border: 0.5pt solid #5a1414;
-                                padding: 8px 12px;
-                            }
-                            .data-row td {
-                                border: 0.5pt solid #cccccc;
-                                padding: 6px 10px;
-                                color: #333333;
-                                font-size: 12px;
-                                vertical-align: middle;
-                            }
-                            .data-row:nth-child(even) {
-                                background-color: #f9f9f9;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <h2>Exportação de Calendário Adoção Espiritual</h2>
-                        <table>
-                            <thead>
-                                <tr class="header-row">
-                                    <th>Calendário</th>
-                                    <th>Formato</th>
-                                    <th>Classificação</th>
-                                    <th>Recorrente</th>
-                                    <th>Data Atividade</th>
-                                    <th>Título</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
+                if (typeof XLSX === 'undefined') {
+                    alert('Erro ao carregar a biblioteca de exportação para Excel.');
+                    return;
+                }
 
-                items.forEach(item => {
-                    htmlContent += `
-                        <tr class="data-row">
-                            <td>${escapeXml(item.tipo_calendario || item.tipo || '-')}</td>
-                            <td>${escapeXml(item.formato || '-')}</td>
-                            <td>${escapeXml(item.tipo || '-')}</td>
-                            <td>${escapeXml(item.recorrente || 'Não')}</td>
-                            <td>${escapeXml(formatDt(item.data_atividade))}</td>
-                            <td>${escapeXml(item.titulo || '-')}</td>
-                        </tr>
-                    `;
+                const titleStyle = {
+                    font: { name: "Arial", sz: 14, bold: true, color: { rgb: "000000" } },
+                    alignment: { vertical: "center" }
+                };
+
+                const headerStyle = {
+                    fill: { fgColor: { rgb: "8B1E1E" } },
+                    font: { name: "Arial", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+                    alignment: { horizontal: "left", vertical: "center" },
+                    border: {
+                        top: { style: "thin", color: { rgb: "5A1414" } },
+                        bottom: { style: "thin", color: { rgb: "5A1414" } },
+                        left: { style: "thin", color: { rgb: "5A1414" } },
+                        right: { style: "thin", color: { rgb: "5A1414" } }
+                    }
+                };
+
+                const dataEvenStyle = {
+                    fill: { fgColor: { rgb: "F9F9F9" } },
+                    font: { name: "Arial", sz: 10, color: { rgb: "333333" } },
+                    alignment: { vertical: "center" },
+                    border: {
+                        top: { style: "thin", color: { rgb: "CCCCCC" } },
+                        bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                        left: { style: "thin", color: { rgb: "CCCCCC" } },
+                        right: { style: "thin", color: { rgb: "CCCCCC" } }
+                    }
+                };
+
+                const dataOddStyle = {
+                    fill: { fgColor: { rgb: "FFFFFF" } },
+                    font: { name: "Arial", sz: 10, color: { rgb: "333333" } },
+                    alignment: { vertical: "center" },
+                    border: {
+                        top: { style: "thin", color: { rgb: "CCCCCC" } },
+                        bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                        left: { style: "thin", color: { rgb: "CCCCCC" } },
+                        right: { style: "thin", color: { rgb: "CCCCCC" } }
+                    }
+                };
+
+                const ws = {};
+                ws['A1'] = { v: "Exportação de Calendário Adoção Espiritual", t: 's', s: titleStyle };
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }
+                ];
+
+                const headers = ["Calendário", "Classificação", "Recorrente", "Data e hora", "Título"];
+                headers.forEach((h, colIdx) => {
+                    const cellRef = XLSX.utils.encode_cell({ r: 2, c: colIdx });
+                    ws[cellRef] = { v: h, t: 's', s: headerStyle };
                 });
 
-                htmlContent += `
-                            </tbody>
-                        </table>
-                    </body>
-                    </html>
-                `;
+                items.forEach((item, rowIdx) => {
+                    const r = 3 + rowIdx;
+                    const style = rowIdx % 2 === 0 ? dataOddStyle : dataEvenStyle;
 
-                const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                    const dataAtiv = formatDt(item.data_atividade);
+                    const horaTxt = formatHora(item.hora_atividade || item.hora);
+                    let dataHoraTxt = dataAtiv;
+                    if (dataAtiv && dataAtiv !== '-' && horaTxt && horaTxt !== '-') {
+                        dataHoraTxt = `${dataAtiv} ${horaTxt}`;
+                    } else if (dataAtiv && dataAtiv !== '-') {
+                        dataHoraTxt = dataAtiv;
+                    } else if (horaTxt && horaTxt !== '-') {
+                        dataHoraTxt = horaTxt;
+                    } else {
+                        dataHoraTxt = '-';
+                    }
+
+                    let tituloTxt = item.titulo || '-';
+                    const isParoquial = String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paroquial' || String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paróquia';
+                    if (isParoquial) {
+                        const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
+                        const nomePar = item.nome_paroquia || parInfo.nome_paroquia || parInfo.nome || '';
+                        const addrParts = [];
+                        const street = item.endereco_paroquia || item.endereco || parInfo.endereco || '';
+                        const bairro = item.bairro_paroquia || item.bairro || parInfo.bairro || '';
+                        const cidade = item.cidade_paroquia || item.cidade || parInfo.cidade || '';
+                        if (street) addrParts.push(street);
+                        if (bairro) addrParts.push(bairro);
+                        if (cidade) addrParts.push(cidade);
+                        const fullAddr = addrParts.join(' — ');
+                        const details = [nomePar, fullAddr].filter(Boolean).join(' — ');
+                        if (details) {
+                            tituloTxt += ` (${details})`;
+                        }
+                    }
+
+                    const classifTxt = item.formato ? `${item.formato} - ${item.tipo || '-'}` : (item.tipo || '-');
+
+                    const rowValues = [
+                        item.tipo_calendario || item.tipo || '-',
+                        classifTxt,
+                        item.recorrente || 'Não',
+                        dataHoraTxt,
+                        tituloTxt
+                    ];
+
+                    rowValues.forEach((val, c) => {
+                        const cellRef = XLSX.utils.encode_cell({ r, c });
+                        ws[cellRef] = { v: val, t: 's', s: style };
+                    });
+                });
+
+                const totalRows = 3 + items.length;
+                ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(totalRows - 1, 2), c: 4 } });
+
+                ws['!cols'] = [
+                    { wch: 18 },
+                    { wch: 25 },
+                    { wch: 14 },
+                    { wch: 20 },
+                    { wch: 60 }
+                ];
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Calendário");
+                XLSX.writeFile(wb, fileName);
             } else if (format === 'pdf') {
                 const printWin = window.open('', '_blank');
-                let rowsHtml = items.map(item => `
+                let rowsHtml = items.map(item => {
+                    const dataAtiv = formatDt(item.data_atividade);
+                    const horaTxt = formatHora(item.hora_atividade || item.hora);
+                    let dataHoraTxt = dataAtiv;
+                    if (dataAtiv && dataAtiv !== '-' && horaTxt && horaTxt !== '-') {
+                        dataHoraTxt = `${dataAtiv} ${horaTxt}`;
+                    } else if (dataAtiv && dataAtiv !== '-') {
+                        dataHoraTxt = dataAtiv;
+                    } else if (horaTxt && horaTxt !== '-') {
+                        dataHoraTxt = horaTxt;
+                    } else {
+                        dataHoraTxt = '-';
+                    }
+
+                    let tituloHtml = `<strong>${escapeXml(item.titulo || '-')}</strong>`;
+                    const isParoquial = String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paroquial' || String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paróquia';
+                    if (isParoquial) {
+                        const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
+                        const nomePar = item.nome_paroquia || parInfo.nome_paroquia || parInfo.nome || '';
+                        const addrParts = [];
+                        const street = item.endereco_paroquia || item.endereco || parInfo.endereco || '';
+                        const bairro = item.bairro_paroquia || item.bairro || parInfo.bairro || '';
+                        const cidade = item.cidade_paroquia || item.cidade || parInfo.cidade || '';
+                        if (street) addrParts.push(street);
+                        if (bairro) addrParts.push(bairro);
+                        if (cidade) addrParts.push(cidade);
+                        const fullAddr = addrParts.join(' — ');
+                        const details = [nomePar ? `<strong>${escapeXml(nomePar)}</strong>` : '', escapeXml(fullAddr)].filter(Boolean).join(' — ');
+                        if (details) {
+                            tituloHtml += `<br><span style="font-size: 0.8rem; color: #555;">${details}</span>`;
+                        }
+                    }
+                    const classifTxt = item.formato ? `${item.formato} - ${item.tipo || '-'}` : (item.tipo || '-');
+                    return `
                     <tr>
                         <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.tipo_calendario || item.tipo || '-')}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.formato || '-')}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.tipo || '-')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(classifTxt)}</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.recorrente || 'Não')}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(formatDt(item.data_atividade))}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;"><strong>${escapeXml(item.titulo || '-')}</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(dataHoraTxt)}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${tituloHtml}</td>
                     </tr>
-                `).join('');
+                `;
+                }).join('');
 
                 printWin.document.write(`
                     <!DOCTYPE html>
@@ -2200,10 +2302,9 @@
                             <thead>
                                 <tr>
                                     <th>Calendário</th>
-                                    <th>Formato</th>
                                     <th>Classificação</th>
                                     <th>Recorrente</th>
-                                    <th>Data Atividade</th>
+                                    <th>Data e hora</th>
                                     <th>Título</th>
                                 </tr>
                             </thead>
@@ -2221,7 +2322,24 @@
             } else if (format === 'whatsapp') {
                 let msg = `*Exportação de Calendário Adoção Espiritual*\n\n`;
                 items.slice(0, 15).forEach((item, idx) => {
-                    msg += `${idx + 1}. *${item.titulo || 'Sem título'}*\n   - Data: ${formatDt(item.data_atividade)}\n   - Calendário: ${item.tipo_calendario || item.tipo || '-'}\n   - Recorrente: ${item.recorrente || 'Não'}\n\n`;
+                    const horaTxt = formatHora(item.hora_atividade || item.hora);
+                    const isParoquial = String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paroquial' || String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paróquia';
+                    let paroquiaLine = '';
+                    if (isParoquial) {
+                        const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
+                        const nomePar = item.nome_paroquia || parInfo.nome_paroquia || parInfo.nome || '';
+                        const addrParts = [];
+                        const street = item.endereco_paroquia || item.endereco || parInfo.endereco || '';
+                        const bairro = item.bairro_paroquia || item.bairro || parInfo.bairro || '';
+                        const cidade = item.cidade_paroquia || item.cidade || parInfo.cidade || '';
+                        if (street) addrParts.push(street);
+                        if (bairro) addrParts.push(bairro);
+                        if (cidade) addrParts.push(cidade);
+                        const fullAddr = addrParts.join(' — ');
+                        const details = [nomePar, fullAddr].filter(Boolean).join(' — ');
+                        if (details) paroquiaLine = `\n   - Paróquia: ${details}`;
+                    }
+                    msg += `${idx + 1}. *${item.titulo || 'Sem título'}*\n   - Data/Hora: ${formatDt(item.data_atividade)} ${horaTxt !== '-' ? horaTxt : ''}\n   - Calendário: ${item.tipo_calendario || item.tipo || '-'}\n   - Recorrente: ${item.recorrente || 'Não'}${paroquiaLine}\n\n`;
                 });
                 if (items.length > 15) {
                     msg += `... e mais ${items.length - 15} atividades.`;
@@ -2312,6 +2430,24 @@
                 })
                 .catch(err => console.error('Erro ao carregar menu:', err));
 
+            let paroquiaMap = {};
+            fetch(`${API_BASE}/paroquias`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        data.forEach(p => {
+                            const pId = p.id_paroquia || p.id;
+                            if (pId) {
+                                paroquiaMap[pId] = p;
+                            }
+                        });
+                        if (allActivities && allActivities.length > 0) {
+                            renderTable(allActivities);
+                        }
+                    }
+                })
+                .catch(err => console.error('Erro ao buscar paróquias:', err));
+
             // Load actividades_calendario list
             function loadActivities() {
                 const container = document.getElementById('calendario-list');
@@ -2352,6 +2488,19 @@
                     const tipoClassificacao = item.tipo || '-';
                     const recorrente = item.recorrente || 'Não';
                     const dataAtividade = formatDate(item.data_atividade);
+                    const horaFormatted = formatHora(item.hora_atividade || item.hora);
+                    
+                    let dataHoraTxt = dataAtividade;
+                    if (dataAtividade && dataAtividade !== '-' && horaFormatted && horaFormatted !== '-') {
+                        dataHoraTxt = `${dataAtividade} ${horaFormatted}`;
+                    } else if (dataAtividade && dataAtividade !== '-') {
+                        dataHoraTxt = dataAtividade;
+                    } else if (horaFormatted && horaFormatted !== '-') {
+                        dataHoraTxt = horaFormatted;
+                    } else {
+                        dataHoraTxt = '-';
+                    }
+
                     const titulo = item.titulo || '-';
 
                     const itemDiv = document.createElement('div');
@@ -2366,14 +2515,52 @@
                         ? `<img src="./logo_circular_vermelho.png" alt="Selo" title="Paróquia Parceira Adoção" style="width: 22px; height: 22px; object-fit: contain; margin-left: 8px; vertical-align: middle;">`
                         : '';
 
+                    const isParoquial = String(tipoCal).trim().toLowerCase() === 'paroquial' || String(tipoCal).trim().toLowerCase() === 'paróquia';
+
+                    let paroquiaInfoHtml = '';
+                    if (isParoquial) {
+                        const parInfo = paroquiaMap[item.id_paroquia || item.paroquia_id] || {};
+                        const nomeParoquia = item.nome_paroquia || parInfo.nome_paroquia || parInfo.nome || '';
+                        
+                        const addrParts = [];
+                        const street = item.endereco_paroquia || item.endereco || parInfo.endereco || '';
+                        const bairro = item.bairro_paroquia || item.bairro || parInfo.bairro || '';
+                        const cidade = item.cidade_paroquia || item.cidade || parInfo.cidade || '';
+                        const cep = item.cep_paroquia || item.cep || parInfo.cep || '';
+
+                        if (street) addrParts.push(street);
+                        if (bairro) addrParts.push(bairro);
+                        if (cidade) addrParts.push(cidade);
+                        if (cep) addrParts.push('CEP ' + cep);
+
+                        const fullAddress = addrParts.join(' — ');
+
+                        const detailsParts = [];
+                        if (nomeParoquia) detailsParts.push(`<strong>${escapeXml(nomeParoquia)}</strong>`);
+                        if (fullAddress) detailsParts.push(escapeXml(fullAddress));
+
+                        if (detailsParts.length > 0) {
+                            paroquiaInfoHtml = `
+                                <div style="font-size: 0.82rem; color: #666; font-weight: normal; margin-top: 3px; line-height: 1.3;">
+                                    <i class="fa-solid fa-church" style="color: var(--primary-red); margin-right: 4px; font-size: 0.78rem;"></i>
+                                    ${detailsParts.join(' — ')}
+                                </div>
+                            `;
+                        }
+                    }
+
+                    const formatoIconHtml = getFormatoIconHtml(formato);
+
                     itemDiv.innerHTML = `
                         <i class="fa-regular fa-trash-can trash-icon" style="width: 35px; flex-shrink: 0; text-align: center;" title="Excluir" onclick="event.stopPropagation(); deleteRecord(${id});"></i>
-                        <div style="flex: 0 0 130px; min-width: 100px; color: #444; font-weight: 500;">${tipoCal}</div>
-                        <div style="flex: 0 0 110px; min-width: 90px; color: #555;">${formato}</div>
-                        <div style="flex: 0 0 130px; min-width: 100px; color: #555;">${tipoClassificacao}</div>
-                        <div style="flex: 0 0 110px; min-width: 80px; color: #555;">${recorrente}</div>
-                        <div style="flex: 0 0 130px; min-width: 100px; color: #555;">${dataAtividade}</div>
-                        <div style="flex: 1 1 auto; min-width: 180px; font-weight: bold; color: #333; display: flex; align-items: center;">${titulo}${seloHtml}</div>
+                        <div style="flex: 0 0 130px; min-width: 100px; color: #444; font-weight: 500;">${escapeXml(tipoCal)}</div>
+                        <div style="flex: 0 0 140px; min-width: 110px; color: #555; display: flex; align-items: center;">${formatoIconHtml}<span>${escapeXml(tipoClassificacao)}</span></div>
+                        <div style="flex: 0 0 110px; min-width: 85px; color: #555;">${escapeXml(recorrente)}</div>
+                        <div style="flex: 0 0 160px; min-width: 130px; color: #555;">${escapeXml(dataHoraTxt)}</div>
+                        <div style="flex: 1 1 auto; min-width: 180px; display: flex; flex-direction: column; justify-content: center;">
+                            <div style="font-weight: bold; color: #333; display: flex; align-items: center; flex-wrap: wrap;">${escapeXml(titulo)}${seloHtml}</div>
+                            ${paroquiaInfoHtml}
+                        </div>
                     `;
                     container.appendChild(itemDiv);
                 });

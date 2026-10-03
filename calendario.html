@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendário de Atividades - Adoção Espiritual</title>
+    <title>Calendário - Feriados e Dias Santos - Adoção Espiritual</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -793,7 +793,7 @@
             <div class="search-row">
                 <div class="subtitle-with-icon" onclick="goToRegistro('new')" style="cursor: pointer;" title="Adicionar Novo Evento">
                     <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
-                    Calendário de Atividades - exceto treinamentos
+                    Calendário - Feriados e Dias Santos
                 </div>
                 <div style="display: flex; align-items: center; gap: 20px;">
                     <div class="search-container">
@@ -810,10 +810,10 @@
             <!-- The List -->
             <div class="list-container">
                 <div class="list-header">
-                    <div style="width: 25%; flex: 0 0 25%;">Data e Hora</div>
-                    <div style="width: 45%; flex: 0 0 45%;">Nome do Evento</div>
-                    <div style="width: 15%; flex: 0 0 15%;">Recorrente</div>
-                    <div style="width: 15%; flex: 0 0 15%;">Onde</div>
+                    <div style="width: 30%; flex: 0 0 30%;">Data e Hora</div>
+                    <div style="width: 40%; flex: 0 0 40%;">Nome do Evento</div>
+                    <div style="width: 15%; flex: 0 0 15%;">Feriado</div>
+                    <div style="width: 15%; flex: 0 0 15%;">Data Religiosa</div>
                 </div>
                 <div id="events-list-container">
                     <!-- Dynamic content will go here -->
@@ -871,40 +871,65 @@
             }
         }
 
+        // Helper to parse dates in DD/MM, DD/MM/YYYY, YYYY-MM-DD, MMDD or YYYYMMDD formats
+        function parseAnyDate(val) {
+            if (val === null || val === undefined || val === '') return null;
+            const str = String(val).trim();
+            let day, month, year = null;
+
+            if (str.includes('/')) {
+                const parts = str.split('/');
+                if (parts.length >= 2) {
+                    day = parseInt(parts[0], 10);
+                    month = parseInt(parts[1], 10);
+                    if (parts.length >= 3 && parts[2]) {
+                        year = parseInt(parts[2], 10);
+                        if (year < 100) year += 2000;
+                    }
+                }
+            } else if (str.includes('-')) {
+                const parts = str.split('-');
+                if (parts.length >= 3) {
+                    year = parseInt(parts[0], 10);
+                    month = parseInt(parts[1], 10);
+                    day = parseInt(parts[2], 10);
+                }
+            } else if (/^\d+$/.test(str)) {
+                if (str.length >= 8) {
+                    year = parseInt(str.substring(0, 4), 10);
+                    month = parseInt(str.substring(4, 6), 10);
+                    day = parseInt(str.substring(6, 8), 10);
+                } else {
+                    const padded = str.padStart(4, '0');
+                    month = parseInt(padded.substring(0, 2), 10);
+                    day = parseInt(padded.substring(2, 4), 10);
+                }
+            }
+
+            if (!day || !month || isNaN(day) || isNaN(month)) return null;
+
+            return { day, month, year };
+        }
+
         // Helpers to format dates with/without year
         function formatDate(val) {
-            if (!val) return '';
-            const str = String(val);
-            if (str.length >= 8) {
-                // YYYYMMDD
-                const year = str.substring(0, 4);
-                const month = str.substring(4, 6);
-                const day = str.substring(6, 8);
-                return `${day}/${month}/${year}`;
-            } else {
-                // MMDD (padded to 4 digits)
-                const padded = str.padStart(4, '0');
-                const month = padded.substring(0, 2);
-                const day = padded.substring(2, 4);
-                return `${day}/${month}`;
+            const parsed = parseAnyDate(val);
+            if (!parsed) return '';
+            const dayStr = String(parsed.day).padStart(2, '0');
+            const monthStr = String(parsed.month).padStart(2, '0');
+            if (parsed.year) {
+                return `${dayStr}/${monthStr}/${parsed.year}`;
             }
+            return `${dayStr}/${monthStr}`;
         }
 
         const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
         function getWeekday(val) {
-            const str = String(val);
-            let day, month, year;
-            if (str.length >= 8) {
-                year = parseInt(str.substring(0, 4), 10);
-                month = parseInt(str.substring(4, 6), 10);
-                day = parseInt(str.substring(6, 8), 10);
-            } else {
-                const padded = str.padStart(4, '0');
-                month = parseInt(padded.substring(0, 2), 10);
-                day = parseInt(padded.substring(2, 4), 10);
-                year = new Date().getFullYear();
-            }
-            const date = new Date(year, month - 1, day);
+            const parsed = parseAnyDate(val);
+            if (!parsed) return '';
+            const y = parsed.year || new Date().getFullYear();
+            const date = new Date(y, parsed.month - 1, parsed.day);
+            if (isNaN(date.getTime())) return '';
             return weekdays[date.getDay()];
         }
 
@@ -941,7 +966,10 @@
 
         async function loadEvents() {
             try {
-                const res = await fetch(`${API_URL}/calendario?_=${new Date().getTime()}`);
+                let res = await fetch(`${API_URL}/calendario_feriados?_=${new Date().getTime()}`);
+                if (!res.ok) {
+                    res = await fetch(`${API_URL}/calendario?_=${new Date().getTime()}`);
+                }
                 if (!res.ok) throw new Error('Erro ao buscar eventos do calendário');
                 const events = await res.json();
 
@@ -959,21 +987,12 @@
                     return;
                 }
 
-                // Sort events chronologically based on date integer helper
+                // Sort events chronologically based on date helper
                 function getSortTimestamp(val) {
-                    const str = String(val);
-                    let day, month, year;
-                    if (str.length >= 8) {
-                        year = parseInt(str.substring(0, 4), 10);
-                        month = parseInt(str.substring(4, 6), 10);
-                        day = parseInt(str.substring(6, 8), 10);
-                    } else {
-                        const padded = str.padStart(4, '0');
-                        month = parseInt(padded.substring(0, 2), 10);
-                        day = parseInt(padded.substring(2, 4), 10);
-                        year = new Date().getFullYear();
-                    }
-                    return new Date(year, month - 1, day).getTime();
+                    const parsed = parseAnyDate(val);
+                    if (!parsed) return 0;
+                    const y = parsed.year || new Date().getFullYear();
+                    return new Date(y, parsed.month - 1, parsed.day).getTime();
                 }
 
                 // Group events by id_calendario
@@ -1051,29 +1070,22 @@
                         `;
                     }
 
-                    // Recorrente Badge
-                    let recBadge = '';
-                    const isRec = ev.recorrente && ev.recorrente.trim().toLowerCase() === 'sim';
-                    if (isRec) {
-                        recBadge = `<span class="badge badge-recorrente-sim"><i class="fa-solid fa-arrows-rotate"></i> Sim</span>`;
+                    // Feriado Badge
+                    let feriadoBadge = '';
+                    const isFeriado = ev.feriado && (ev.feriado === 'Sim' || ev.feriado === true || ev.feriado === 1);
+                    if (isFeriado) {
+                        feriadoBadge = `<span class="badge" style="background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;"><i class="fa-solid fa-calendar-minus"></i> Sim</span>`;
                     } else {
-                        recBadge = `<span class="badge badge-recorrente-nao"><i class="fa-solid fa-minus"></i> Não</span>`;
+                        feriadoBadge = `<span class="badge badge-recorrente-nao"><i class="fa-solid fa-minus"></i> Não</span>`;
                     }
 
-                    // Onde Badge
-                    let ondeBadge = '';
-                    const rawOnde = ev.onde ? ev.onde.trim().toLowerCase() : '';
-                    if (rawOnde === 'google meeting' || rawOnde === 'google meet') {
-                        ondeBadge = `<span class="badge badge-onde-google"><i class="fa-solid fa-video"></i> Google Meet</span>`;
-                    } else if (rawOnde === 'instagram') {
-                        ondeBadge = `<span class="badge badge-onde-instagram"><i class="fa-brands fa-instagram"></i> Instagram</span>`;
-                    } else if (rawOnde === 'paroquia' || rawOnde === 'paróquia') {
-                        ondeBadge = `<span class="badge badge-onde-paroquia"><i class="fa-solid fa-church"></i> Paróquia</span>`;
-                    } else if (rawOnde === 'não se aplica' || rawOnde === 'nao se aplica') {
-                        ondeBadge = `<span class="badge badge-onde-outro" style="background-color: #f3f4f6; color: #4b5563; border-color: #e5e7eb;"><i class="fa-solid fa-ban"></i> Não se aplica</span>`;
+                    // Data Religiosa Badge
+                    let religBadge = '';
+                    const isReligioso = ev.calendario_religioso && (ev.calendario_religioso === 'Sim' || ev.calendario_religioso === true || ev.calendario_religioso === 1);
+                    if (isReligioso) {
+                        religBadge = `<span class="badge" style="background-color: #fefce8; color: #854d0e; border: 1px solid #fef08a;"><i class="fa-solid fa-cross"></i> Sim</span>`;
                     } else {
-                        const label = ev.onde || 'Outro';
-                        ondeBadge = `<span class="badge badge-onde-outro"><i class="fa-solid fa-location-dot"></i> ${label}</span>`;
+                        religBadge = `<span class="badge badge-recorrente-nao"><i class="fa-solid fa-minus"></i> Não</span>`;
                     }
 
                     // Main Row HTML
@@ -1090,10 +1102,10 @@
                     };
 
                     mainRow.innerHTML = `
-                        <div class="event-date" style="width: 25%; flex: 0 0 25%; display: flex; align-items: center;">${dateTimeDisplay}</div>
-                        <div class="event-name" style="width: 45%; flex: 0 0 45%;">${ev.nome_evento || ''}</div>
-                        <div class="event-recorrente" style="width: 15%; flex: 0 0 15%;">${recBadge}</div>
-                        <div class="event-onde" style="width: 15%; flex: 0 0 15%;">${ondeBadge}</div>
+                        <div class="event-date" style="width: 30%; flex: 0 0 30%; display: flex; align-items: center;">${dateTimeDisplay}</div>
+                        <div class="event-name" style="width: 40%; flex: 0 0 40%;">${ev.nome_evento || ''}</div>
+                        <div class="event-recorrente" style="width: 15%; flex: 0 0 15%;">${feriadoBadge}</div>
+                        <div class="event-onde" style="width: 15%; flex: 0 0 15%;">${religBadge}</div>
                     `;
                     groupContainer.appendChild(mainRow);
 
@@ -1155,9 +1167,9 @@
             <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
             <h2 class="help-card-title">Orientações de uso</h2>
             <div class="help-card-content">
-                <p style="margin-bottom: 15px;">Nesta página são listados todos os eventos e atividades programados no calendário da Adoção Espiritual.</p>
-                <p style="margin-bottom: 15px;">A tabela exibe a data e horário do evento, o nome do evento, se é recorrente ou não, e o local ou meio de transmissão/reunião.</p>
-                <p><strong>Dica:</strong> Utilize o campo busca, localizado à direita da tela, para pesquisar eventos por nome, local ou data correspondentes.</p>
+                <p style="margin-bottom: 15px;">Nesta página são listados todos os eventos e datas cadastradas no calendário da Adoção Espiritual.</p>
+                <p style="margin-bottom: 15px;">A tabela exibe a data e horário, o nome do evento, se é feriado e se é data religiosa.</p>
+                <p><strong>Dica:</strong> Utilize o campo busca, localizado à direita da tela, para pesquisar eventos por nome ou data correspondente.</p>
             </div>
         </div>
     </div>

@@ -521,7 +521,7 @@
 
         .search-input {
             width: 100%;
-            padding: 8px 16px 8px 36px;
+            padding: 8px 30px 8px 36px;
             border-radius: 20px;
             border: 1px solid #cbd5e0;
             font-size: 0.85rem;
@@ -544,6 +544,22 @@
             transform: translateY(-50%);
             color: #a0aec0;
             font-size: 0.85rem;
+        }
+
+        .clear-search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: none;
+        }
+
+        .clear-search-icon:hover {
+            color: var(--primary-red);
         }
 
         /* Workspace Split Layout */
@@ -692,6 +708,10 @@
             background-color: var(--accent-gold);
         }
 
+        .event-dot.feriado {
+            background-color: #3182ce;
+        }
+
         .calendar-day-cell.selected .event-dot {
             background-color: #ffffff !important;
         }
@@ -699,7 +719,8 @@
         /* Calendar Legend */
         .calendar-legend {
             display: flex;
-            gap: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
             font-size: 0.8rem;
             font-weight: 600;
             color: #718096;
@@ -726,6 +747,111 @@
 
         .legend-marker.treinamento {
             background-color: var(--accent-gold);
+        }
+
+        .legend-marker.feriado {
+            background-color: #3182ce;
+        }
+
+        /* Feriado Card styling */
+        .event-card.feriado::before {
+            background-color: #3182ce;
+            width: 6px;
+        }
+
+        .event-card.feriado .event-type-badge {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            border: 1px solid #90cdf4;
+            letter-spacing: 0.5px;
+        }
+
+        /* Monthly Feriados List below calendar */
+        .month-feriados-box {
+            border-top: 1px solid #edf2f7;
+            padding-top: 15px;
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .month-feriados-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .month-feriados-title i {
+            color: #3182ce;
+        }
+
+        .month-feriados-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .month-feriados-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .month-feriados-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 2px;
+        }
+
+        .feriado-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 10px;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feriado-chip:hover {
+            background-color: #ebf8ff;
+            border-color: #cbd5e0;
+            color: #2b6cb0;
+        }
+
+        .feriado-chip-date {
+            font-weight: 700;
+            color: #3182ce;
+            min-width: 45px;
+        }
+
+        .feriado-chip-name {
+            font-weight: 600;
+            flex: 1;
+            margin: 0 8px;
+        }
+
+        .feriado-chip-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            border: 1px solid #bee3f8;
+        }
+
+        .empty-month-feriados {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            font-style: italic;
         }
 
 
@@ -1131,9 +1257,18 @@
                             <option value="treinamento">Treinamentos</option>
                         </select>
                     </div>
+                    <div class="search-container" style="min-width: 210px;">
+                        <i class="fa-solid fa-church search-icon"></i>
+                        <input type="text" id="filter-arquidiocese" class="search-input" list="arquidioceses-list" placeholder="Filtrar Arquidiocese..." onkeyup="applyFilters()" onchange="applyFilters()">
+                        <i class="fa-solid fa-xmark clear-search-icon" id="clear-arq-icon" onclick="clearInput('filter-arquidiocese')" title="Limpar arquidiocese"></i>
+                        <datalist id="arquidioceses-list">
+                            <!-- Dynamically filled by JS -->
+                        </datalist>
+                    </div>
                     <div class="search-container">
                         <i class="fa-solid fa-magnifying-glass search-icon"></i>
                         <input type="text" id="search-input" class="search-input" placeholder="Buscar por título ou local..." onkeyup="applyFilters()">
+                        <i class="fa-solid fa-xmark clear-search-icon" id="clear-search-icon" onclick="clearInput('search-input')" title="Limpar busca"></i>
                     </div>
                 </div>
             </div>
@@ -1169,8 +1304,16 @@
                         </div>
                         <div class="legend-item">
                             <span class="legend-marker treinamento"></span>
-                            <span>Sessões de Treinamento</span>
+                            <span>Treinamentos</span>
                         </div>
+                        <div class="legend-item">
+                            <span class="legend-marker feriado"></span>
+                            <span>Feriados / Dias Santos</span>
+                        </div>
+                    </div>
+
+                    <div class="month-feriados-box" id="month-feriados-box">
+                        <!-- Dynamically filled by JS -->
                     </div>
                 </div>
 
@@ -1205,6 +1348,7 @@
         let allTrainings = [];
         let allTrainingSessions = [];
         let allCalendarEvents = [];
+        let allFeriadosEvents = [];
         let unifiedEvents = [];
 
         // Calendar Date State
@@ -1285,27 +1429,58 @@
 
         // Helper Date Parsers
         function parseCalendarDbDate(val) {
-            const str = String(val);
-            if (str.length >= 8) {
-                // YYYYMMDD
-                const year = parseInt(str.substring(0, 4), 10);
-                const month = parseInt(str.substring(4, 6), 10);
-                const day = parseInt(str.substring(6, 8), 10);
-                return { day, month, year };
-            } else {
-                // MMDD (yearless - fallback to current year)
-                const padded = str.padStart(4, '0');
-                const month = parseInt(padded.substring(0, 2), 10);
-                const day = parseInt(padded.substring(2, 4), 10);
-                return { day, month, year: null }; // Indicates yearless
+            if (val === null || val === undefined || val === '') return null;
+            const str = String(val).trim();
+            let day, month, year = null;
+
+            if (str.includes('/')) {
+                const parts = str.split('/');
+                if (parts.length >= 2) {
+                    day = parseInt(parts[0], 10);
+                    month = parseInt(parts[1], 10);
+                    if (parts.length >= 3 && parts[2]) {
+                        year = parseInt(parts[2], 10);
+                        if (year < 100) year += 2000;
+                    }
+                }
+            } else if (str.includes('-')) {
+                const parts = str.split('-');
+                if (parts.length >= 3) {
+                    if (parts[0].length === 4) {
+                        year = parseInt(parts[0], 10);
+                        month = parseInt(parts[1], 10);
+                        day = parseInt(parts[2], 10);
+                    } else {
+                        day = parseInt(parts[0], 10);
+                        month = parseInt(parts[1], 10);
+                        year = parseInt(parts[2], 10);
+                        if (year < 100) year += 2000;
+                    }
+                } else if (parts.length === 2) {
+                    day = parseInt(parts[0], 10);
+                    month = parseInt(parts[1], 10);
+                }
+            } else if (/^\d+$/.test(str)) {
+                if (str.length >= 8) {
+                    year = parseInt(str.substring(0, 4), 10);
+                    month = parseInt(str.substring(4, 6), 10);
+                    day = parseInt(str.substring(6, 8), 10);
+                } else {
+                    const padded = str.padStart(4, '0');
+                    month = parseInt(padded.substring(0, 2), 10);
+                    day = parseInt(padded.substring(2, 4), 10);
+                }
             }
+
+            if (!day || !month || isNaN(day) || isNaN(month)) return null;
+
+            return { day, month, year };
         }
 
         // Parse standard SQL DATE (e.g. 2026-06-15)
         function parseSqlDate(dateStr) {
             if (!dateStr) return null;
             try {
-                // split by 'T' if it's ISO datetime
                 const cleanDate = dateStr.split('T')[0];
                 const parts = cleanDate.split('-');
                 if (parts.length === 3) {
@@ -1317,6 +1492,41 @@
                 }
             } catch (e) {
                 console.error("Error parsing SQL Date: " + dateStr, e);
+            }
+            return null;
+        }
+
+        function getRecurrentWeekdayDate(year, month, ordem, diaSemanaStr) {
+            const dayMap = {
+                'domingo': 0, 'dom': 0,
+                'segunda': 1, 'segunda-feira': 1, 'seg': 1,
+                'terça': 2, 'terça-feira': 2, 'terca': 2, 'terca-feira': 2, 'ter': 2,
+                'quarta': 3, 'quarta-feira': 3, 'qua': 3,
+                'quinta': 4, 'quinta-feira': 4, 'qui': 4,
+                'sexta': 5, 'sexta-feira': 5, 'sex': 5,
+                'sábado': 6, 'sabado': 6, 'sab': 6, 'sáb': 6
+            };
+            const cleanDay = (diaSemanaStr || '').toLowerCase().trim();
+            let targetDay = dayMap[cleanDay];
+            if (targetDay === undefined) return null;
+
+            const normOrdem = (ordem || '').toLowerCase().trim();
+            if (normOrdem.includes('últim') || normOrdem.includes('ultim')) {
+                const lastDay = new Date(year, month, 0).getDate();
+                for (let day = lastDay; day >= 1; day--) {
+                    if (new Date(year, month - 1, day).getDay() === targetDay) return day;
+                }
+            } else {
+                const orderMap = { 'primeira': 1, '1ª': 1, '1': 1, 'segunda': 2, '2ª': 2, '2': 2, 'terceira': 3, '3ª': 3, '3': 3, 'quarta': 4, '4ª': 4, '4': 4 };
+                let orderNum = orderMap[normOrdem] || 1;
+                let count = 0;
+                const lastDay = new Date(year, month, 0).getDate();
+                for (let day = 1; day <= lastDay; day++) {
+                    if (new Date(year, month - 1, day).getDay() === targetDay) {
+                        count++;
+                        if (count === orderNum) return day;
+                    }
+                }
             }
             return null;
         }
@@ -1340,9 +1550,33 @@
                 const resSessions = await fetch(`${API_URL}/treinamento_instrutores`, { cache: 'no-store' });
                 if (resSessions.ok) allTrainingSessions = await resSessions.json();
 
-                // Fetch calendario events
-                const resCal = await fetch(`${API_URL}/calendario`, { cache: 'no-store' });
+                // Fetch atividades_calendario events
+                const resCal = await fetch(`${API_URL}/atividades_calendario`, { cache: 'no-store' });
                 if (resCal.ok) allCalendarEvents = await resCal.json();
+
+                // Fetch feriados / datas religiosas
+                try {
+                    let resFer = await fetch(`${API_URL}/calendario_feriados`, { cache: 'no-store' });
+                    if (!resFer.ok) resFer = await fetch(`${API_URL}/calendario`, { cache: 'no-store' });
+                    if (resFer.ok) allFeriadosEvents = await resFer.json();
+                } catch (eF) {
+                    console.error("Error fetching feriados:", eF);
+                }
+
+                // Fetch arquidioceses for datalist suggestions
+                try {
+                    const resArq = await fetch(`${API_URL}/arquidioceses/detalhes`, { cache: 'no-store' });
+                    if (resArq.ok) {
+                        const arqs = await resArq.json();
+                        const datalist = document.getElementById('arquidioceses-list');
+                        if (datalist && Array.isArray(arqs)) {
+                            const names = Array.from(new Set(arqs.map(a => a.nome_arquidiocese).filter(Boolean))).sort();
+                            datalist.innerHTML = names.map(name => `<option value="${name}"></option>`).join('');
+                        }
+                    }
+                } catch (eA) {
+                    console.error("Error fetching arquidioceses:", eA);
+                }
 
                 buildUnifiedEvents();
             } catch (err) {
@@ -1354,44 +1588,113 @@
         function buildUnifiedEvents() {
             unifiedEvents = [];
 
-            // 1. Map Calendar Events
+            // 1. Map Calendar Activities from atividades_calendario
             allCalendarEvents.forEach(item => {
-                const dateParsed = parseCalendarDbDate(item.data);
-                if (!dateParsed) return;
+                const rawTime = item.hora_atividade || item.hora || '';
+                const cleanTime = rawTime ? rawTime.substring(0, 5) : '';
 
-                const parish = allParishes.find(p => p.id_paroquia === item.id_paroquia);
-                const parishDisplay = parish 
-                    ? `${parish.nome_paroquia} (${parish.cidade} - ${parish.sigla_estado})` 
-                    : `Paróquia #${item.id_paroquia}`;
+                let parishDisplay = '';
+                if (item.nome_paroquia && item.nome_paroquia !== '-') {
+                    parishDisplay = item.nome_paroquia;
+                    if (item.cidade_paroquia) {
+                        parishDisplay += ` (${item.cidade_paroquia})`;
+                    }
+                }
 
-                let friendlyOnde = item.onde;
-                if (item.onde === 'Google meeting') friendlyOnde = 'Google Meet';
-                else if (item.onde === 'Paroquia') friendlyOnde = 'Paróquia';
+                let locationDisplay = item.formato || 'Presencial';
+                if (parishDisplay) {
+                    locationDisplay = parishDisplay;
+                } else if (item.nome_arquidiocese && item.nome_arquidiocese !== '-') {
+                    locationDisplay = item.nome_arquidiocese;
+                }
 
-                unifiedEvents.push({
-                    tipo: 'atividade',
-                    id: item.id_calendario,
-                    titulo: item.nome_evento,
-                    onde: friendlyOnde,
-                    nome_paroquia: item.id_paroquia ? parishDisplay : '',
-                    hora: item.hora ? item.hora.substring(0, 5) : '',
-                    observacoes: item.observacoes || '',
-                    feriado: item.feriado,
-                    calendario_religioso: item.calendario_religioso,
-                    day: dateParsed.day,
-                    month: dateParsed.month, // 1-indexed
-                    year: dateParsed.year,   // null if yearless
-                    data_original: item.data
-                });
+                // Map archdiocese name
+                let archdioceseName = item.nome_arquidiocese && item.nome_arquidiocese !== '-' ? item.nome_arquidiocese : '';
+                let isParishImplantada = false;
+
+                if (item.id_paroquia) {
+                    const foundP = allParishes.find(p => String(p.id_paroquia) === String(item.id_paroquia));
+                    if (foundP) {
+                        if (foundP.implantada === 'Sim' || foundP.parceira === 'Sim') isParishImplantada = true;
+                        if (!archdioceseName && foundP.nome_arquidiocese) archdioceseName = foundP.nome_arquidiocese;
+                    }
+                }
+                if (item.nome_paroquia && item.nome_paroquia !== '-') {
+                    const foundP = allParishes.find(p => p.nome_paroquia && p.nome_paroquia.trim().toLowerCase() === item.nome_paroquia.trim().toLowerCase());
+                    if (foundP) {
+                        if (foundP.implantada === 'Sim' || foundP.parceira === 'Sim') isParishImplantada = true;
+                        if (!archdioceseName && foundP.nome_arquidiocese) archdioceseName = foundP.nome_arquidiocese;
+                    }
+                }
+
+                const recStr = item.recorrente || 'Única';
+                const hasWeekdayRec = Boolean(item.ordem_semana && item.dia_semana);
+                const hasFixedDayRec = Boolean(item.dia_mes || item.dia_fixo);
+
+                const pushEvent = (d, m, y) => {
+                    if (!d || !m) return;
+                    unifiedEvents.push({
+                        tipo: 'atividade',
+                        id: item.id_atividade || item.id,
+                        titulo: item.titulo || item.nome_evento || 'Atividade',
+                        tipo_calendario: item.tipo_calendario || 'Geral',
+                        tipo_classificacao: item.tipo || item.formato || '',
+                        formato: item.formato || '',
+                        onde: locationDisplay,
+                        nome_paroquia: parishDisplay,
+                        nome_arquidiocese: archdioceseName,
+                        is_implantada: isParishImplantada,
+                        hora: cleanTime,
+                        observacoes: item.observacoes || '',
+                        recorrente: recStr,
+                        day: d,
+                        month: m,
+                        year: y
+                    });
+                };
+
+                if (hasWeekdayRec || recStr.includes('semana')) {
+                    for (let m = 1; m <= 12; m++) {
+                        const dayNum = getRecurrentWeekdayDate(currentYear, m, item.ordem_semana, item.dia_semana);
+                        if (dayNum) {
+                            pushEvent(dayNum, m, currentYear);
+                        }
+                    }
+                } else if (hasFixedDayRec || recStr.includes('fixo')) {
+                    const fixedDay = parseInt(item.dia_mes || item.dia_fixo, 10);
+                    if (fixedDay > 0) {
+                        for (let m = 1; m <= 12; m++) {
+                            const maxDays = new Date(currentYear, m, 0).getDate();
+                            const dayNum = Math.min(fixedDay, maxDays);
+                            pushEvent(dayNum, m, currentYear);
+                        }
+                    }
+                } else {
+                    const rawDate = item.data_atividade || item.data;
+                    const dateParsed = parseCalendarDbDate(rawDate) || parseSqlDate(rawDate);
+                    if (dateParsed) {
+                        pushEvent(dateParsed.day, dateParsed.month, dateParsed.year);
+                    }
+                }
             });
 
             // 2. Map Training sessions
             allTrainingSessions.forEach(session => {
-                const dateParsed = parseSqlDate(session.data);
+                const dateParsed = parseSqlDate(session.data) || parseCalendarDbDate(session.data);
                 if (!dateParsed) return;
 
                 const training = allTrainings.find(t => t.id_treinamento === session.id_treinamento);
                 const trainer = allCollaborators.find(c => c.id_colaborador === session.id_colaborador);
+
+                let trainerParishImplantada = false;
+                let trainerArchdioceseName = '';
+                if (training && training.local) {
+                    const foundP = allParishes.find(p => p.nome_paroquia && p.nome_paroquia.trim().toLowerCase() === training.local.trim().toLowerCase());
+                    if (foundP) {
+                        if (foundP.implantada === 'Sim' || foundP.parceira === 'Sim') trainerParishImplantada = true;
+                        if (foundP.nome_arquidiocese) trainerArchdioceseName = foundP.nome_arquidiocese;
+                    }
+                }
 
                 unifiedEvents.push({
                     tipo: 'treinamento',
@@ -1401,11 +1704,33 @@
                     qualifica_para: training ? training.qualifica_para : '',
                     forma_treinamento: training ? training.forma_treinamento : 'On-line',
                     local: training ? training.local : '',
+                    nome_arquidiocese: trainerArchdioceseName,
+                    is_implantada: trainerParishImplantada,
                     status: training ? training.status : 'agendado',
                     pauta: session.pauta,
                     hora_inicio: session.hora_inicio ? session.hora_inicio.substring(0, 5) : '',
                     hora_fim: session.hora_fim ? session.hora_fim.substring(0, 5) : '',
                     nome_instrutor: trainer ? (trainer.apelido_colaborador || trainer.nome_colaborador) : 'Instrutor não especificado',
+                    day: dateParsed.day,
+                    month: dateParsed.month,
+                    year: dateParsed.year
+                });
+            });
+
+            // 3. Map Feriados and Datas Religiosas from calendario_feriados
+            allFeriadosEvents.forEach(item => {
+                const rawDate = item.data;
+                const dateParsed = parseCalendarDbDate(rawDate) || parseSqlDate(rawDate);
+                if (!dateParsed) return;
+
+                unifiedEvents.push({
+                    tipo: 'feriado',
+                    id: item.id_calendario,
+                    titulo: item.nome_evento || 'Feriado / Data Religiosa',
+                    feriado: item.feriado || 'Não',
+                    calendario_religioso: item.calendario_religioso || 'Não',
+                    observacoes: item.observacoes || '',
+                    hora: item.hora || '',
                     day: dateParsed.day,
                     month: dateParsed.month,
                     year: dateParsed.year
@@ -1467,6 +1792,7 @@
 
                     const hasAtividades = dayEvents.some(e => e.tipo === 'atividade');
                     const hasTreinamentos = dayEvents.some(e => e.tipo === 'treinamento');
+                    const hasFeriados = dayEvents.some(e => e.tipo === 'feriado');
 
                     if (hasAtividades) {
                         const dot = document.createElement('span');
@@ -1476,6 +1802,11 @@
                     if (hasTreinamentos) {
                         const dot = document.createElement('span');
                         dot.className = 'event-dot treinamento';
+                        dotsContainer.appendChild(dot);
+                    }
+                    if (hasFeriados) {
+                        const dot = document.createElement('span');
+                        dot.className = 'event-dot feriado';
                         dotsContainer.appendChild(dot);
                     }
                     cell.appendChild(dotsContainer);
@@ -1493,6 +1824,58 @@
                 cell.textContent = i;
                 grid.appendChild(cell);
             }
+
+            renderMonthFeriados();
+        }
+
+        // Render holidays list below calendar grid
+        function renderMonthFeriados() {
+            const container = document.getElementById('month-feriados-box');
+            if (!container) return;
+
+            const currentMonthFeriados = unifiedEvents.filter(e => {
+                if (e.tipo !== 'feriado') return false;
+                const matchesMonth = e.month === (currentMonth + 1);
+                const matchesYear = e.year === null || e.year === currentYear;
+                return matchesMonth && matchesYear;
+            });
+
+            currentMonthFeriados.sort((a, b) => a.day - b.day);
+
+            let html = `
+                <div class="month-feriados-title">
+                    <i class="fa-solid fa-umbrella-beach"></i>
+                    <span>Feriados e Datas Religiosas em ${monthNames[currentMonth]}</span>
+                </div>
+            `;
+
+            if (currentMonthFeriados.length === 0) {
+                html += `<div class="empty-month-feriados">Nenhum feriado ou data religiosa neste mês.</div>`;
+            } else {
+                html += `<div class="month-feriados-list">`;
+                currentMonthFeriados.forEach(f => {
+                    const dayStr = String(f.day).padStart(2, '0');
+                    const monthStr = String(f.month).padStart(2, '0');
+                    const isFeriado = f.feriado === 'Sim';
+                    const isReligioso = f.calendario_religioso === 'Sim';
+
+                    let tagText = '';
+                    if (isFeriado && isReligioso) tagText = 'Feriado & Data Religiosa';
+                    else if (isFeriado) tagText = 'Feriado';
+                    else if (isReligioso) tagText = 'Data Religiosa';
+
+                    html += `
+                        <div class="feriado-chip" onclick="selectDay(${f.day})" title="Clique para ver no dia ${dayStr}/${monthStr}">
+                            <span class="feriado-chip-date">${dayStr}/${monthStr}</span>
+                            <span class="feriado-chip-name">${f.titulo}</span>
+                            ${tagText ? `<span class="feriado-chip-tag">${tagText}</span>` : ''}
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
         }
 
         // Get all events scheduled on a specific day of the currently displayed month
@@ -1508,12 +1891,15 @@
             });
         }
 
-        // Apply filters (Search + Dropdown type) to events list
+        // Apply filters (Search + Dropdown type) to events list (Atividades e Treinamentos)
         function getFilteredEvents() {
             const searchInput = document.getElementById('search-input').value.toLowerCase().trim();
             const filterType = document.getElementById('filter-type').value;
 
             return unifiedEvents.filter(e => {
+                // Do not list feriados/datas religiosas in the Events List panel (they are kept below the calendar grid)
+                if (e.tipo === 'feriado') return false;
+
                 // Month & Year constraints
                 const matchesMonth = e.month === (currentMonth + 1);
                 const matchesYear = e.year === null || e.year === currentYear;
@@ -1525,6 +1911,16 @@
                 // Type filter constraint
                 if (filterType !== 'todos' && e.tipo !== filterType) return false;
 
+                // Archdiocese text filter constraint
+                const arqInput = document.getElementById('filter-arquidiocese');
+                if (arqInput && arqInput.value.trim() !== '') {
+                    const filterArq = arqInput.value.toLowerCase().trim();
+                    const eventArq = (e.nome_arquidiocese || '').toLowerCase();
+                    if (!eventArq.includes(filterArq)) {
+                        return false;
+                    }
+                }
+
                 // Search query constraint
                 if (searchInput !== '') {
                     const searchTitle = e.titulo.toLowerCase();
@@ -1532,12 +1928,14 @@
                     const searchParish = (e.nome_paroquia || '').toLowerCase();
                     const searchPauta = (e.pauta || '').toLowerCase();
                     const searchLocal = (e.local || '').toLowerCase();
+                    const searchArq = (e.nome_arquidiocese || '').toLowerCase();
 
                     const matchesSearch = searchTitle.includes(searchInput) ||
                                           searchOnde.includes(searchInput) ||
                                           searchParish.includes(searchInput) ||
                                           searchPauta.includes(searchInput) ||
-                                          searchLocal.includes(searchInput);
+                                          searchLocal.includes(searchInput) ||
+                                          searchArq.includes(searchInput);
                     
                     if (!matchesSearch) return false;
                 }
@@ -1587,6 +1985,8 @@
                 return timeA.localeCompare(timeB);
             });
 
+            const sealIconHtml = `<img src="./logo_circular_vermelho.png" alt="Paróquia Implantada" title="Paróquia Implantada" style="width: 18px; height: 18px; object-fit: contain; margin-left: 6px; vertical-align: middle;">`;
+
             eventsToRender.forEach(e => {
                 const card = document.createElement('div');
                 card.className = `event-card ${e.tipo}`;
@@ -1596,8 +1996,9 @@
                 const weekday = weekdays[dateObj.getDay()];
 
                 if (e.tipo === 'atividade') {
-                    const timeInfo = e.hora ? `<div class="event-detail-item"><i class="fa-regular fa-clock"></i> Horário: <strong>${e.hora}</strong></div>` : '';
+                    const timeSuffix = e.hora ? ` às ${e.hora}` : '';
                     const location = e.onde === 'Paróquia' && e.nome_paroquia ? e.nome_paroquia : e.onde;
+                    const locationSeal = e.is_implantada ? sealIconHtml : '';
 
                     card.innerHTML = `
                         <div class="event-card-header">
@@ -1606,34 +2007,29 @@
                         </div>
                         <div class="event-details-grid">
                             <div class="event-detail-item">
-                                <i class="fa-solid fa-calendar-day"></i> Data: <strong>${dateStr} - ${weekday}</strong>
+                                <i class="fa-solid fa-calendar-day"></i> Data: <strong>${dateStr} - ${weekday}${timeSuffix}</strong>
                             </div>
                             <div class="event-detail-item">
-                                <i class="fa-solid fa-location-dot"></i> Local: <strong>${location}</strong>
+                                <i class="fa-solid fa-location-dot"></i> Local: <strong>${location}</strong>${locationSeal}
                             </div>
-                            ${timeInfo}
-                            ${e.feriado === 'Sim' ? '<div class="event-detail-item" style="color: #c53030;"><i class="fa-solid fa-calendar-minus"></i> Feriado Oficial</div>' : ''}
-                            ${e.calendario_religioso === 'Sim' ? '<div class="event-detail-item" style="color: var(--accent-gold);"><i class="fa-solid fa-cross"></i> Data Religiosa</div>' : ''}
                         </div>
                         ${e.observacoes ? `<div class="event-observations">${e.observacoes}</div>` : ''}
                     `;
                 } else if (e.tipo === 'treinamento') {
+                    const localSeal = e.is_implantada ? sealIconHtml : '';
                     const formatOrLocalInfo = e.forma_treinamento === 'Presencial' 
                         ? `<div class="event-detail-item">
                             <i class="fa-solid fa-location-dot"></i>
-                            <span>Local: <strong>${e.local || 'Não informado'}</strong></span>
+                            <span>Local: <strong>${e.local || 'Não informado'}</strong>${localSeal}</span>
                            </div>`
                         : `<div class="event-detail-item">
                             <i class="fa-solid fa-desktop"></i>
                             <span>Formato: <strong>On-line</strong></span>
                            </div>`;
 
-                    const timeInfo = (e.hora_inicio && e.hora_fim) 
-                        ? `<div class="event-detail-item">
-                            <i class="fa-regular fa-clock"></i>
-                            <span>Horário: <strong>${e.hora_inicio} às ${e.hora_fim}</strong></span>
-                           </div>`
-                        : '';
+                    const timeSuffix = (e.hora_inicio && e.hora_fim) 
+                        ? ` das ${e.hora_inicio} às ${e.hora_fim}`
+                        : (e.hora_inicio ? ` às ${e.hora_inicio}` : '');
 
                     card.innerHTML = `
                         <div class="event-card-header">
@@ -1645,9 +2041,8 @@
                         <div class="event-details-grid">
                             <div class="event-detail-item">
                                 <i class="fa-solid fa-calendar-day"></i>
-                                <span>Data: <strong>${dateStr} - ${weekday}</strong></span>
+                                <span>Data: <strong>${dateStr} - ${weekday}${timeSuffix}</strong></span>
                             </div>
-                            ${timeInfo}
                             <div class="event-detail-item">
                                 <i class="fa-solid fa-user"></i>
                                 <span>Instrutor: <strong>${e.nome_instrutor}</strong></span>
@@ -1655,6 +2050,25 @@
                             ${formatOrLocalInfo}
                         </div>
                         ${e.pauta ? `<div class="event-observations" style="margin-top: 10px;"><strong>Pauta:</strong> ${e.pauta}</div>` : ''}
+                    `;
+                } else if (e.tipo === 'feriado') {
+                    const badgeText = e.feriado === 'Sim' && e.calendario_religioso === 'Sim'
+                        ? 'Feriado & Data Religiosa'
+                        : (e.feriado === 'Sim' ? 'Feriado' : 'Data Religiosa');
+
+                    const timeSuffix = e.hora ? ` às ${e.hora}` : '';
+
+                    card.innerHTML = `
+                        <div class="event-card-header">
+                            <span class="event-title">${e.titulo}</span>
+                            <span class="event-type-badge feriado">${badgeText}</span>
+                        </div>
+                        <div class="event-details-grid">
+                            <div class="event-detail-item">
+                                <i class="fa-solid fa-calendar-day"></i> Data: <strong>${dateStr} - ${weekday}${timeSuffix}</strong>
+                            </div>
+                        </div>
+                        ${e.observacoes ? `<div class="event-observations">${e.observacoes}</div>` : ''}
                     `;
                 }
 
@@ -1682,6 +2096,7 @@
         // Navigation
         function changeMonth(direction) {
             selectedDay = null; // Clear day focus when month switches
+            const prevYear = currentYear;
             currentMonth += direction;
             if (currentMonth > 11) {
                 currentMonth = 0;
@@ -1690,11 +2105,38 @@
                 currentMonth = 11;
                 currentYear -= 1;
             }
-            renderMonthCalendar();
-            renderEventsPanel();
+            if (currentYear !== prevYear) {
+                buildUnifiedEvents();
+            } else {
+                renderMonthCalendar();
+                renderEventsPanel();
+            }
+        }
+
+        function clearInput(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                applyFilters();
+            }
+        }
+
+        function updateClearIcons() {
+            const arqInput = document.getElementById('filter-arquidiocese');
+            const arqClear = document.getElementById('clear-arq-icon');
+            if (arqInput && arqClear) {
+                arqClear.style.display = arqInput.value.trim() !== '' ? 'block' : 'none';
+            }
+
+            const searchInput = document.getElementById('search-input');
+            const searchClear = document.getElementById('clear-search-icon');
+            if (searchInput && searchClear) {
+                searchClear.style.display = searchInput.value.trim() !== '' ? 'block' : 'none';
+            }
         }
 
         function applyFilters() {
+            updateClearIcons();
             renderEventsPanel();
         }
 
