@@ -1331,9 +1331,9 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Estado + Regional -->
+                <!-- Row 2: Estado + Regional + Listar atividades -->
                 <div class="export-row" id="export-row-2">
-                    <div class="export-group" id="export-group-estado" style="flex: 1; min-width: 200px;">
+                    <div class="export-group" id="export-group-estado" style="flex: 1; min-width: 180px;">
                         <label class="export-label" for="export-estado">Estado <span>*</span></label>
                         <div class="export-select-wrapper">
                             <select id="export-estado" class="export-select" onchange="onExportEstadoChange()">
@@ -1342,13 +1342,27 @@
                             <i class="fa-solid fa-chevron-down select-icon"></i>
                         </div>
                     </div>
-                    <div class="export-group" id="export-group-regional" style="flex: 1; min-width: 200px;">
+                    <div class="export-group" id="export-group-regional" style="flex: 1; min-width: 180px;">
                         <label class="export-label" for="export-regional">Regional <span>*</span></label>
                         <div class="export-select-wrapper">
                             <select id="export-regional" class="export-select" onchange="onExportRegionalChange()">
                                 <option value="">Selecione a regional</option>
                             </select>
                             <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="export-group" id="export-group-listar-atividades" style="flex: 1.5; min-width: 210px;">
+                        <div class="export-freq-header">Listar atividades</div>
+                        <div class="export-divider"></div>
+                        <div class="export-freq-options">
+                            <label class="checkbox-label" id="lbl-chk-listar-nacional">
+                                <input type="checkbox" id="chk-listar-nacional" class="custom-chk">
+                                <span>Nacionais</span>
+                            </label>
+                            <label class="checkbox-label" id="lbl-chk-listar-arquidiocese">
+                                <input type="checkbox" id="chk-listar-arquidiocese" class="custom-chk">
+                                <span>Arquidioceses</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -1521,6 +1535,13 @@
             const grpRegional = document.getElementById('export-group-regional');
             const grpArquidiocese = document.getElementById('export-group-arquidiocese');
             const grpParoquia = document.getElementById('export-group-paroquia');
+            const grpListarAtividades = document.getElementById('export-group-listar-atividades');
+
+            const lblNacional = document.getElementById('lbl-chk-listar-nacional');
+            const lblArquidiocese = document.getElementById('lbl-chk-listar-arquidiocese');
+            const chkNacional = document.getElementById('chk-listar-nacional');
+            const chkArquidiocese = document.getElementById('chk-listar-arquidiocese');
+
             const row2 = document.getElementById('export-row-2');
             const row3 = document.getElementById('export-row-3');
 
@@ -1528,27 +1549,47 @@
             if (grpRegional) grpRegional.classList.remove('is-hidden');
             if (grpArquidiocese) grpArquidiocese.classList.remove('is-hidden');
             if (grpParoquia) grpParoquia.classList.remove('is-hidden');
+            if (grpListarAtividades) grpListarAtividades.classList.remove('is-hidden');
             if (row2) row2.classList.remove('is-hidden');
             if (row3) row3.classList.remove('is-hidden');
+
+            if (lblNacional) lblNacional.style.display = 'inline-flex';
+            if (lblArquidiocese) lblArquidiocese.style.display = 'inline-flex';
 
             if (!calVal || calVal === 'Nacional') {
                 if (grpEstado) grpEstado.classList.add('is-hidden');
                 if (grpRegional) grpRegional.classList.add('is-hidden');
                 if (grpArquidiocese) grpArquidiocese.classList.add('is-hidden');
                 if (grpParoquia) grpParoquia.classList.add('is-hidden');
+                if (grpListarAtividades) grpListarAtividades.classList.add('is-hidden');
                 if (row2) row2.classList.add('is-hidden');
                 if (row3) row3.classList.add('is-hidden');
+
+                if (chkNacional) chkNacional.checked = false;
+                if (chkArquidiocese) chkArquidiocese.checked = false;
             } else if (calVal === 'Estadual') {
                 if (grpRegional) grpRegional.classList.add('is-hidden');
                 if (grpArquidiocese) grpArquidiocese.classList.add('is-hidden');
                 if (grpParoquia) grpParoquia.classList.add('is-hidden');
+                if (grpListarAtividades) grpListarAtividades.classList.add('is-hidden');
                 if (row3) row3.classList.add('is-hidden');
+
+                if (chkNacional) chkNacional.checked = false;
+                if (chkArquidiocese) chkArquidiocese.checked = false;
             } else if (calVal === 'Regional') {
                 if (grpArquidiocese) grpArquidiocese.classList.add('is-hidden');
                 if (grpParoquia) grpParoquia.classList.add('is-hidden');
+                if (grpListarAtividades) grpListarAtividades.classList.add('is-hidden');
                 if (row3) row3.classList.add('is-hidden');
+
+                if (chkNacional) chkNacional.checked = false;
+                if (chkArquidiocese) chkArquidiocese.checked = false;
             } else if (calVal === 'Arquidiocese') {
                 if (grpParoquia) grpParoquia.classList.add('is-hidden');
+                if (lblArquidiocese) lblArquidiocese.style.display = 'none';
+                if (chkArquidiocese) chkArquidiocese.checked = false;
+            } else if (calVal === 'Paroquial' || calVal === 'Paróquia') {
+                // Habilita ambos os checks Nacionais e Arquidioceses, default desmarcado
             }
         }
 
@@ -1953,6 +1994,9 @@
             const cal = document.getElementById('export-calendario').value;
             const chkUnica = document.getElementById('freq-unica') ? document.getElementById('freq-unica').checked : false;
             const chkRecorrente = document.getElementById('freq-recorrente') ? document.getElementById('freq-recorrente').checked : false;
+            const chkListarNacional = document.getElementById('chk-listar-nacional') ? document.getElementById('chk-listar-nacional').checked : false;
+            const chkListarArquidiocese = document.getElementById('chk-listar-arquidiocese') ? document.getElementById('chk-listar-arquidiocese').checked : false;
+
             const estadoId = document.getElementById('export-estado') ? document.getElementById('export-estado').value : '';
             const regionalId = document.getElementById('export-regional') ? document.getElementById('export-regional').value : '';
             const arquidioceseId = document.getElementById('export-arquidiocese') ? document.getElementById('export-arquidiocese').value : '';
@@ -1970,29 +2014,73 @@
                 const itemReg = item.id_regional || parInfo.id_regional;
                 const itemEst = item.id_estado || parInfo.id_estado;
 
-                // Location Filters according to selected Calendário
+                // Location & Calendario Filters according to selected Calendário and 'Listar atividades' checkboxes
                 if (cal) {
-                    const tipoCal = (item.tipo_calendario || item.tipo || '').toLowerCase().trim();
+                    const itemCal = (item.tipo_calendario || item.tipo || '').toLowerCase().trim();
                     const targetCal = cal.toLowerCase().trim();
+
+                    let matchesPrimary = false;
+
                     if (targetCal === 'paroquial' || targetCal === 'paróquia') {
-                        if (tipoCal !== 'paroquial' && tipoCal !== 'paróquia' && tipoCal !== '') return;
-                    } else if (tipoCal !== targetCal) {
+                        const isParType = (itemCal === 'paroquial' || itemCal === 'paróquia' || itemCal === '');
+                        if (isParType) {
+                            let locOk = true;
+                            if (paroquiaId && item.id_paroquia && String(item.id_paroquia) !== String(paroquiaId)) locOk = false;
+                            if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) locOk = false;
+                            if (estadoId && itemEst && String(itemEst) !== String(estadoId)) locOk = false;
+                            if (locOk) matchesPrimary = true;
+                        }
+                    } else if (targetCal === 'arquidiocese') {
+                        if (itemCal === 'arquidiocese') {
+                            let locOk = true;
+                            if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) locOk = false;
+                            if (estadoId && itemEst && String(itemEst) !== String(estadoId)) locOk = false;
+                            if (locOk) matchesPrimary = true;
+                        }
+                    } else if (targetCal === 'regional') {
+                        if (itemCal === 'regional') {
+                            let locOk = true;
+                            if (regionalId && itemReg && String(itemReg) !== String(regionalId)) locOk = false;
+                            if (estadoId && itemEst && String(itemEst) !== String(estadoId)) locOk = false;
+                            if (locOk) matchesPrimary = true;
+                        }
+                    } else if (targetCal === 'estadual') {
+                        if (itemCal === 'estadual') {
+                            let locOk = true;
+                            if (estadoId && itemEst && String(itemEst) !== String(estadoId)) locOk = false;
+                            if (locOk) matchesPrimary = true;
+                        }
+                    } else if (targetCal === 'nacional') {
+                        if (itemCal === 'nacional') {
+                            matchesPrimary = true;
+                        }
+                    } else {
+                        if (itemCal === targetCal) matchesPrimary = true;
+                    }
+
+                    let matchesExtraNacional = false;
+                    let matchesExtraArquidiocese = false;
+
+                    // Rule 3.1 & 4.1: If Check 'Nacional' is checked
+                    if ((targetCal === 'arquidiocese' || targetCal === 'paroquial' || targetCal === 'paróquia') && chkListarNacional) {
+                        if (itemCal === 'nacional') {
+                            matchesExtraNacional = true;
+                        }
+                    }
+
+                    // Rule 4.2: If Check 'Arquidioceses' is checked when Calendário = Paroquial
+                    if ((targetCal === 'paroquial' || targetCal === 'paróquia') && chkListarArquidiocese) {
+                        if (itemCal === 'arquidiocese') {
+                            let arqOk = true;
+                            if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) arqOk = false;
+                            if (estadoId && itemEst && String(itemEst) !== String(estadoId)) arqOk = false;
+                            if (arqOk) matchesExtraArquidiocese = true;
+                        }
+                    }
+
+                    if (!matchesPrimary && !matchesExtraNacional && !matchesExtraArquidiocese) {
                         return;
                     }
-                }
-
-                if (cal === 'Estadual') {
-                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
-                } else if (cal === 'Regional') {
-                    if (regionalId && itemReg && String(itemReg) !== String(regionalId)) return;
-                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
-                } else if (cal === 'Arquidiocese') {
-                    if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) return;
-                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
-                } else if (cal === 'Paroquial' || cal === 'Paróquia') {
-                    if (paroquiaId && item.id_paroquia && String(item.id_paroquia) !== String(paroquiaId)) return;
-                    if (arquidioceseId && itemArq && String(itemArq) !== String(arquidioceseId)) return;
-                    if (estadoId && itemEst && String(itemEst) !== String(estadoId)) return;
                 }
 
                 // Frequency Filter (Única vs Recorrente)
