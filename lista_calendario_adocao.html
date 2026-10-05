@@ -2016,7 +2016,15 @@
 
                 // Location & Calendario Filters according to selected Calendário and 'Listar atividades' checkboxes
                 if (cal) {
-                    const itemCal = (item.tipo_calendario || item.tipo || '').toLowerCase().trim();
+                    let rawCal = (item.tipo_calendario || '').toLowerCase().trim();
+                    if (!rawCal) {
+                        if (item.id_paroquia || item.paroquia_id) rawCal = 'paroquial';
+                        else if (itemArq) rawCal = 'arquidiocese';
+                        else if (itemReg) rawCal = 'regional';
+                        else if (itemEst) rawCal = 'estadual';
+                        else rawCal = 'nacional';
+                    }
+                    const itemCal = rawCal;
                     const targetCal = cal.toLowerCase().trim();
 
                     let matchesPrimary = false;
@@ -2085,8 +2093,11 @@
 
                 // Frequency Filter (Única vs Recorrente)
                 const recStr = (item.recorrente || '').toLowerCase().trim();
-                const hasWeekdayRec = Boolean(item.ordem_semana && item.dia_semana);
-                const hasFixedDayRec = Boolean(item.dia_fixo || item.dia_mes);
+                const hasWeekdayRec = Boolean((item.ordem_semana && item.dia_semana) || recStr.includes('semana'));
+                const partsDataAtiv = parseDateParts(item.data_atividade);
+                const fixedDayVal = item.dia_fixo || item.dia_mes || (partsDataAtiv ? partsDataAtiv.day : null);
+                const hasFixedDayRec = Boolean(fixedDayVal && (recStr.includes('fixo') || recStr.includes('mensal')));
+
                 const isRecurrentType = recStr.includes('mensal') || recStr.includes('recorrente') || recStr.includes('semana') || recStr.includes('fixo') || hasWeekdayRec || hasFixedDayRec;
 
                 if (chkUnica && isRecurrentType) return;
@@ -2102,8 +2113,10 @@
                     }
                 }
 
+                let addedRecurrent = false;
+
                 // Rule a.4: Recurrent Weekday Activity
-                if (hasWeekdayRec || recStr.includes('semana')) {
+                if (hasWeekdayRec && item.ordem_semana && item.dia_semana) {
                     for (let m = startMonth; m <= endMonth; m++) {
                         const dt = getRecurrentWeekdayDate(targetYear, m, item.ordem_semana, item.dia_semana);
                         if (dt && dt >= periodStart && dt <= periodEnd) {
@@ -2118,12 +2131,15 @@
                                 ...item,
                                 data_atividade: formatIsoDate(dt)
                             });
+                            addedRecurrent = true;
                         }
                     }
-                } else if (hasFixedDayRec || recStr.includes('fixo')) {
+                }
+
+                if (!addedRecurrent && hasFixedDayRec && fixedDayVal) {
                     // Rule a.5: Recurrent Fixed Day Activity
                     for (let m = startMonth; m <= endMonth; m++) {
-                        const dt = getRecurrentFixedDayDate(targetYear, m, item.dia_fixo || item.dia_mes);
+                        const dt = getRecurrentFixedDayDate(targetYear, m, fixedDayVal);
                         if (dt && dt >= periodStart && dt <= periodEnd) {
                             if (endDateVal) {
                                 const pEnd = parseDateParts(endDateVal);
@@ -2136,9 +2152,12 @@
                                 ...item,
                                 data_atividade: formatIsoDate(dt)
                             });
+                            addedRecurrent = true;
                         }
                     }
-                } else if (item.data_atividade) {
+                }
+
+                if (!addedRecurrent && item.data_atividade) {
                     // Rule a.3: Single / Fixed Date Activity
                     const parts = parseDateParts(item.data_atividade);
                     if (parts) {
@@ -2312,6 +2331,10 @@
                 XLSX.writeFile(wb, fileName);
             } else if (format === 'pdf') {
                 const printWin = window.open('', '_blank');
+                if (!printWin) {
+                    alert('Por favor, ative a permissão de pop-ups no seu navegador para visualizar e baixar o PDF.');
+                    return;
+                }
 
                 function getStateSigla(nameOrSigla) {
                     if (!nameOrSigla) return '';
@@ -2825,7 +2848,7 @@
                         </div>
 
                         <script>
-                            window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+                            setTimeout(function() { window.print(); }, 500);
                         <\/script>
                     </body>
                     </html>
