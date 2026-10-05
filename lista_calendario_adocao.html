@@ -2330,12 +2330,6 @@
                 XLSX.utils.book_append_sheet(wb, ws, "Calendário");
                 XLSX.writeFile(wb, fileName);
             } else if (format === 'pdf') {
-                const printWin = window.open('', '_blank');
-                if (!printWin) {
-                    alert('Por favor, ative a permissão de pop-ups no seu navegador para visualizar e baixar o PDF.');
-                    return;
-                }
-
                 function getStateSigla(nameOrSigla) {
                     if (!nameOrSigla) return '';
                     const str = String(nameOrSigla).trim();
@@ -2538,12 +2532,19 @@
                     `;
                 }).join('');
 
+                const printWin = window.open('', '_blank');
+                if (!printWin) {
+                    alert('Por favor, ative a permissão de pop-ups no seu navegador para visualizar e baixar o PDF.');
+                    return;
+                }
+
+                printWin.document.open();
                 printWin.document.write(`
                     <!DOCTYPE html>
                     <html lang="pt-BR">
                     <head>
                         <meta charset="UTF-8">
-                        <title>Calendário Adoção Espiritual - ${escapeXml(scopeBadgeText)} - ${escapeXml(periodText)}</title>
+                        <title>Calendário Adoção Espiritual - ${escapeXml(calVal || 'Geral')} - ${escapeXml(periodText)}</title>
                         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
                         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
                         <style>
