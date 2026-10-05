@@ -2328,9 +2328,34 @@
                     const formatoTxt = item.formato ? `${formatoIcon} ${escapeXml(item.formato)}` : '';
                     const tipoTxt = item.tipo ? escapeXml(item.tipo) : '';
                     const calTipoTxt = item.tipo_calendario ? escapeXml(item.tipo_calendario) : '';
-                    const recTxt = (item.recorrente && item.recorrente !== 'Não') ? `Recorrente (${escapeXml(item.recorrente)})` : '';
 
-                    const metaTags = [formatoTxt, tipoTxt, calTipoTxt, recTxt].filter(Boolean);
+                    let recTag = '';
+                    const recNorm = String(item.recorrente || '').toLowerCase().trim();
+                    const hasWeekdayRec = Boolean(item.ordem_semana && item.dia_semana);
+                    const hasFixedDayRec = Boolean(item.dia_fixo || item.dia_mes);
+
+                    if (recNorm.includes('semana') || hasWeekdayRec) {
+                        const ordem = item.ordem_semana ? escapeXml(item.ordem_semana) : '';
+                        const diaSem = item.dia_semana ? escapeXml(item.dia_semana) : '';
+                        if (ordem && diaSem) {
+                            recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> ${ordem} ${diaSem} do mês`;
+                        } else {
+                            recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> Mensal (dia da semana)`;
+                        }
+                    } else if (recNorm.includes('fixo') || hasFixedDayRec) {
+                        const diaFixoVal = item.dia_fixo || item.dia_mes || '';
+                        if (diaFixoVal) {
+                            recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> Todo dia ${escapeXml(diaFixoVal)} do mês`;
+                        } else {
+                            recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> Mensal (dia fixo)`;
+                        }
+                    } else if (recNorm === 'única' || recNorm === 'unica' || recNorm === 'não' || recNorm === 'nao' || !recNorm) {
+                        recTag = '';
+                    } else {
+                        recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> ${escapeXml(item.recorrente)}`;
+                    }
+
+                    const metaTags = [formatoTxt, tipoTxt, calTipoTxt, recTag].filter(Boolean);
 
                     let locationLine = '';
                     const isParoquial = String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paroquial' || String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paróquia';
@@ -2672,7 +2697,6 @@
                             <div class="poster-header">
                                 <div class="poster-entity">${escapeXml(entityTitleHeader)}</div>
                                 <div class="poster-scope-badge">${escapeXml(scopeBadgeText)}</div>
-                                <h1 class="poster-title">PROGRAMAÇÃO E CALENDÁRIO DE ATIVIDADES</h1>
                                 <div class="poster-period">${escapeXml(periodText)}</div>
                                 <div class="poster-quote">"Eu vim para que todos tenham vida, e a tenham em abundância" (Jo 10,10)</div>
                                 
