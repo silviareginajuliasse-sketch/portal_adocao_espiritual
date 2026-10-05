@@ -2224,23 +2224,98 @@
                 XLSX.writeFile(wb, fileName);
             } else if (format === 'pdf') {
                 const printWin = window.open('', '_blank');
-                let rowsHtml = items.map(item => {
-                    const dataAtiv = formatDt(item.data_atividade);
-                    const horaTxt = formatHora(item.hora_atividade || item.hora);
-                    let dataHoraTxt = dataAtiv;
-                    if (dataAtiv && dataAtiv !== '-' && horaTxt && horaTxt !== '-') {
-                        dataHoraTxt = `${dataAtiv} ${horaTxt}`;
-                    } else if (dataAtiv && dataAtiv !== '-') {
-                        dataHoraTxt = dataAtiv;
-                    } else if (horaTxt && horaTxt !== '-') {
-                        dataHoraTxt = horaTxt;
+
+                const calSelect = document.getElementById('export-calendario');
+                const calVal = calSelect ? calSelect.value : '';
+
+                const estadoSelect = document.getElementById('export-estado');
+                const estadoName = (estadoSelect && estadoSelect.selectedIndex > 0) ? estadoSelect.options[estadoSelect.selectedIndex].text : '';
+
+                const regionalSelect = document.getElementById('export-regional');
+                const regionalName = (regionalSelect && regionalSelect.selectedIndex > 0) ? regionalSelect.options[regionalSelect.selectedIndex].text : '';
+
+                const arqSelect = document.getElementById('export-arquidiocese');
+                const arqName = (arqSelect && arqSelect.selectedIndex > 0) ? arqSelect.options[arqSelect.selectedIndex].text : '';
+
+                const paroquiaInput = document.getElementById('export-paroquia-search');
+                const paroquiaName = paroquiaInput ? paroquiaInput.value.split(' — ')[0].trim() : '';
+
+                let scopeBadgeText = '';
+                let entityTitleHeader = '';
+
+                if (calVal === 'Nacional') {
+                    scopeBadgeText = 'Calendário Nacional';
+                    entityTitleHeader = 'Adoção Espiritual — Brasil';
+                } else if (calVal === 'Estadual') {
+                    scopeBadgeText = 'Calendário Estadual';
+                    entityTitleHeader = estadoName ? `Estado de ${estadoName}` : 'Calendário Estadual';
+                } else if (calVal === 'Regional') {
+                    scopeBadgeText = 'Calendário Regional';
+                    entityTitleHeader = regionalName ? regionalName : 'Calendário Regional';
+                } else if (calVal === 'Arquidiocese') {
+                    scopeBadgeText = 'Calendário Arquidiocesano';
+                    entityTitleHeader = arqName ? arqName : 'Calendário Arquidiocesano';
+                } else if (calVal === 'Paroquial' || calVal === 'Paróquia') {
+                    scopeBadgeText = 'Calendário Paroquial';
+                    entityTitleHeader = paroquiaName ? paroquiaName : (arqName ? arqName : 'Calendário Paroquial');
+                } else {
+                    scopeBadgeText = 'Calendário Geral';
+                    entityTitleHeader = 'Adoção Espiritual';
+                }
+
+                const anoInput = document.getElementById('export-ano') ? document.getElementById('export-ano').value.trim() : '';
+                const targetYear = anoInput ? anoInput : new Date().getFullYear();
+
+                const mesInicioSelect = document.getElementById('export-mes-inicio');
+                const mesFimSelect = document.getElementById('export-mes-fim');
+                const mInicioVal = mesInicioSelect ? mesInicioSelect.value : '';
+                const mFimVal = mesFimSelect ? mesFimSelect.value : '';
+
+                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+                let periodText = '';
+                if (mInicioVal && mFimVal) {
+                    const iNum = parseInt(mInicioVal, 10);
+                    const fNum = parseInt(mFimVal, 10);
+                    if (iNum === fNum) {
+                        periodText = `${monthNames[iNum - 1].toUpperCase()} DE ${targetYear}`;
                     } else {
-                        dataHoraTxt = '-';
+                        periodText = `${monthNames[iNum - 1].toUpperCase()} A ${monthNames[fNum - 1].toUpperCase()} DE ${targetYear}`;
+                    }
+                } else if (mInicioVal) {
+                    const iNum = parseInt(mInicioVal, 10);
+                    periodText = `${monthNames[iNum - 1].toUpperCase()} DE ${targetYear}`;
+                } else {
+                    periodText = `ANO DE ${targetYear}`;
+                }
+
+                let cronogramaItemsHtml = items.map(item => {
+                    const parts = parseDateParts(item.data_atividade);
+                    let dateBadgeStr = '';
+                    if (parts) {
+                        const day = String(parts.day).padStart(2, '0');
+                        const month = String(parts.month).padStart(2, '0');
+                        dateBadgeStr = `${day}/${month}`;
+                    } else {
+                        dateBadgeStr = formatDt(item.data_atividade);
                     }
 
-                    let tituloHtml = `<strong>${escapeXml(item.titulo || '-')}</strong>`;
+                    const horaTxt = formatHora(item.hora_atividade || item.hora);
+                    let titleLine = escapeXml(item.titulo || 'Atividade Sem Título');
+                    if (horaTxt && horaTxt !== '-') {
+                        titleLine += ` às ${escapeXml(horaTxt)}`;
+                    }
+
+                    const formatoTxt = item.formato ? escapeXml(item.formato) : '';
+                    const tipoTxt = item.tipo ? escapeXml(item.tipo) : '';
+                    const calTipoTxt = item.tipo_calendario ? escapeXml(item.tipo_calendario) : '';
+                    const recTxt = (item.recorrente && item.recorrente !== 'Não') ? `Recorrente (${escapeXml(item.recorrente)})` : '';
+
+                    const metaTags = [formatoTxt, tipoTxt, calTipoTxt, recTxt].filter(Boolean);
+
+                    let locationLine = '';
                     const isParoquial = String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paroquial' || String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paróquia';
-                    if (isParoquial) {
+                    if (isParoquial || item.nome_paroquia || item.endereco || item.endereco_paroquia) {
                         const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
                         const nomePar = item.nome_paroquia || parInfo.nome_paroquia || parInfo.nome || '';
                         const addrParts = [];
@@ -2251,21 +2326,30 @@
                         if (bairro) addrParts.push(bairro);
                         if (cidade) addrParts.push(cidade);
                         const fullAddr = addrParts.join(' — ');
-                        const details = [nomePar ? `<strong>${escapeXml(nomePar)}</strong>` : '', escapeXml(fullAddr)].filter(Boolean).join(' — ');
-                        if (details) {
-                            tituloHtml += `<br><span style="font-size: 0.8rem; color: #555;">${details}</span>`;
+                        const locDetails = [nomePar ? `<strong>${escapeXml(nomePar)}</strong>` : '', escapeXml(fullAddr)].filter(Boolean).join(' — ');
+                        if (locDetails) {
+                            locationLine = `<div class="item-location"><i class="fa-solid fa-location-dot"></i> ${locDetails}</div>`;
                         }
                     }
-                    const classifTxt = item.formato ? `${item.formato} - ${item.tipo || '-'}` : (item.tipo || '-');
+
+                    let obsLine = '';
+                    if (item.observacoes || item.descricao) {
+                        obsLine = `<div class="item-obs"><i class="fa-solid fa-circle-info"></i> ${escapeXml(item.observacoes || item.descricao)}</div>`;
+                    }
+
                     return `
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.tipo_calendario || item.tipo || '-')}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(classifTxt)}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(item.recorrente || 'Não')}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${escapeXml(dataHoraTxt)}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${tituloHtml}</td>
-                    </tr>
-                `;
+                        <div class="cronograma-item">
+                            <div class="date-badge">${escapeXml(dateBadgeStr)}</div>
+                            <div class="item-details">
+                                <div class="item-title">${titleLine}</div>
+                                ${locationLine}
+                                ${obsLine}
+                                <div class="item-meta">
+                                    ${metaTags.map(tag => `<span class="item-meta-tag">${tag}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }).join('');
 
                 printWin.document.write(`
@@ -2273,45 +2357,310 @@
                     <html lang="pt-BR">
                     <head>
                         <meta charset="UTF-8">
-                        <title>Exportação de Calendário Adoção Espiritual</title>
+                        <title>Calendário Adoção Espiritual - ${escapeXml(scopeBadgeText)} - ${escapeXml(periodText)}</title>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+                        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
                         <style>
-                            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333; }
-                            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #8b1e1e; padding-bottom: 10px; margin-bottom: 20px; }
-                            h1 { color: #8b1e1e; margin: 0; font-size: 1.4rem; }
-                            .meta-info { font-size: 0.85rem; color: #666; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-                            th { background-color: #8b1e1e; color: white; border: 1px solid #8b1e1e; padding: 10px; text-align: left; }
-                            td { border: 1px solid #ddd; padding: 8px; }
-                            tr:nth-child(even) { background-color: #f9f9f9; }
-                            .no-print-bar { margin-bottom: 15px; display: flex; gap: 10px; }
-                            .btn-print { background: #8b1e1e; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+                            * { box-sizing: border-box; margin: 0; padding: 0; }
+                            body {
+                                font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                                background-color: #f4f7fa;
+                                color: #1e293b;
+                                padding: 20px;
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
+                            }
+
+                            .no-print-bar {
+                                max-width: 850px;
+                                margin: 0 auto 20px auto;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                background: white;
+                                padding: 12px 20px;
+                                border-radius: 8px;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                            }
+                            .btn-print {
+                                background: #8b1e1e;
+                                color: white;
+                                border: none;
+                                padding: 10px 22px;
+                                border-radius: 20px;
+                                cursor: pointer;
+                                font-weight: 700;
+                                font-size: 0.95rem;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                                box-shadow: 0 4px 10px rgba(139,30,30,0.3);
+                                transition: transform 0.2s;
+                            }
+                            .btn-print:hover { transform: scale(1.03); background: #a01a1a; }
+
+                            .pdf-poster {
+                                max-width: 850px;
+                                margin: 0 auto;
+                                background: #ffffff;
+                                background-image: radial-gradient(circle at top center, #e6f0fa 0%, #ffffff 70%);
+                                border: 1px solid #cbd5e1;
+                                border-radius: 16px;
+                                padding: 35px 40px;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+                                position: relative;
+                            }
+
+                            .poster-header {
+                                text-align: center;
+                                margin-bottom: 25px;
+                                position: relative;
+                            }
+                            .poster-entity {
+                                font-size: 1.15rem;
+                                font-weight: 700;
+                                color: #1e3a8a;
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                margin-bottom: 6px;
+                            }
+                            .poster-scope-badge {
+                                display: inline-block;
+                                background: #e0f2fe;
+                                color: #0369a1;
+                                font-size: 0.82rem;
+                                font-weight: 700;
+                                padding: 4px 14px;
+                                border-radius: 12px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.8px;
+                                margin-bottom: 14px;
+                            }
+                            .poster-title {
+                                font-size: 2.1rem;
+                                font-weight: 800;
+                                color: #0f172a;
+                                line-height: 1.25;
+                                text-transform: uppercase;
+                                margin-bottom: 8px;
+                                letter-spacing: -0.5px;
+                            }
+                            .poster-period {
+                                font-size: 1.25rem;
+                                font-weight: 700;
+                                color: #8b1e1e;
+                                margin-bottom: 10px;
+                            }
+                            .poster-quote {
+                                font-style: italic;
+                                font-size: 0.98rem;
+                                color: #475569;
+                                margin-bottom: 20px;
+                            }
+
+                            .poster-logo-container {
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                margin: 15px 0 25px 0;
+                            }
+                            .poster-logo-wrapper {
+                                width: 110px;
+                                height: 110px;
+                                border-radius: 50%;
+                                background: #ffffff;
+                                box-shadow: 0 0 25px rgba(14, 116, 144, 0.25), 0 0 0 6px #e0f2fe;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 8px;
+                            }
+                            .poster-logo-wrapper img {
+                                width: 100%;
+                                height: 100%;
+                                object-fit: contain;
+                            }
+
+                            .cronograma-box {
+                                background: #f8fafc;
+                                border: 1.5px solid #cbd5e1;
+                                border-radius: 16px;
+                                padding: 24px 28px;
+                                margin-bottom: 25px;
+                            }
+                            .cronograma-title-pill {
+                                display: table;
+                                margin: -40px auto 20px auto;
+                                background: linear-gradient(135deg, #0f4c81, #1e3a8a);
+                                color: white;
+                                font-weight: 700;
+                                font-size: 1.15rem;
+                                padding: 6px 28px;
+                                border-radius: 25px;
+                                box-shadow: 0 4px 12px rgba(15, 76, 129, 0.3);
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                            }
+                            .cronograma-list {
+                                display: flex;
+                                flex-direction: column;
+                                gap: 12px;
+                            }
+                            .cronograma-item {
+                                display: flex;
+                                align-items: flex-start;
+                                gap: 16px;
+                                padding: 12px 16px;
+                                background: white;
+                                border-radius: 10px;
+                                border: 1px solid #e2e8f0;
+                                page-break-inside: avoid;
+                            }
+                            .cronograma-item:nth-child(even) {
+                                background: #f1f5f9;
+                            }
+
+                            .date-badge {
+                                flex-shrink: 0;
+                                background: linear-gradient(135deg, #0f4c81, #1d4ed8);
+                                color: white;
+                                font-weight: 800;
+                                font-size: 0.95rem;
+                                padding: 6px 16px;
+                                border-radius: 20px;
+                                min-width: 72px;
+                                text-align: center;
+                                box-shadow: 0 2px 6px rgba(15,76,129,0.25);
+                                margin-top: 2px;
+                            }
+
+                            .item-details {
+                                flex: 1;
+                            }
+                            .item-title {
+                                font-weight: 700;
+                                font-size: 1.05rem;
+                                color: #0f172a;
+                                line-height: 1.35;
+                            }
+                            .item-location {
+                                font-size: 0.85rem;
+                                color: #1e3a8a;
+                                margin-top: 4px;
+                                font-weight: 500;
+                            }
+                            .item-location i {
+                                color: #8b1e1e;
+                                margin-right: 4px;
+                            }
+                            .item-obs {
+                                font-size: 0.84rem;
+                                color: #475569;
+                                margin-top: 4px;
+                                font-style: italic;
+                            }
+                            .item-obs i {
+                                color: #0284c7;
+                                margin-right: 4px;
+                            }
+                            .item-meta {
+                                display: flex;
+                                flex-wrap: wrap;
+                                gap: 8px;
+                                font-size: 0.8rem;
+                                color: #475569;
+                                margin-top: 6px;
+                            }
+                            .item-meta-tag {
+                                background: #e2e8f0;
+                                padding: 2px 8px;
+                                border-radius: 4px;
+                                font-weight: 500;
+                            }
+
+                            .poster-footer {
+                                text-align: center;
+                                border-top: 1px solid #e2e8f0;
+                                padding-top: 18px;
+                                margin-top: 10px;
+                            }
+                            .footer-callout {
+                                font-size: 1.2rem;
+                                font-weight: 800;
+                                color: #8b1e1e;
+                                font-style: italic;
+                                margin-bottom: 10px;
+                            }
+                            .footer-contacts {
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                flex-wrap: wrap;
+                                gap: 20px;
+                                font-size: 0.88rem;
+                                color: #475569;
+                                font-weight: 500;
+                            }
+                            .footer-contacts i {
+                                color: #0f4c81;
+                                margin-right: 4px;
+                            }
+
                             @media print {
+                                body { background: white; padding: 0; }
                                 .no-print-bar { display: none; }
+                                .pdf-poster {
+                                    border: none;
+                                    box-shadow: none;
+                                    padding: 15px 20px;
+                                    max-width: 100%;
+                                }
+                                .cronograma-item { page-break-inside: avoid; }
                             }
                         </style>
                     </head>
                     <body>
                         <div class="no-print-bar">
-                            <button class="btn-print" onclick="window.print()">Baixar / Salvar em PDF</button>
+                            <button class="btn-print" onclick="window.print()">
+                                <i class="fa-solid fa-print"></i> Baixar / Salvar em PDF
+                            </button>
+                            <div style="font-size: 0.85rem; color: #64748b;">
+                                Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+                            </div>
                         </div>
-                        <div class="header">
-                            <h1>Exportação de Calendário Adoção Espiritual</h1>
-                            <div class="meta-info">Data do Relatório: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</div>
+
+                        <div class="pdf-poster">
+                            <div class="poster-header">
+                                <div class="poster-entity">${escapeXml(entityTitleHeader)}</div>
+                                <div class="poster-scope-badge">${escapeXml(scopeBadgeText)}</div>
+                                <h1 class="poster-title">PROGRAMAÇÃO E CALENDÁRIO DE ATIVIDADES</h1>
+                                <div class="poster-period">${escapeXml(periodText)}</div>
+                                <div class="poster-quote">"Eu vim para que todos tenham vida, e a tenham em abundância" (Jo 10,10)</div>
+                                
+                                <div class="poster-logo-container">
+                                    <div class="poster-logo-wrapper">
+                                        <img src="./logo_circular.png" onerror="this.src='./logo_circular_vermelho.png'" alt="Adoção Espiritual Logo" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cronograma-box">
+                                <div class="cronograma-title-pill">Cronograma de Atividades</div>
+                                <div class="cronograma-list">
+                                    ${cronogramaItemsHtml}
+                                </div>
+                            </div>
+
+                            <div class="poster-footer">
+                                <div class="footer-callout">Participe! Defenda a Vida!</div>
+                                <div class="footer-contacts">
+                                    <span><i class="fa-brands fa-instagram"></i> @adocaoespiritualbrasil</span>
+                                    <span><i class="fa-brands fa-whatsapp"></i> (21) 2210-2586</span>
+                                    <span><i class="fa-solid fa-globe"></i> www.adocaoespiritual.org.br</span>
+                                </div>
+                            </div>
                         </div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Calendário</th>
-                                    <th>Classificação</th>
-                                    <th>Recorrente</th>
-                                    <th>Data e hora</th>
-                                    <th>Título</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rowsHtml}
-                            </tbody>
-                        </table>
+
                         <script>
                             window.onload = function() { setTimeout(function() { window.print(); }, 500); };
                         <\/script>
