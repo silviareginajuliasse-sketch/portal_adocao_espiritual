@@ -2225,6 +2225,24 @@
             } else if (format === 'pdf') {
                 const printWin = window.open('', '_blank');
 
+                function getStateSigla(nameOrSigla) {
+                    if (!nameOrSigla) return '';
+                    const str = String(nameOrSigla).trim();
+                    if (str.length === 2 && /^[A-Za-z]{2}$/.test(str)) return str.toUpperCase();
+                    
+                    const norm = str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    const map = {
+                        'acre': 'AC', 'alagoas': 'AL', 'amapa': 'AP', 'amazonas': 'AM',
+                        'bahia': 'BA', 'ceara': 'CE', 'distrito federal': 'DF', 'espirito santo': 'ES',
+                        'goias': 'GO', 'maranhao': 'MA', 'mato grosso': 'MT', 'mato grosso do sul': 'MS',
+                        'minas gerais': 'MG', 'para': 'PA', 'paraiba': 'PB', 'parana': 'PR',
+                        'pernambuco': 'PE', 'piaui': 'PI', 'rio de janeiro': 'RJ', 'rio grande do norte': 'RN',
+                        'rio grande do sul': 'RS', 'rondonia': 'RO', 'roraima': 'RR', 'santa catarina': 'SC',
+                        'sao paulo': 'SP', 'sergipe': 'SE', 'tocantins': 'TO'
+                    };
+                    return map[norm] || str;
+                }
+
                 const calSelect = document.getElementById('export-calendario');
                 const calVal = calSelect ? calSelect.value : '';
 
@@ -2248,7 +2266,7 @@
                     entityTitleHeader = 'Adoção Espiritual — Brasil';
                 } else if (calVal === 'Estadual') {
                     scopeBadgeText = 'Calendário Estadual';
-                    entityTitleHeader = estadoName ? `Estado de ${estadoName}` : 'Calendário Estadual';
+                    entityTitleHeader = estadoName ? `Estado do ${getStateSigla(estadoName)}` : 'Calendário Estadual';
                 } else if (calVal === 'Regional') {
                     scopeBadgeText = 'Calendário Regional';
                     entityTitleHeader = regionalName ? regionalName : 'Calendário Regional';
@@ -2306,7 +2324,8 @@
                         titleLine += ` às ${escapeXml(horaTxt)}`;
                     }
 
-                    const formatoTxt = item.formato ? escapeXml(item.formato) : '';
+                    const formatoIcon = getFormatoIconHtml(item.formato);
+                    const formatoTxt = item.formato ? `${formatoIcon} ${escapeXml(item.formato)}` : '';
                     const tipoTxt = item.tipo ? escapeXml(item.tipo) : '';
                     const calTipoTxt = item.tipo_calendario ? escapeXml(item.tipo_calendario) : '';
                     const recTxt = (item.recorrente && item.recorrente !== 'Não') ? `Recorrente (${escapeXml(item.recorrente)})` : '';
@@ -2318,14 +2337,43 @@
                     if (isParoquial || item.nome_paroquia || item.endereco || item.endereco_paroquia) {
                         const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
                         const nomePar = item.nome_paroquia || parInfo.nome_paroquia || parInfo.nome || '';
-                        const addrParts = [];
+                        
                         const street = item.endereco_paroquia || item.endereco || parInfo.endereco || '';
                         const bairro = item.bairro_paroquia || item.bairro || parInfo.bairro || '';
                         const cidade = item.cidade_paroquia || item.cidade || parInfo.cidade || '';
+                        const estadoRaw = item.sigla_estado || item.sigla || item.uf || item.estado || parInfo.sigla_estado || parInfo.sigla_uf || parInfo.uf || parInfo.nome_estado || parInfo.estado || '';
+                        const estadoSigla = getStateSigla(estadoRaw);
+
+                        const addrParts = [];
                         if (street) addrParts.push(street);
                         if (bairro) addrParts.push(bairro);
-                        if (cidade) addrParts.push(cidade);
-                        const fullAddr = addrParts.join(' — ');
+                        if (cidade && estadoSigla) {
+                            addrParts.push(`${cidade}/${estadoSigla}`);
+                        } else if (cidade) {
+                            addrParts.push(cidade);
+                        } else if (estadoSigla) {
+                            addrParts.push(estadoSigla);
+                        }
+
+                        let fullAddr = addrParts.join(' — ');
+
+                        const stateNames = [
+                            ['Rio de Janeiro', 'RJ'], ['São Paulo', 'SP'], ['Minas Gerais', 'MG'],
+                            ['Espírito Santo', 'ES'], ['Paraná', 'PR'], ['Santa Catarina', 'SC'],
+                            ['Rio Grande do Sul', 'RS'], ['Bahia', 'BA'], ['Goiás', 'GO'],
+                            ['Pernambuco', 'PE'], ['Ceará', 'CE'], ['Pará', 'PA'],
+                            ['Maranhão', 'MA'], ['Amazonas', 'AM'], ['Mato Grosso do Sul', 'MS'],
+                            ['Mato Grosso', 'MT'], ['Paraíba', 'PB'], ['Rio Grande do Norte', 'RN'],
+                            ['Alagoas', 'AL'], ['Piauí', 'PI'], ['Distrito Federal', 'DF'],
+                            ['Sergipe', 'SE'], ['Rondônia', 'RO'], ['Tocantins', 'TO'],
+                            ['Acre', 'AC'], ['Amapá', 'AP'], ['Roraima', 'RR']
+                        ];
+
+                        stateNames.forEach(([fullName, sigla]) => {
+                            const regex1 = new RegExp(`([\\/,\\-—\\(]\\s*)` + fullName, 'gi');
+                            fullAddr = fullAddr.replace(regex1, `$1${sigla}`);
+                        });
+
                         const locDetails = [nomePar ? `<strong>${escapeXml(nomePar)}</strong>` : '', escapeXml(fullAddr)].filter(Boolean).join(' — ');
                         if (locDetails) {
                             locationLine = `<div class="item-location"><i class="fa-solid fa-location-dot"></i> ${locDetails}</div>`;
@@ -2435,15 +2483,6 @@
                                 text-transform: uppercase;
                                 letter-spacing: 0.8px;
                                 margin-bottom: 14px;
-                            }
-                            .poster-title {
-                                font-size: 2.1rem;
-                                font-weight: 800;
-                                color: #0f172a;
-                                line-height: 1.25;
-                                text-transform: uppercase;
-                                margin-bottom: 8px;
-                                letter-spacing: -0.5px;
                             }
                             .poster-period {
                                 font-size: 1.25rem;
