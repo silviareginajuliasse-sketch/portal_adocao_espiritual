@@ -2192,7 +2192,98 @@
                 .replace(/"/g, '&quot;');
         }
 
+        function validateExportForm() {
+            const anoInput = document.getElementById('export-ano');
+            const anoVal = anoInput ? anoInput.value.trim() : '';
+            if (!anoVal) {
+                alert('Por favor, informe o Ano.');
+                if (anoInput) anoInput.focus();
+                return false;
+            }
+
+            const mesInicioSelect = document.getElementById('export-mes-inicio') || document.getElementById('export-mes');
+            const mesInicioVal = mesInicioSelect ? mesInicioSelect.value : '';
+            if (!mesInicioVal) {
+                alert('Por favor, selecione o Mês inicial.');
+                if (mesInicioSelect) mesInicioSelect.focus();
+                return false;
+            }
+
+            const mesFimSelect = document.getElementById('export-mes-fim');
+            const mesFimVal = mesFimSelect ? mesFimSelect.value : '';
+            if (!mesFimVal) {
+                alert('Por favor, selecione o Mês final.');
+                if (mesFimSelect) mesFimSelect.focus();
+                return false;
+            }
+
+            const calSelect = document.getElementById('export-calendario');
+            const calVal = calSelect ? calSelect.value : '';
+            if (!calVal) {
+                alert('Por favor, selecione o Calendário.');
+                if (calSelect) calSelect.focus();
+                return false;
+            }
+
+            const chkTodas = document.getElementById('freq-todas') ? document.getElementById('freq-todas').checked : false;
+            const chkUnica = document.getElementById('freq-unica') ? document.getElementById('freq-unica').checked : false;
+            const chkRecorrente = document.getElementById('freq-recorrente') ? document.getElementById('freq-recorrente').checked : false;
+            if (!chkTodas && !chkUnica && !chkRecorrente) {
+                alert('Por favor, selecione a Frequência (Todas, Única ou Recorrente).');
+                return false;
+            }
+
+            const targetCal = calVal.toLowerCase().trim();
+
+            if (targetCal === 'nacional') {
+                return true;
+            }
+
+            if (targetCal === 'estadual' || targetCal === 'regional' || targetCal === 'arquidiocese' || targetCal === 'paroquial' || targetCal === 'paróquia') {
+                const estadoSelect = document.getElementById('export-estado');
+                if (estadoSelect && !estadoSelect.value) {
+                    alert('Por favor, selecione o Estado.');
+                    if (estadoSelect) estadoSelect.focus();
+                    return false;
+                }
+            }
+
+            if (targetCal === 'regional' || targetCal === 'arquidiocese' || targetCal === 'paroquial' || targetCal === 'paróquia') {
+                const regionalSelect = document.getElementById('export-regional');
+                if (regionalSelect && !regionalSelect.value) {
+                    alert('Por favor, selecione a Regional.');
+                    if (regionalSelect) regionalSelect.focus();
+                    return false;
+                }
+            }
+
+            if (targetCal === 'arquidiocese' || targetCal === 'paroquial' || targetCal === 'paróquia') {
+                const arqSelect = document.getElementById('export-arquidiocese');
+                if (arqSelect && !arqSelect.value) {
+                    alert('Por favor, selecione a Arquidiocese.');
+                    if (arqSelect) arqSelect.focus();
+                    return false;
+                }
+            }
+
+            if (targetCal === 'paroquial' || targetCal === 'paróquia') {
+                const paroquiaInput = document.getElementById('export-paroquia');
+                if (paroquiaInput && !paroquiaInput.value) {
+                    alert('Por favor, selecione a Paróquia.');
+                    const searchInput = document.getElementById('export-paroquia-search');
+                    if (searchInput) searchInput.focus();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         function doExport(format) {
+            if (!validateExportForm()) {
+                return;
+            }
+
             const items = getFilteredExportActivities();
             if (items.length === 0) {
                 alert('Não há registros para exportar com os filtros selecionados.');
