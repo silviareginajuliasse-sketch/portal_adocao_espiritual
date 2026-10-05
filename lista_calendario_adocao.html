@@ -2346,27 +2346,29 @@
                 const paroquiaInput = document.getElementById('export-paroquia-search');
                 const paroquiaName = paroquiaInput ? paroquiaInput.value.split(' — ')[0].trim() : '';
 
-                let scopeBadgeText = '';
-                let entityTitleHeader = '';
+                let scopeHtml = '';
 
                 if (calVal === 'Nacional') {
-                    scopeBadgeText = 'Calendário Nacional';
-                    entityTitleHeader = 'Adoção Espiritual — Brasil';
+                    scopeHtml = `<div class="poster-scope-badge">CALENDÁRIO NACIONAL</div>`;
                 } else if (calVal === 'Estadual') {
-                    scopeBadgeText = 'Calendário Estadual';
-                    entityTitleHeader = estadoName ? `Estado do ${getStateSigla(estadoName)}` : 'Calendário Estadual';
+                    const txt = estadoName ? `CALENDÁRIO ESTADUAL DO ${getStateSigla(estadoName).toUpperCase()}` : 'CALENDÁRIO ESTADUAL';
+                    scopeHtml = `<div class="poster-scope-title">${escapeXml(txt)}</div>`;
                 } else if (calVal === 'Regional') {
-                    scopeBadgeText = 'Calendário Regional';
-                    entityTitleHeader = regionalName ? regionalName : 'Calendário Regional';
+                    const txt = regionalName ? `CALENDÁRIO REGIONAL ${regionalName.toUpperCase()}` : 'CALENDÁRIO REGIONAL';
+                    scopeHtml = `<div class="poster-scope-title">${escapeXml(txt)}</div>`;
                 } else if (calVal === 'Arquidiocese') {
-                    scopeBadgeText = 'Calendário Arquidiocesano';
-                    entityTitleHeader = arqName ? arqName : 'Calendário Arquidiocesano';
+                    const txt = arqName ? `CALENDÁRIO ${arqName.toUpperCase()}` : 'CALENDÁRIO ARQUIDIOCESANO';
+                    scopeHtml = `<div class="poster-scope-title">${escapeXml(txt)}</div>`;
                 } else if (calVal === 'Paroquial' || calVal === 'Paróquia') {
-                    scopeBadgeText = 'Calendário Paroquial';
-                    entityTitleHeader = paroquiaName ? paroquiaName : (arqName ? arqName : 'Calendário Paroquial');
+                    let txt = 'CALENDÁRIO PAROQUIAL';
+                    if (paroquiaName) {
+                        txt = `CALENDÁRIO PAROQUIAL - ${paroquiaName.toUpperCase()}`;
+                    } else if (arqName) {
+                        txt = `CALENDÁRIO PAROQUIAL - ${arqName.toUpperCase()}`;
+                    }
+                    scopeHtml = `<div class="poster-scope-title">${escapeXml(txt)}</div>`;
                 } else {
-                    scopeBadgeText = 'Calendário Geral';
-                    entityTitleHeader = 'Adoção Espiritual';
+                    scopeHtml = `<div class="poster-scope-badge">CALENDÁRIO DE ATIVIDADES</div>`;
                 }
 
                 const anoInput = document.getElementById('export-ano') ? document.getElementById('export-ano').value.trim() : '';
@@ -2573,64 +2575,74 @@
                             }
 
                             .poster-header {
-                                text-align: center;
                                 margin-bottom: 25px;
                                 position: relative;
                             }
-                            .poster-entity {
-                                font-size: 1.15rem;
-                                font-weight: 700;
-                                color: #1e3a8a;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 6px;
-                            }
-                            .poster-scope-badge {
-                                display: inline-block;
-                                background: #e0f2fe;
-                                color: #0369a1;
-                                font-size: 0.82rem;
-                                font-weight: 700;
-                                padding: 4px 14px;
-                                border-radius: 12px;
-                                text-transform: uppercase;
-                                letter-spacing: 0.8px;
-                                margin-bottom: 14px;
-                            }
-                            .poster-period {
-                                font-size: 1.25rem;
-                                font-weight: 700;
-                                color: #8b1e1e;
-                                margin-bottom: 10px;
-                            }
-                            .poster-quote {
-                                font-style: italic;
-                                font-size: 0.98rem;
-                                color: #475569;
-                                margin-bottom: 20px;
-                            }
-
-                            .poster-logo-container {
+                            .poster-header-content {
                                 display: flex;
-                                justify-content: center;
                                 align-items: center;
-                                margin: 15px 0 25px 0;
+                                justify-content: flex-start;
+                                gap: 25px;
+                                padding: 5px 0 15px 0;
                             }
                             .poster-logo-wrapper {
-                                width: 110px;
-                                height: 110px;
+                                width: 115px;
+                                height: 115px;
                                 border-radius: 50%;
                                 background: #ffffff;
-                                box-shadow: 0 0 25px rgba(14, 116, 144, 0.25), 0 0 0 6px #e0f2fe;
+                                box-shadow: 0 0 20px rgba(14, 116, 144, 0.18), 0 0 0 5px #e0f2fe;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
-                                padding: 8px;
+                                padding: 6px;
+                                flex-shrink: 0;
                             }
                             .poster-logo-wrapper img {
                                 width: 100%;
                                 height: 100%;
                                 object-fit: contain;
+                            }
+                            .poster-text-block {
+                                flex: 1;
+                                text-align: center;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                            }
+                            .poster-scope-badge {
+                                display: inline-block;
+                                background: #e0f2fe;
+                                color: #0369a1;
+                                font-size: 0.9rem;
+                                font-weight: 800;
+                                padding: 4px 20px;
+                                border-radius: 14px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.8px;
+                                margin-bottom: 8px;
+                            }
+                            .poster-scope-title {
+                                font-size: 0.98rem;
+                                font-weight: 800;
+                                color: #0f4c81;
+                                text-transform: uppercase;
+                                letter-spacing: 0.8px;
+                                margin-bottom: 8px;
+                            }
+                            .poster-period {
+                                font-size: 1.55rem;
+                                font-weight: 800;
+                                color: #8b1e1e;
+                                text-transform: uppercase;
+                                margin-bottom: 6px;
+                                letter-spacing: 0.5px;
+                                line-height: 1.2;
+                            }
+                            .poster-quote {
+                                font-style: italic;
+                                font-size: 0.95rem;
+                                color: #475569;
                             }
 
                             .cronograma-box {
@@ -2645,13 +2657,13 @@
                                 margin: -40px auto 20px auto;
                                 background: linear-gradient(135deg, #0f4c81, #1e3a8a);
                                 color: white;
-                                font-weight: 700;
+                                font-weight: 800;
                                 font-size: 1.15rem;
-                                padding: 6px 28px;
+                                padding: 8px 32px;
                                 border-radius: 25px;
                                 box-shadow: 0 4px 12px rgba(15, 76, 129, 0.3);
                                 text-transform: uppercase;
-                                letter-spacing: 0.5px;
+                                letter-spacing: 0.8px;
                             }
                             .cronograma-list {
                                 display: flex;
@@ -2783,20 +2795,20 @@
 
                         <div class="pdf-poster">
                             <div class="poster-header">
-                                <div class="poster-entity">${escapeXml(entityTitleHeader)}</div>
-                                <div class="poster-scope-badge">${escapeXml(scopeBadgeText)}</div>
-                                <div class="poster-period">${escapeXml(periodText)}</div>
-                                <div class="poster-quote">"Eu vim para que todos tenham vida, e a tenham em abundância" (Jo 10,10)</div>
-                                
-                                <div class="poster-logo-container">
+                                <div class="poster-header-content">
                                     <div class="poster-logo-wrapper">
                                         <img src="./logo_circular.png" onerror="this.src='./logo_circular_vermelho.png'" alt="Adoção Espiritual Logo" />
+                                    </div>
+                                    <div class="poster-text-block">
+                                        ${scopeHtml}
+                                        <div class="poster-period">${escapeXml(periodText)}</div>
+                                        <div class="poster-quote">"Eu vim para que todos tenham vida, e a tenham em abundância" (Jo 10,10)</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="cronograma-box">
-                                <div class="cronograma-title-pill">Cronograma de Atividades</div>
+                                <div class="cronograma-title-pill">CRONOGRAMA DE ATIVIDADES</div>
                                 <div class="cronograma-list">
                                     ${cronogramaItemsHtml}
                                 </div>
