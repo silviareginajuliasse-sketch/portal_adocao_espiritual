@@ -1379,7 +1379,7 @@
                         </div>
                     </div>
                     <div class="export-group" id="export-group-paroquia" style="flex: 1; min-width: 200px;">
-                        <label class="export-label" for="export-paroquia-search">Paróquia <span>*</span></label>
+                        <label class="export-label" for="export-paroquia-search">Paróquia</label>
                         <div class="autocomplete-wrapper" id="exportParoquiaAutocompleteWrapper">
                             <input type="text" id="export-paroquia-search" class="export-input" placeholder="Digite para buscar a paróquia..." autocomplete="off" />
                             <input type="hidden" id="export-paroquia" name="export-paroquia" />
@@ -2262,16 +2262,6 @@
                 if (arqSelect && !arqSelect.value) {
                     alert('Por favor, selecione a Arquidiocese.');
                     if (arqSelect) arqSelect.focus();
-                    return false;
-                }
-            }
-
-            if (targetCal === 'paroquial' || targetCal === 'paróquia') {
-                const paroquiaInput = document.getElementById('export-paroquia');
-                if (paroquiaInput && !paroquiaInput.value) {
-                    alert('Por favor, selecione a Paróquia.');
-                    const searchInput = document.getElementById('export-paroquia-search');
-                    if (searchInput) searchInput.focus();
                     return false;
                 }
             }
