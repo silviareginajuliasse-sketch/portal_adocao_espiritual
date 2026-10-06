@@ -1302,7 +1302,7 @@
                             <i class="fa-solid fa-chevron-down select-icon"></i>
                         </div>
                     </div>
-                    <div class="export-group" style="flex: 1; min-width: 130px;">
+                    <div class="export-group" style="flex: 1; min-width: 120px;">
                         <label class="export-label" for="export-calendario">Calendário <span>*</span></label>
                         <div class="export-select-wrapper">
                             <select id="export-calendario" class="export-select" onchange="updateExportLocationVisibility()">
@@ -1311,7 +1311,7 @@
                             <i class="fa-solid fa-chevron-down select-icon"></i>
                         </div>
                     </div>
-                    <div class="export-group" style="flex: 1.5; min-width: 210px;">
+                    <div class="export-group" style="flex: 0 0 250px;">
                         <div class="export-freq-header">Frequência <span>*</span></div>
                         <div class="export-divider"></div>
                         <div class="export-freq-options">
@@ -1331,9 +1331,9 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Estado + Regional + Listar atividades -->
+                <!-- Row 2: Estado + Regional + Recorrentes + Listar atividades -->
                 <div class="export-row" id="export-row-2">
-                    <div class="export-group" id="export-group-estado" style="flex: 1; min-width: 180px;">
+                    <div class="export-group" id="export-group-estado" style="flex: 1; min-width: 150px;">
                         <label class="export-label" for="export-estado">Estado <span>*</span></label>
                         <div class="export-select-wrapper">
                             <select id="export-estado" class="export-select" onchange="onExportEstadoChange()">
@@ -1342,7 +1342,7 @@
                             <i class="fa-solid fa-chevron-down select-icon"></i>
                         </div>
                     </div>
-                    <div class="export-group" id="export-group-regional" style="flex: 1; min-width: 180px;">
+                    <div class="export-group" id="export-group-regional" style="flex: 1.8; min-width: 180px;">
                         <label class="export-label" for="export-regional">Regional <span>*</span></label>
                         <div class="export-select-wrapper">
                             <select id="export-regional" class="export-select" onchange="onExportRegionalChange()">
@@ -1351,7 +1351,18 @@
                             <i class="fa-solid fa-chevron-down select-icon"></i>
                         </div>
                     </div>
-                    <div class="export-group" id="export-group-listar-atividades" style="flex: 1.5; min-width: 210px;">
+                    <div class="export-group" id="export-group-recorrente" style="flex: 0 0 100px;">
+                        <label class="export-label" for="export-recorrente">Recorrentes</label>
+                        <div class="export-select-wrapper">
+                            <select id="export-recorrente" class="export-select">
+                                <option value=""></option>
+                                <option value="Sim">Sim</option>
+                                <option value="Não">Não</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="export-group" id="export-group-listar-atividades" style="flex: 0 0 250px;">
                         <div class="export-freq-header">Listar atividades</div>
                         <div class="export-divider"></div>
                         <div class="export-freq-options">
@@ -1400,9 +1411,6 @@
                 </button>
                 <button type="button" class="export-icon-btn" title="Exportar para PDF" onclick="doExport('pdf')">
                     <i class="fa-solid fa-file-pdf pdf-icon"></i>
-                </button>
-                <button type="button" class="export-icon-btn" title="Compartilhar no WhatsApp" onclick="doExport('whatsapp')">
-                    <i class="fa-brands fa-whatsapp whatsapp-icon"></i>
                 </button>
             </div>
         </div>
@@ -1533,6 +1541,7 @@
 
             const grpEstado = document.getElementById('export-group-estado');
             const grpRegional = document.getElementById('export-group-regional');
+            const grpRecorrente = document.getElementById('export-group-recorrente');
             const grpArquidiocese = document.getElementById('export-group-arquidiocese');
             const grpParoquia = document.getElementById('export-group-paroquia');
             const grpListarAtividades = document.getElementById('export-group-listar-atividades');
@@ -1547,6 +1556,7 @@
 
             if (grpEstado) grpEstado.classList.remove('is-hidden');
             if (grpRegional) grpRegional.classList.remove('is-hidden');
+            if (grpRecorrente) grpRecorrente.classList.remove('is-hidden');
             if (grpArquidiocese) grpArquidiocese.classList.remove('is-hidden');
             if (grpParoquia) grpParoquia.classList.remove('is-hidden');
             if (grpListarAtividades) grpListarAtividades.classList.remove('is-hidden');
@@ -1559,6 +1569,7 @@
             if (!calVal || calVal === 'Nacional') {
                 if (grpEstado) grpEstado.classList.add('is-hidden');
                 if (grpRegional) grpRegional.classList.add('is-hidden');
+                if (grpRecorrente) grpRecorrente.classList.add('is-hidden');
                 if (grpArquidiocese) grpArquidiocese.classList.add('is-hidden');
                 if (grpParoquia) grpParoquia.classList.add('is-hidden');
                 if (grpListarAtividades) grpListarAtividades.classList.add('is-hidden');
@@ -1999,6 +2010,7 @@
 
             const estadoId = document.getElementById('export-estado') ? document.getElementById('export-estado').value : '';
             const regionalId = document.getElementById('export-regional') ? document.getElementById('export-regional').value : '';
+            const optRecorrenteVal = document.getElementById('export-recorrente') ? document.getElementById('export-recorrente').value : '';
             const arquidioceseId = document.getElementById('export-arquidiocese') ? document.getElementById('export-arquidiocese').value : '';
             const paroquiaId = document.getElementById('export-paroquia') ? document.getElementById('export-paroquia').value : '';
 
@@ -2102,6 +2114,8 @@
 
                 if (chkUnica && isRecurrentType) return;
                 if (chkRecorrente && !isRecurrentType) return;
+                if (optRecorrenteVal === 'Sim' && !isRecurrentType) return;
+                if (optRecorrenteVal === 'Não' && isRecurrentType) return;
 
                 // Rule a.1: Check termina_em / data_fim constraint
                 const endDateVal = item.data_fim || item.termina_em;
@@ -2269,9 +2283,147 @@
             return true;
         }
 
-        function doExport(format) {
+        let exportParoquiaCoordenadoresMap = {};
+        let exportRegionalCoordenadoresMap = {};
+        let exportArqCoordenadoresMap = {};
+        let exportArquidioceseMap = {};
+        let exportCoordenadoresDataLoaded = false;
+
+        async function loadExportCoordenadoresData() {
+            const API_BASE = (window.location.protocol === 'file:' || window.location.port !== '3000') ? 'http://localhost:3000/api' : '/api';
+            try {
+                const [resColab, resParCoord, resRegCoord, resArqCoord, resArqs] = await Promise.all([
+                    fetch(`${API_BASE}/colaboradores?light=true`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE}/paroquia_coordenadores`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE}/regional_coordenadores`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE}/arquidiocese_coordenadores`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE}/arquidioceses`).then(r => r.json()).catch(() => [])
+                ]);
+
+                const colabMap = {};
+                if (Array.isArray(resColab)) {
+                    resColab.forEach(c => {
+                        const id = c.id_colaborador || c.id;
+                        const name = c.nome_colaborador || c.nome || c.apelido_colaborador || '';
+                        if (id) colabMap[id] = name;
+                    });
+                }
+
+                exportParoquiaCoordenadoresMap = {};
+                if (Array.isArray(resParCoord)) {
+                    resParCoord.forEach(pc => {
+                        const isFimNull = (pc.data_fim_coordenador === null || pc.data_fim_coordenador === undefined || pc.data_fim_coordenador === '' || pc.data_fim_coordenador === 'null');
+                        if (pc.id_paroquia && isFimNull) {
+                            const cName = colabMap[pc.id_colaborador] || '';
+                            if (cName) {
+                                if (!exportParoquiaCoordenadoresMap[pc.id_paroquia]) {
+                                    exportParoquiaCoordenadoresMap[pc.id_paroquia] = [];
+                                }
+                                if (!exportParoquiaCoordenadoresMap[pc.id_paroquia].includes(cName)) {
+                                    exportParoquiaCoordenadoresMap[pc.id_paroquia].push(cName);
+                                }
+                            }
+                        }
+                    });
+                }
+
+                exportRegionalCoordenadoresMap = {};
+                if (Array.isArray(resRegCoord)) {
+                    resRegCoord.forEach(rc => {
+                        const isFimNull = (rc.data_fim_coordenador === null || rc.data_fim_coordenador === undefined || rc.data_fim_coordenador === '' || rc.data_fim_coordenador === 'null');
+                        if (rc.id_regional && isFimNull) {
+                            const cName = colabMap[rc.id_colaborador] || '';
+                            if (cName) {
+                                if (!exportRegionalCoordenadoresMap[rc.id_regional]) {
+                                    exportRegionalCoordenadoresMap[rc.id_regional] = [];
+                                }
+                                if (!exportRegionalCoordenadoresMap[rc.id_regional].includes(cName)) {
+                                    exportRegionalCoordenadoresMap[rc.id_regional].push(cName);
+                                }
+                            }
+                        }
+                    });
+                }
+
+                exportArqCoordenadoresMap = {};
+                if (Array.isArray(resArqCoord)) {
+                    resArqCoord.forEach(ac => {
+                        const isFimNull = (ac.data_fim_coordenador === null || ac.data_fim_coordenador === undefined || ac.data_fim_coordenador === '' || ac.data_fim_coordenador === 'null');
+                        if (ac.id_arquidiocese && isFimNull) {
+                            const cName = colabMap[ac.id_colaborador] || '';
+                            if (cName) {
+                                if (!exportArqCoordenadoresMap[ac.id_arquidiocese]) {
+                                    exportArqCoordenadoresMap[ac.id_arquidiocese] = [];
+                                }
+                                if (!exportArqCoordenadoresMap[ac.id_arquidiocese].includes(cName)) {
+                                    exportArqCoordenadoresMap[ac.id_arquidiocese].push(cName);
+                                }
+                            }
+                        }
+                    });
+                }
+
+                exportArquidioceseMap = {};
+                if (Array.isArray(resArqs)) {
+                    resArqs.forEach(a => {
+                        const aId = a.id_arquidiocese || a.id;
+                        if (aId) {
+                            exportArquidioceseMap[aId] = a;
+                        }
+                    });
+                }
+
+                exportCoordenadoresDataLoaded = true;
+            } catch (err) {
+                console.error('Erro ao carregar dados de coordenadores para exportação:', err);
+            }
+        }
+
+        function getCoordenadorTextForExport(item) {
+            let rawCal = (item.tipo_calendario || '').toLowerCase().trim();
+            const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
+            const itemArq = item.id_arquidiocese || item.paroquia_id_arquidiocese || parInfo.id_arquidiocese;
+            const itemReg = item.id_regional || parInfo.id_regional;
+            const itemPar = item.id_paroquia || item.paroquia_id;
+
+            if (!rawCal) {
+                if (itemPar) rawCal = 'paroquial';
+                else if (itemArq) rawCal = 'arquidiocese';
+                else if (itemReg) rawCal = 'regional';
+            }
+
+            const isParoquial = rawCal === 'paroquial' || rawCal === 'paróquia';
+            const isRegional = rawCal === 'regional';
+            const isArquidiocese = rawCal === 'arquidiocese' || rawCal === 'arquidiocesano';
+
+            const exportArqSelect = document.getElementById('export-arquidiocese');
+            const selectedArqId = exportArqSelect ? exportArqSelect.value : '';
+
+            if (isParoquial) {
+                if (itemPar && exportParoquiaCoordenadoresMap[itemPar] && exportParoquiaCoordenadoresMap[itemPar].length > 0) {
+                    return exportParoquiaCoordenadoresMap[itemPar].join(', ');
+                }
+            } else if (isRegional) {
+                if (itemReg && exportRegionalCoordenadoresMap[itemReg] && exportRegionalCoordenadoresMap[itemReg].length > 0) {
+                    return exportRegionalCoordenadoresMap[itemReg].join(', ');
+                }
+            } else if (isArquidiocese) {
+                const arqId = itemArq || selectedArqId;
+                if (arqId && exportArqCoordenadoresMap[arqId] && exportArqCoordenadoresMap[arqId].length > 0) {
+                    return exportArqCoordenadoresMap[arqId].join(', ');
+                }
+            }
+
+            return '';
+        }
+
+        async function doExport(format) {
             if (!validateExportForm()) {
                 return;
+            }
+
+            if (!exportCoordenadoresDataLoaded) {
+                await loadExportCoordenadoresData();
             }
 
             const items = getFilteredExportActivities();
@@ -2290,6 +2442,34 @@
                     alert('Erro ao carregar a biblioteca de exportação para Excel.');
                     return;
                 }
+
+                const anoInput = document.getElementById('export-ano') ? document.getElementById('export-ano').value.trim() : '';
+                const targetYear = anoInput ? anoInput : new Date().getFullYear();
+
+                const mesInicioSelect = document.getElementById('export-mes-inicio');
+                const mesFimSelect = document.getElementById('export-mes-fim');
+                const mInicioVal = mesInicioSelect ? mesInicioSelect.value : '';
+                const mFimVal = mesFimSelect ? mesFimSelect.value : '';
+
+                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+                let periodText = '';
+                if (mInicioVal && mFimVal) {
+                    const iNum = parseInt(mInicioVal, 10);
+                    const fNum = parseInt(mFimVal, 10);
+                    if (iNum === fNum) {
+                        periodText = `${monthNames[iNum - 1]} de ${targetYear}`;
+                    } else {
+                        periodText = `${monthNames[iNum - 1]} a ${monthNames[fNum - 1]} de ${targetYear}`;
+                    }
+                } else if (mInicioVal) {
+                    const iNum = parseInt(mInicioVal, 10);
+                    periodText = `${monthNames[iNum - 1]} de ${targetYear}`;
+                } else {
+                    periodText = `Ano de ${targetYear}`;
+                }
+
+                const excelTitle = `Exportação de Calendário Adoção Espiritual - ${periodText}`;
 
                 const titleStyle = {
                     font: { name: "Arial", sz: 14, bold: true, color: { rgb: "000000" } },
@@ -2333,12 +2513,63 @@
                 };
 
                 const ws = {};
-                ws['A1'] = { v: "Exportação de Calendário Adoção Espiritual", t: 's', s: titleStyle };
+                ws['A1'] = { v: excelTitle, t: 's', s: titleStyle };
                 ws['!merges'] = [
-                    { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }
                 ];
 
-                const headers = ["Calendário", "Classificação", "Recorrente", "Data e hora", "Título"];
+                function formatOrdemDiaSemanaExcel(ordem, diaSemana) {
+                    if (!ordem) return diaSemana || '';
+                    if (!diaSemana) return ordem || '';
+                    const oStr = String(ordem).trim().toLowerCase();
+                    const dStr = String(diaSemana).trim().toLowerCase();
+                    const isMasculine = dStr.includes('domingo') || dStr.includes('sábado') || dStr.includes('sabado');
+                    let adjustedOrdem = ordem;
+                    if (oStr.includes('primeir') || oStr.includes('1')) {
+                        adjustedOrdem = isMasculine ? 'Primeiro' : 'Primeira';
+                    } else if (oStr.includes('segund') || oStr.includes('2')) {
+                        adjustedOrdem = isMasculine ? 'Segundo' : 'Segunda';
+                    } else if (oStr.includes('terceir') || oStr.includes('3')) {
+                        adjustedOrdem = isMasculine ? 'Terceiro' : 'Terceira';
+                    } else if (oStr.includes('quart') || oStr.includes('4')) {
+                        adjustedOrdem = isMasculine ? 'Quarto' : 'Quarta';
+                    } else if (oStr.includes('últim') || oStr.includes('ultim')) {
+                        adjustedOrdem = isMasculine ? 'Último' : 'Última';
+                    }
+                    return `${adjustedOrdem} ${diaSemana}`;
+                }
+
+                function getStateSigla(nameOrSigla) {
+                    if (!nameOrSigla) return '';
+                    const str = String(nameOrSigla).trim();
+                    if (str.length === 2 && /^[A-Za-z]{2}$/.test(str)) return str.toUpperCase();
+                    
+                    const norm = str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    const map = {
+                        'acre': 'AC', 'alagoas': 'AL', 'amapa': 'AP', 'amazonas': 'AM',
+                        'bahia': 'BA', 'ceara': 'CE', 'distrito federal': 'DF', 'espirito santo': 'ES',
+                        'goias': 'GO', 'maranhao': 'MA', 'mato grosso': 'MT', 'mato grosso do sul': 'MS',
+                        'minas gerais': 'MG', 'para': 'PA', 'paraiba': 'PB', 'parana': 'PR',
+                        'pernambuco': 'PE', 'piaui': 'PI', 'rio de janeiro': 'RJ', 'rio grande do norte': 'RN',
+                        'rio grande do sul': 'RS', 'rondonia': 'RO', 'roraima': 'RR', 'santa catarina': 'SC',
+                        'sao paulo': 'SP', 'sergipe': 'SE', 'tocantins': 'TO'
+                    };
+                    return map[norm] || str;
+                }
+
+                const headers = [
+                    "Calendário",
+                    "Formato",
+                    "Classificação",
+                    "Recorrente",
+                    "Data e hora",
+                    "Coordenador",
+                    "Paróquia ou Arquidiocese",
+                    "Atividade",
+                    "Endereço",
+                    "Cidade",
+                    "UF"
+                ];
                 headers.forEach((h, colIdx) => {
                     const cellRef = XLSX.utils.encode_cell({ r: 2, c: colIdx });
                     ws[cellRef] = { v: h, t: 's', s: headerStyle };
@@ -2361,33 +2592,89 @@
                         dataHoraTxt = '-';
                     }
 
-                    let tituloTxt = item.titulo || '-';
-                    const isParoquial = String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paroquial' || String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paróquia';
-                    if (isParoquial) {
-                        const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
-                        const nomePar = item.nome_paroquia || parInfo.nome_paroquia || parInfo.nome || '';
-                        const addrParts = [];
-                        const street = item.endereco_paroquia || item.endereco || parInfo.endereco || '';
-                        const bairro = item.bairro_paroquia || item.bairro || parInfo.bairro || '';
-                        const cidade = item.cidade_paroquia || item.cidade || parInfo.cidade || '';
-                        if (street) addrParts.push(street);
-                        if (bairro) addrParts.push(bairro);
-                        if (cidade) addrParts.push(cidade);
-                        const fullAddr = addrParts.join(' — ');
-                        const details = [nomePar, fullAddr].filter(Boolean).join(' — ');
-                        if (details) {
-                            tituloTxt += ` (${details})`;
-                        }
+                    let rawCal = (item.tipo_calendario || item.tipo || '').toLowerCase().trim();
+                    const parInfo = (typeof paroquiaMap !== 'undefined' && paroquiaMap[item.id_paroquia || item.paroquia_id]) || {};
+                    const itemArq = item.id_arquidiocese || item.paroquia_id_arquidiocese || parInfo.id_arquidiocese;
+                    const itemPar = item.id_paroquia || item.paroquia_id;
+
+                    if (!rawCal) {
+                        if (itemPar) rawCal = 'paroquial';
+                        else if (itemArq) rawCal = 'arquidiocese';
                     }
 
-                    const classifTxt = item.formato ? `${item.formato} - ${item.tipo || '-'}` : (item.tipo || '-');
+                    const isParoquial = rawCal === 'paroquial' || rawCal === 'paróquia';
+                    const isArquidiocese = rawCal === 'arquidiocese' || rawCal === 'arquidiocesano';
+
+                    let paroquiaOuArquidiocese = '-';
+                    if (isParoquial) {
+                        paroquiaOuArquidiocese = item.nome_paroquia || item.paroquia_nome || parInfo.nome_paroquia || parInfo.nome || '-';
+                    } else if (isArquidiocese) {
+                        const arqInfo = (itemArq && exportArquidioceseMap[itemArq]) || {};
+                        const arqSelect = document.getElementById('export-arquidiocese');
+                        const selectedArqName = (arqSelect && arqSelect.selectedIndex > 0) ? arqSelect.options[arqSelect.selectedIndex].text : '';
+                        paroquiaOuArquidiocese = item.nome_arquidiocese || item.arquidiocese_nome || arqInfo.nome_arquidiocese || arqInfo.nome || parInfo.nome_arquidiocese || selectedArqName || '-';
+                    }
+
+                    const atividadeTxt = item.titulo || item.descricao || '-';
+
+                    const arqInfo = (itemArq && exportArquidioceseMap[itemArq]) || {};
+                    const street = item.endereco_paroquia || item.endereco || parInfo.endereco || arqInfo.endereco || '';
+                    const bairro = item.bairro_paroquia || item.bairro || parInfo.bairro || arqInfo.bairro || '';
+                    const addrParts = [];
+                    if (street) addrParts.push(street);
+                    if (bairro) addrParts.push(bairro);
+                    const enderecoTxt = addrParts.length > 0 ? addrParts.join(' — ') : '-';
+
+                    const cidadeTxt = item.cidade_paroquia || item.cidade || parInfo.cidade || arqInfo.cidade || '-';
+
+                    const estadoSelect = document.getElementById('export-estado');
+                    const selectedEstadoText = (estadoSelect && estadoSelect.selectedIndex > 0) ? estadoSelect.options[estadoSelect.selectedIndex].text : '';
+                    const selectedEstadoSigla = getStateSigla(selectedEstadoText);
+
+                    const rawState = item.sigla_estado || item.sigla || item.uf || item.estado || parInfo.sigla_estado || parInfo.sigla_uf || parInfo.uf || parInfo.nome_estado || parInfo.estado || arqInfo.sigla_estado || arqInfo.sigla_uf || arqInfo.uf || arqInfo.nome_estado || arqInfo.estado || selectedEstadoSigla || '';
+                    const ufTxt = getStateSigla(rawState) || '';
+
+                    let recTxt = '';
+                    const recNorm = String(item.recorrente || '').toLowerCase().trim();
+                    const hasWeekdayRec = Boolean(item.ordem_semana && item.dia_semana);
+                    const hasFixedDayRec = Boolean(item.dia_fixo || item.dia_mes);
+
+                    if (recNorm.includes('semana') || hasWeekdayRec) {
+                        if (item.ordem_semana && item.dia_semana) {
+                            const formattedStr = formatOrdemDiaSemanaExcel(item.ordem_semana, item.dia_semana);
+                            recTxt = `${formattedStr} do mês`;
+                        } else {
+                            recTxt = `Mensal (dia da semana)`;
+                        }
+                    } else if (recNorm.includes('fixo') || hasFixedDayRec) {
+                        const diaFixoVal = item.dia_fixo || item.dia_mes || '';
+                        if (diaFixoVal) {
+                            recTxt = `Todo dia ${diaFixoVal} do mês`;
+                        } else {
+                            recTxt = `Mensal (dia fixo)`;
+                        }
+                    } else if (recNorm === 'única' || recNorm === 'unica') {
+                        recTxt = 'Única';
+                    } else if (recNorm === 'não' || recNorm === 'nao' || !recNorm) {
+                        recTxt = 'Não';
+                    } else {
+                        recTxt = item.recorrente;
+                    }
+
+                    const coordTxt = getCoordenadorTextForExport(item);
 
                     const rowValues = [
                         item.tipo_calendario || item.tipo || '-',
-                        classifTxt,
-                        item.recorrente || 'Não',
+                        item.formato || '-',
+                        item.tipo || '-',
+                        recTxt,
                         dataHoraTxt,
-                        tituloTxt
+                        coordTxt,
+                        paroquiaOuArquidiocese,
+                        atividadeTxt,
+                        enderecoTxt,
+                        cidadeTxt,
+                        ufTxt
                     ];
 
                     rowValues.forEach((val, c) => {
@@ -2397,14 +2684,20 @@
                 });
 
                 const totalRows = 3 + items.length;
-                ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(totalRows - 1, 2), c: 4 } });
+                ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(totalRows - 1, 2), c: 10 } });
 
                 ws['!cols'] = [
                     { wch: 18 },
-                    { wch: 25 },
-                    { wch: 14 },
+                    { wch: 15 },
                     { wch: 20 },
-                    { wch: 60 }
+                    { wch: 32 },
+                    { wch: 20 },
+                    { wch: 28 },
+                    { wch: 35 },
+                    { wch: 40 },
+                    { wch: 40 },
+                    { wch: 25 },
+                    { wch: 8 }
                 ];
 
                 const wb = XLSX.utils.book_new();
@@ -2517,16 +2810,36 @@
                     const tipoTxt = item.tipo ? escapeXml(item.tipo) : '';
                     const calTipoTxt = item.tipo_calendario ? escapeXml(item.tipo_calendario) : '';
 
+                    function formatOrdemDiaSemana(ordem, diaSemana) {
+                        if (!ordem) return diaSemana || '';
+                        if (!diaSemana) return ordem || '';
+                        const oStr = String(ordem).trim().toLowerCase();
+                        const dStr = String(diaSemana).trim().toLowerCase();
+                        const isMasculine = dStr.includes('domingo') || dStr.includes('sábado') || dStr.includes('sabado');
+                        let adjustedOrdem = ordem;
+                        if (oStr.includes('primeir') || oStr.includes('1')) {
+                            adjustedOrdem = isMasculine ? 'Primeiro' : 'Primeira';
+                        } else if (oStr.includes('segund') || oStr.includes('2')) {
+                            adjustedOrdem = isMasculine ? 'Segundo' : 'Segunda';
+                        } else if (oStr.includes('terceir') || oStr.includes('3')) {
+                            adjustedOrdem = isMasculine ? 'Terceiro' : 'Terceira';
+                        } else if (oStr.includes('quart') || oStr.includes('4')) {
+                            adjustedOrdem = isMasculine ? 'Quarto' : 'Quarta';
+                        } else if (oStr.includes('últim') || oStr.includes('ultim')) {
+                            adjustedOrdem = isMasculine ? 'Último' : 'Última';
+                        }
+                        return `${adjustedOrdem} ${diaSemana}`;
+                    }
+
                     let recTag = '';
                     const recNorm = String(item.recorrente || '').toLowerCase().trim();
                     const hasWeekdayRec = Boolean(item.ordem_semana && item.dia_semana);
                     const hasFixedDayRec = Boolean(item.dia_fixo || item.dia_mes);
 
                     if (recNorm.includes('semana') || hasWeekdayRec) {
-                        const ordem = item.ordem_semana ? escapeXml(item.ordem_semana) : '';
-                        const diaSem = item.dia_semana ? escapeXml(item.dia_semana) : '';
-                        if (ordem && diaSem) {
-                            recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> ${ordem} ${diaSem} do mês`;
+                        if (item.ordem_semana && item.dia_semana) {
+                            const formattedStr = formatOrdemDiaSemana(item.ordem_semana, item.dia_semana);
+                            recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> ${escapeXml(formattedStr)} do mês`;
                         } else {
                             recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> Mensal (dia da semana)`;
                         }
@@ -2543,7 +2856,7 @@
                         recTag = `<i class="fa-solid fa-rotate" style="margin-right: 4px; color: #0f4c81;"></i> ${escapeXml(item.recorrente)}`;
                     }
 
-                    const metaTags = [formatoTxt, tipoTxt, calTipoTxt, recTag].filter(Boolean);
+                    const metaTags = [formatoTxt, tipoTxt, recTag].filter(Boolean);
 
                     let locationLine = '';
                     const isParoquial = String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paroquial' || String(item.tipo_calendario || item.tipo || '').trim().toLowerCase() === 'paróquia';
