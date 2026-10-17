@@ -375,6 +375,10 @@
                     }
                     localStorage.setItem('user_id_perfil', colab.id_perfil || '');
                     localStorage.setItem('user_nome_perfil', colab.nome_perfil || '');
+                    // IDs separados por vírgula (ex.: '3,7'); vazio quando não se aplica
+                    localStorage.setItem('user_id_paroquia', colab.id_paroquia || '');
+                    localStorage.setItem('user_id_regional', colab.id_regional || '');
+                    localStorage.setItem('user_id_arquidiocese', colab.id_arquidiocese || '');
 
                     // Passo 3: redirecionar o usuário para menu_principal_2.html passando os campos apelido_colaborador e id_colaborador por parâmetro de URL (nome e id_colaborador)
                     window.location.href = `menu_principal_2.html?nome=${encodeURIComponent(colab.apelido_colaborador)}&id_colaborador=${encodeURIComponent(colab.id_colaborador)}`;

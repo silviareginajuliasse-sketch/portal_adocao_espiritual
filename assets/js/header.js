@@ -3,6 +3,30 @@
         ? `http://${window.location.hostname || 'localhost'}:3000/api`
         : '/api';
 
+    function escapeXml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatDateStr(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) {
+            const str = String(dateStr).trim();
+            const parts = str.split('T')[0].split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return String(dateStr);
+        }
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
     function rebuildDropdown() {
         const dropdown = document.getElementById('dropdown-menu');
         if (!dropdown || dropdown.getAttribute('data-rebuilt')) return;
@@ -31,17 +55,25 @@
                         <div class="id-number" id="dropdown-id">000.000.000-00</div>
                     </div>
                 </div>
-                <div class="user-role regular">
-                    Seu perfil é <strong>Coordenador Nacional</strong>
+                <div class="user-role regular" id="dropdown-user-role-container">
+                    Seu perfil é <strong id="dropdown-user-role-text">Colaborador</strong>
                 </div>
                 <div class="decorative-divider">
                     <span></span><span></span><span></span>
                 </div>
-                <div id="dropdown-selos-section" style="display: none;">
-                    <div style="font-style: italic; font-size: 14px; color: #555; margin-bottom: 8px;">Selos</div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <img src="./logo_circular.png" alt="Selo" style="width: 45px; height: 45px; object-fit: contain;">
+                
+                <!-- Atividades Participadas -->
+                <div class="user-activities-row">
+                    <div class="activities-count-badge">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Atividades participadas: <strong id="dropdown-activities-count">0</strong></span>
                     </div>
+                </div>
+
+                <!-- Selos Section -->
+                <div id="dropdown-selos-section" style="display: none;">
+                    <div style="font-style: italic; font-size: 13px; color: #555; margin-bottom: 6px;">Selos</div>
+                    <div id="dropdown-selos-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center;"></div>
                     <div class="decorative-divider blue-divider">
                         <span></span><span></span><span></span>
                     </div>
@@ -62,7 +94,7 @@
                 .dropdown-menu {
                     border-radius: 8px !important;
                     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
-                    width: 290px !important;
+                    width: 300px !important;
                 }
                 .dropdown-header {
                     border-bottom: 1px solid #eee !important;
@@ -122,6 +154,58 @@
                 .decorative-divider.blue-divider span {
                     background-color: #0c3c60 !important;
                 }
+
+                .user-activities-row {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: space-between !important;
+                    background: #f8fafc !important;
+                    border: 1px solid #e2e8f0 !important;
+                    border-radius: 8px !important;
+                    padding: 8px 12px !important;
+                    margin-bottom: 12px !important;
+                }
+                .activities-count-badge {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 8px !important;
+                    font-size: 12px !important;
+                    color: #475569 !important;
+                }
+                .activities-count-badge i {
+                    color: #0f4c81 !important;
+                    font-size: 14px !important;
+                }
+                .activities-count-badge strong {
+                    color: #8b1e1e !important;
+                    font-size: 13px !important;
+                }
+                .user-selo-badge {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    gap: 5px !important;
+                    padding: 4px 10px !important;
+                    border-radius: 14px !important;
+                    font-size: 11px !important;
+                    font-weight: 700 !important;
+                    line-height: 1.2 !important;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+                    user-select: none !important;
+                    margin-bottom: 4px !important;
+                }
+                .user-selo-badge.selo-treinado {
+                    background: #fef3c7 !important; color: #92400e !important; border: 1px solid #f59e0b !important;
+                }
+                .user-selo-badge.selo-arquidiocese {
+                    background: #f3e8ff !important; color: #6b21a8 !important; border: 1px solid #a855f7 !important;
+                }
+                .user-selo-badge.selo-regional {
+                    background: #e0f2fe !important; color: #075985 !important; border: 1px solid #0284c7 !important;
+                }
+                .user-selo-badge.selo-paroquia {
+                    background: #ffe4e6 !important; color: #9f1239 !important; border: 1px solid #f43f5e !important;
+                }
+
                 .btn-update-profile {
                     display: block !important;
                     background-color: #c53030 !important;
@@ -143,20 +227,115 @@
                     color: white !important;
                     text-decoration: none !important;
                 }
+
             `;
             document.head.appendChild(style);
         }
     }
 
-    function updateDropdownSeal() {
+    async function updateDropdownSeal(id_colab, colabData) {
         const selosSection = document.getElementById('dropdown-selos-section');
-        if (selosSection) {
-            const hasSelo = localStorage.getItem('adocao_user_selo');
-            if (hasSelo && hasSelo !== 'null' && hasSelo !== 'undefined' && hasSelo !== '') {
-                selosSection.style.display = 'block';
-            } else {
-                selosSection.style.display = 'none';
+        const selosList = document.getElementById('dropdown-selos-list');
+        if (!selosSection || !selosList) return;
+
+        selosList.innerHTML = '';
+        let hasAnySeal = false;
+
+        // 1. Check Trained seal
+        const savedSelo = localStorage.getItem('adocao_user_selo');
+        const isTreinado = (colabData && (colabData.selo_colaborador || colabData.treinado)) || (savedSelo && savedSelo !== 'null' && savedSelo !== 'undefined' && savedSelo !== '');
+        if (isTreinado) {
+            hasAnySeal = true;
+            const badge = document.createElement('span');
+            badge.className = 'user-selo-badge selo-treinado';
+            badge.title = 'Colaborador Treinado';
+            badge.innerHTML = `<i class="fa-solid fa-award"></i> Treinado`;
+            selosList.appendChild(badge);
+        }
+
+        // 2. Fetch active coordinations from backend API
+        if (id_colab) {
+            try {
+                const res = await fetch(`${API_URL}/colaboradores/${id_colab}/coordenacoes`);
+                if (res.ok) {
+                    const coordenacoes = await res.json();
+                    if (Array.isArray(coordenacoes)) {
+                        // Check active Archdiocese Coordinator (data_fim_coordenador is null)
+                        const hasArq = coordenacoes.some(c => c.tipo === 'arquidiocese' && (c.data_fim_coordenador === null || c.data_fim_coordenador === undefined || c.data_fim_coordenador === '' || c.data_fim_coordenador === 'null'));
+                        if (hasArq) {
+                            hasAnySeal = true;
+                            const badge = document.createElement('span');
+                            badge.className = 'user-selo-badge selo-arquidiocese';
+                            badge.title = 'Coordenador de Arquidiocese';
+                            badge.innerHTML = `<i class="fa-solid fa-landmark"></i> Coordenador Arquidiocesano`;
+                            selosList.appendChild(badge);
+                        }
+
+                        // Check active Regional Coordinator (data_fim_coordenador is null)
+                        const hasReg = coordenacoes.some(c => c.tipo === 'regional' && (c.data_fim_coordenador === null || c.data_fim_coordenador === undefined || c.data_fim_coordenador === '' || c.data_fim_coordenador === 'null'));
+                        if (hasReg) {
+                            hasAnySeal = true;
+                            const badge = document.createElement('span');
+                            badge.className = 'user-selo-badge selo-regional';
+                            badge.title = 'Coordenador Regional';
+                            badge.innerHTML = `<i class="fa-solid fa-earth-americas"></i> Coordenador Regional`;
+                            selosList.appendChild(badge);
+                        }
+
+                        // Check active Parish Coordinator (data_fim_coordenador is null)
+                        const hasPar = coordenacoes.some(c => c.tipo === 'paroquia' && (c.data_fim_coordenador === null || c.data_fim_coordenador === undefined || c.data_fim_coordenador === '' || c.data_fim_coordenador === 'null'));
+                        if (hasPar) {
+                            hasAnySeal = true;
+                            const badge = document.createElement('span');
+                            badge.className = 'user-selo-badge selo-paroquia';
+                            badge.title = 'Coordenador Paroquial';
+                            badge.innerHTML = `<i class="fa-solid fa-church"></i> Paroquial`;
+                            selosList.appendChild(badge);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not fetch user coordinations for seals:', err);
             }
+        }
+
+        selosSection.style.display = hasAnySeal ? 'block' : 'none';
+    }
+
+    async function updateUserActivitiesCount(id_colab) {
+        const countEl = document.getElementById('dropdown-activities-count');
+        if (!countEl || !id_colab) return;
+
+        try {
+            const res = await fetch(`${API_URL}/colaboradores/${id_colab}/atividades`);
+            if (res.ok) {
+                const list = await res.json();
+                if (Array.isArray(list)) {
+                    countEl.innerText = list.length;
+                }
+            }
+        } catch (err) {
+            console.warn('Could not fetch user activities count:', err);
+        }
+    }
+
+    function updateUserRoleText(perfilName) {
+        const roleContainer = document.getElementById('dropdown-user-role-container');
+        if (!roleContainer) return;
+
+        let pName = perfilName || localStorage.getItem('user_nome_perfil') || '';
+        if (pName) pName = pName.trim();
+
+        if (pName) {
+            const isDbAdmin = (pName.toLowerCase() === 'admin' || pName.toLowerCase() === 'administrador');
+            if (isDbAdmin) {
+                roleContainer.innerHTML = `Seu perfil é <strong>Admin</strong>`;
+            } else {
+                roleContainer.innerHTML = `Seu perfil é <strong>${escapeXml(pName)}</strong>`;
+            }
+        } else {
+            // Non-admin fallback: do NOT show "Seu perfil é Admin"
+            roleContainer.innerHTML = `Seu perfil é <strong>Colaborador</strong>`;
         }
     }
 
@@ -195,13 +374,9 @@
         if (dropdownId) dropdownId.innerText = "Código de usuário: " + (savedCodColab || id_colab);
 
         // Profile Display Update
-        const userRoles = document.querySelectorAll('.user-role strong');
         const userNomePerfil = localStorage.getItem('user_nome_perfil');
-        if (userNomePerfil && userRoles.length > 0) {
-            userRoles.forEach(el => {
-                el.innerText = userNomePerfil;
-            });
-        }
+        updateUserRoleText(userNomePerfil);
+
         // Update "Minha Conta" -> "Atualizar cadastro" link dynamically using localStorage
         const savedId = localStorage.getItem('user_id_colaborador') || id_colab;
         const updateLinks = document.querySelectorAll('.update-link');
@@ -230,7 +405,7 @@
             }
         }
 
-        // Fetch dynamically from DB to stay up to date and load the seal
+        // Fetch dynamically from DB to stay up to date
         if (id_colab) {
             const apiUrl = `${API_URL}/colaboradores/${id_colab}`;
 
@@ -249,6 +424,10 @@
                                 uId.innerText = colab.cod_colaborador;
                             }
                         }
+                        if (colab.nome_perfil) {
+                            localStorage.setItem('user_nome_perfil', colab.nome_perfil);
+                            updateUserRoleText(colab.nome_perfil);
+                        }
                         if (colab.foto_colaborador) {
                             localStorage.setItem('adocao_user_photo', colab.foto_colaborador);
                             if (userInitials) {
@@ -262,13 +441,20 @@
                         } else {
                             localStorage.removeItem('adocao_user_selo');
                         }
-                        updateDropdownSeal();
+                        updateDropdownSeal(id_colab, colab);
+                    } else {
+                        updateDropdownSeal(id_colab, null);
                     }
                 })
-                .catch(err => console.warn('Could not fetch user details:', err));
-        }
+                .catch(err => {
+                    console.warn('Could not fetch user details:', err);
+                    updateDropdownSeal(id_colab, null);
+                });
 
-        updateDropdownSeal();
+            updateUserActivitiesCount(id_colab);
+        } else {
+            updateDropdownSeal(null, null);
+        }
     }
 
     function handlePhotoUpload(event) {

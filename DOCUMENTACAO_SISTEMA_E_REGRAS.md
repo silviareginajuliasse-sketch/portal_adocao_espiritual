@@ -1,0 +1,156 @@
+# Documentação Geral do Sistema e Regras de Negócio Implementadas
+## Projeto Adoção Espiritual
+
+---
+
+## 1. Visão Geral da Arquitetura
+
+* **Front-end:** HTML5, CSS3 Customizado (sem Tailwind), JavaScript Vanilla modularizado, FontAwesome e bibliotecas auxiliares de exportação (html2canvas, jsPDF, XLSX).
+* **Back-end:** Node.js com Express ([backend/server.js](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/backend/server.js)), conexão via pool assíncrono `mysql2/promise`.
+* **Banco de Dados:** MySQL 8.0 rodando em container Docker dedicado (`adocao_espiritual_mysql`), administrável via phpMyAdmin (`http://localhost:8080`) e mapeado em [docker-compose.yml](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/docker-compose.yml).
+* **Automação e Skill:** Script de auto-inicialização e diagnóstico em [.agents/skills/gerenciar-banco-docker/](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/.agents/skills/gerenciar-banco-docker/).
+
+---
+
+## 2. Autenticação, Sessão e Header Unificado
+
+### Regras de Negócio e Comportamento:
+1. **Identificação do Usuário ([identificacao.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/identificacao.html)):**
+   * O colaborador se identifica por CPF / credencial cadastrada.
+   * Ao efetuar login, os dados essenciais (`id_colaborador`, `nome`, `cpf`, `funcao`, `perfil`) são persistidos no `localStorage` sob as chaves de sessão.
+2. **Componente de Cabeçalho Global ([assets/js/header.js](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/assets/js/header.js)):**
+   * **Injeção Dinâmica:** O header e o menu sanduíche são injetados automaticamente em todas as telas que importam o script.
+   * **Card do Perfil:** Exibe a foto do colaborador (ou avatar padrão com ícone), nome completo em destaque e CPF formatado (`000.000.000-00`).
+   * **Alteração de Foto Rápida:** Ao clicar no avatar ou no badge de câmera, permite upload direto de nova foto atualizando o perfil via API.
+   * **Controle de Acesso por Perfil:** Exibe se o usuário é `Administrador`, `Coordenador` ou `Colaborador`. Itens administrativos ou gerenciais só são visíveis de acordo com a permissão.
+   * **Botão Sair (Logout):** Limpa as informações de sessão do navegador e redireciona para [identificacao.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/identificacao.html).
+
+---
+
+## 3. Módulo de Treinamentos e Capacitação
+
+### Regras de Negócio Implementadas:
+1. **Regra de Exclusão Mútua (Instrutor vs Participante):**
+   * Um colaborador **NÃO PODE** ser instrutor e participante no mesmo treinamento.
+   * Ao tentar vincular um participante que já está escalado como instrutor em qualquer agenda daquele treinamento, o backend rejeita com erro `400 Bad Request`.
+   * Da mesma forma, ao cadastrar um instrutor para uma pauta/agenda, o sistema valida se ele já está matriculado como participante e bloqueia se for o caso.
+2. **Integridade de Datas de Auditoria (`criado_em` e `atualizado_em`):**
+   * O campo `criado_em` é imutável: permanece estritamente fixo na data de inserção original.
+   * O campo `atualizado_em` é atualizado a cada alteração ou reagendamento, registrando quem foi o colaborador responsável (`id_colaborador_atualiza`).
+3. **Formas e Status do Treinamento:**
+   * Modalidade: `Presencial` ou `Online`.
+   * Status: `agendado`, `em_andamento`, `concluido`, `cancelado`.
+   * Qualificação: Define o papel para o qual o treinamento capacita (ex: *Colaborador Adoção Espiritual*, *Coordenador*, etc.).
+
+---
+
+## 4. Módulo de Gestão de Projetos, Tarefas e Atividades
+
+### Regras de Negócio Implementadas:
+1. **Consistência de Status e Progresso de Tarefas:**
+   * Se a tarefa tem **Percentual = 100%**, o status obrigatoriamente **não pode** permanecer como `Em andamento` ou `Não iniciado`.
+   * Se o status for marcado como `Concluída`, o progresso percentual obrigatoriamente deve ser `100%`. Se for inferior a 100%, o backend rejeita a gravação com código `400`.
+2. **Hierarquia e Cascata:**
+   * **Projeto** $\rightarrow$ **Tarefas** $\rightarrow$ **Atividades da Tarefa**.
+   * Ao listar as tarefas de um projeto (`/api/projetos/:id/tarefas`), o backend aninha o array de sub-atividades correspondentes (`atividades: [...]`).
+   * Deleções e atualizações de atividades mantêm vínculo com a tarefa e o projeto original.
+3. **Reuniões do Projeto ([test_reunioes.js](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/backend/test_reunioes.js)):**
+   * Cada reunião registra data, pauta resolvida e a lista textual ou IDs dos participantes envolvidos.
+   * Vínculo estrito com o `id_projeto`.
+
+---
+
+## 5. Módulo de Calendário, Feriados e Cronograma de Eventos
+
+### Estrutura de Banco de Dados Atual vs Legada:
+* **Tabela Atual de Feriados (`calendario_feriados`):**
+  Armazena feriados nacionais, municipais e datas santas da Igreja. Os campos incluem `nome_evento`, `calendario_religioso`, `feriado`, `data` (armazenada de forma direta, ex: `'25/12'` ou `'17/02/2026'`) e `observacoes`.
+* **Tabela Atual de Cronograma Pastoral (`atividades_calendario`):**
+  Tabela principal para todas as atividades programadas, encontros, reuniões e missas pastorais da Adoção Espiritual, com controle de status, recorrência, coordenadores e vinculação paroquial/arquidiocesana.
+* **Histórico / Migração Legada:**
+  A tabela intermediária `calendario_datas` e a antiga `calendario` foram descontinuadas e refatoradas no banco de dados ativo, unificando a gestão de datas diretamente em `calendario_feriados` e `atividades_calendario`.
+
+### Regras de Negócio e Exportação:
+1. **Tipos de Eventos e Recorrência:**
+   * Distinção clara entre feriados civis, datas religiosas e atividades operacionais/pastorais.
+   * Suporte a recorrências semanais, mensais e anuais no cronograma de atividades.
+2. **Busca e Filtragem:**
+   * Busca insensível a acentuação e caracteres especiais em nomes de eventos, atividades e locais.
+   * Filtros por abrangência: **Nacional** (sem arquidiocese específica), por **Arquidiocese** ou por **Paróquia**.
+3. **Exportação Oficial em PDF:**
+   * **Layout de Cronograma:** Gera cabeçalho institucional contendo o logotipo oficial e título formatado.
+   * **Sigla UF Automática:** Converte o nome por extenso do estado para sua sigla correspondente (ex: "São Paulo" $\rightarrow$ "SP").
+   * **Ícones de Formato:** Renderiza ícones indicativos do formato da atividade (Online, Presencial, Híbrido).
+   * **Remoção de Rodapés Redundantes:** O rodapé com dados de contato foi suprimido a pedido da identidade visual.
+   * **Validação de Formulário no Modal:** Os campos sinalizados com asterisco (`*`) barram a emissão caso não sejam preenchidos.
+   * **Flexibilidade da Paróquia:** O campo Paróquia não é obrigatório quando a consulta é de escopo geral ou arquidiocesano.
+4. **Exportação em Planilha (Excel / XLSX):**
+   * Estruturação das colunas com informações do evento, data/hora, coordenadores responsáveis e local, sem colunas sobressalentes desnecessárias.
+
+---
+
+## 6. Módulo de Colaboradores e Histórico de Liderança
+
+### Regras de Negócio Implementadas:
+1. **Movimentações de Liderança:**
+   * Registro histórico de cargos e lideranças na tabela `colaborador_lideranca`.
+   * Tipos suportados via ENUM dinâmico: *Coordenador paroquial*, *Coordenador diocesano*, *Coordenador regional*, *Liderança nacional*, etc.
+   * Período de vigência: `data_inicio` e `data_fim` (podendo ser nula para funções ativas).
+   * Status: `Ativo` ou `Inativo`.
+2. **Dados Cadastrais e Endereçamento:**
+   * Associação geográfica hierárquica: Regional $\rightarrow$ Arquidiocese/Diocese $\rightarrow$ Paróquia.
+   * Validação de unicidade e formato de CPF e e-mail.
+
+---
+
+## 7. Módulo de Pesquisa de Satisfação dos Usuários
+
+### Regras de Negócio Implementadas:
+1. **Identificação Obrigatória (Não Anônima):**
+   * Submissões sem `id_colaborador` válido são rejeitadas pelo backend com status `400 Bad Request`.
+2. **Tratamento de Recusa / Opt-out:**
+   * Caso o colaborador opte por não responder à pesquisa no momento, registra-se um registro com `recusado = 1`.
+   * Registros com `recusado = 1` são ignorados nas listagens de respostas ativas e relatórios qualitativos, mas servem para o sistema não insistir com o popup de pesquisa na sessão do usuário.
+3. **Métricas e NPS (Net Promoter Score):**
+   * Avaliação de notas numéricas de navegação, visual e uso em dispositivos móveis.
+   * Pergunta NPS (0 a 10):
+     * **Promotores:** Notas 9 e 10.
+     * **Neutros/Passivos:** Notas 7 e 8.
+     * **Detratores:** Notas 0 a 6.
+   * O endpoint `/api/pesquisa_satisfacao/stats` calcula e retorna automaticamente a distribuição percentual e índice consolidado.
+
+---
+
+## 8. Módulo de Banner e Aniversariantes
+
+### Regras de Negócio Implementadas:
+1. **Cálculo Automático de Aniversariantes:**
+   * Filtra aniversariantes do dia ou do mês corrente a partir da data de nascimento dos colaboradores ativos.
+2. **Customização do Banner:**
+   * Permite cadastrar mensagens comemorativas, imagens personalizadas e períodos de exibição no menu principal.
+
+---
+
+## 9. Lista Consolidada de Endpoints da API
+
+| Módulo | Método | Rota | Descrição |
+| :--- | :---: | :--- | :--- |
+| **Colaboradores** | `GET` | `/api/colaboradores` | Lista colaboradores cadastrados |
+| | `POST` | `/api/colaboradores/save` | Cria ou atualiza colaborador |
+| | `GET` | `/api/colaboradores/:id/lideranca` | Lista histórico de liderança do colaborador |
+| | `POST` | `/api/colaborador_lideranca/save` | Salva registro de liderança |
+| **Treinamentos** | `POST` | `/api/treinamentos/save` | Cria/atualiza treinamento com auditoria |
+| | `POST` | `/api/treinamentos/:id/participantes`| Adiciona participante (com exclusão mútua) |
+| | `POST` | `/api/treinamento_instrutores/save` | Agenda instrutor (com exclusão mútua) |
+| **Projetos** | `POST` | `/api/projetos/save` | Cria/atualiza projeto |
+| | `POST` | `/api/projetos/tarefas/save` | Salva tarefa (com validação % vs status) |
+| | `POST` | `/api/projetos/tarefas/atividades/save`| Salva sub-atividade vinculada à tarefa |
+| | `POST` | `/api/projetos/reunioes/save` | Registra reunião e pauta |
+| **Calendário (Feriados)** | `GET` | `/api/calendario_feriados` | Lista feriados e datas religiosas |
+| | `POST` | `/api/calendario_feriados/save` | Salva feriado ou data religiosa |
+| | `DELETE` | `/api/calendario_feriados/:id` | Remove data de feriado/religiosa |
+| **Atividades / Cronograma** | `GET` | `/api/atividades_calendario` | Lista atividades e eventos pastorais |
+| | `POST` | `/api/atividades_calendario/save` | Salva evento do cronograma e recorrência |
+| | `DELETE` | `/api/atividades_calendario/:id` | Exclui evento pastoral |
+| **Satisfação** | `GET` | `/api/pesquisa_satisfacao/stats` | Retorna métricas consolidadas e NPS |
+| | `POST` | `/api/pesquisa_satisfacao/save` | Salva resposta identificada ou recusa |

@@ -791,8 +791,8 @@
         <div class="main-content">
             <!-- Title Row -->
             <div class="search-row">
-                <div class="subtitle-with-icon" onclick="goToRegistro('new')" style="cursor: pointer;" title="Adicionar Novo Evento">
-                    <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
+                <div class="subtitle-with-icon" id="subtitle-incluir" onclick="goToRegistro('new')" style="cursor: pointer;" title="Adicionar Novo Evento">
+                    <img src="./arquidioceses-header-icon.png" class="subtitle-icon" id="icon-incluir" alt="Icon">
                     Calendário - Feriados e Dias Santos
                 </div>
                 <div style="display: flex; align-items: center; gap: 20px;">
@@ -832,6 +832,8 @@
         const API_URL = window.location.protocol === 'file:' 
             ? 'http://localhost:3000/api'
             : '/api';
+        // Apenas o perfil Admin (user_id_perfil = 1) pode incluir eventos
+        const IS_ADMIN = localStorage.getItem('user_id_perfil') === '1';
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -1158,7 +1160,19 @@
         }
 
         // Run when DOM is ready
-        window.addEventListener('DOMContentLoaded', loadEvents);
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!IS_ADMIN) {
+                const icon = document.getElementById('icon-incluir');
+                if (icon) icon.style.display = 'none';
+                const subtitle = document.getElementById('subtitle-incluir');
+                if (subtitle) {
+                    subtitle.removeAttribute('onclick');
+                    subtitle.removeAttribute('title');
+                    subtitle.style.cursor = 'default';
+                }
+            }
+            loadEvents();
+        });
     </script>
 
     <!-- Help Modal -->
@@ -1167,8 +1181,14 @@
             <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
             <h2 class="help-card-title">Orientações de uso</h2>
             <div class="help-card-content">
-                <p style="margin-bottom: 15px;">Nesta página são listados todos os eventos e datas cadastradas no calendário da Adoção Espiritual.</p>
-                <p style="margin-bottom: 15px;">A tabela exibe a data e horário, o nome do evento, se é feriado e se é data religiosa.</p>
+                <p style="margin-bottom: 15px;">Nesta página são listados todos os dias santos e feriados que são mostrados no Painel Calendário de Atividades.</p>
+                <p style="margin-bottom: 15px;">As informações constantes no campo ‘Observações’ não são exibidas em nenhuma outra função do sistema.</p>
+                <p style="margin-bottom: 8px;">As datas podem ser cadastradas em um dos dois formatos:</p>
+                <ul style="margin: 0 0 15px 20px;">
+                    <li>DD/MM/AAAA. Nesse caso o feriado só será exibido no dia, mês e ano cadastrado</li>
+                    <li>DD/MM. Nesse caso o feriado ou dia santo será exibido no calendário no dia e mês cadastrados independente do ano.</li>
+                </ul>
+                <p style="margin-bottom: 15px;">Apenas usuários com perfil Admin poderão incluir, alterar ou excluir feriados e dias santos.</p>
                 <p><strong>Dica:</strong> Utilize o campo busca, localizado à direita da tela, para pesquisar eventos por nome ou data correspondente.</p>
             </div>
         </div>

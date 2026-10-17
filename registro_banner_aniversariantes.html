@@ -952,12 +952,6 @@
                 <div class="header-center-notice">
                     Os campos assinalados com asterisco (*) são de preenchimento obrigatório.
                 </div>
-                <div class="header-right-help">
-                    <a href="#" class="help-btn" onclick="event.preventDefault()">
-                        <div class="help-circle">?</div>
-                        <span>Ajuda</span>
-                    </a>
-                </div>
             </div>
 
             <form>
@@ -1051,7 +1045,7 @@
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
                     <div class="btn-salvar-container">
-                        <button type="submit" class="btn-salvar">Salvar</button>
+                        <button type="submit" class="btn-salvar" id="btn-salvar">Salvar</button>
                     </div>
                 </div>
             </form>
@@ -1062,6 +1056,8 @@
     <script>
         const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
         let isEditMode = false;
+        // Apenas o perfil Admin (user_id_perfil = 1) pode salvar banners
+        const IS_ADMIN = localStorage.getItem('user_id_perfil') === '1';
 
         // Initialize Quill Rich Text Editor
         const quill = new Quill('#texto-editor', {
@@ -1264,12 +1260,19 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', loadBanner);
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!IS_ADMIN) {
+                const btnSalvar = document.getElementById('btn-salvar');
+                if (btnSalvar) btnSalvar.style.display = 'none';
+            }
+            loadBanner();
+        });
 
         // Form Submit
         const form = document.querySelector('form');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!IS_ADMIN) return; // Envio via Enter não permitido para perfis diferentes de Admin
 
             // When inputs are disabled, we get their values from their elements
             const mesValue = document.getElementById('mes-select').value;

@@ -358,6 +358,23 @@ async function connectDB() {
                 console.error('Erro ao verificar/migrar colunas de atividades_calendario:', acErr.message);
             }
 
+            // Ensure data_ocorrencia column exists in atividades_realizadas_participantes (ocorrências de atividades recorrentes)
+            try {
+                const [arpCols] = await pool.query(`
+                    SELECT COLUMN_NAME 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                      AND TABLE_NAME = 'atividades_realizadas_participantes'
+                      AND COLUMN_NAME = 'data_ocorrencia'
+                `);
+                if (arpCols.length === 0) {
+                    console.log('Adicionando coluna data_ocorrencia na tabela atividades_realizadas_participantes...');
+                    await pool.query('ALTER TABLE atividades_realizadas_participantes ADD COLUMN data_ocorrencia DATE NULL DEFAULT NULL');
+                }
+            } catch (arpErr) {
+                console.error('Erro ao migrar atividades_realizadas_participantes.data_ocorrencia:', arpErr.message);
+            }
+
             return; // Conectado com sucesso
         } catch (err) {
             attempts++;
@@ -882,12 +899,13 @@ app.get('/api/colaboradores/:id/atividades', async (req, res) => {
     console.log(`[API] GET /api/colaboradores/${id}/atividades`);
     try {
         const query = `
-            SELECT ar.id_atividade, ar.titulo, ar.data_atividade, p.nome_paroquia
+            SELECT ar.id_atividade, ar.titulo, ar.data_atividade, p.nome_paroquia,
+                   DATE_FORMAT(arp.data_ocorrencia, '%Y-%m-%d') AS data_ocorrencia
             FROM atividades_realizadas_participantes arp
             INNER JOIN atividades_calendario ar ON arp.id_atividade = ar.id_atividade
             LEFT JOIN paroquias p ON ar.paroquia_id = p.id_paroquia
             WHERE arp.id_colaborador = ?
-            ORDER BY ar.data_atividade DESC, ar.titulo ASC
+            ORDER BY COALESCE(arp.data_ocorrencia, ar.data_atividade) DESC, ar.titulo ASC
         `;
         const [rows] = await pool.query(query, [id]);
         res.json(rows);
@@ -952,10 +970,19 @@ app.delete('/api/colaboradores_paroquias/:id_colaborador/:id_paroquia', async (r
 // Route to delete a collaborator's activity participant association
 app.delete('/api/atividades_realizadas_participantes/:id_atividade/:id_colaborador', async (req, res) => {
     const { id_atividade, id_colaborador } = req.params;
-    console.log(`[API] DELETE /api/atividades_realizadas_participantes/${id_atividade}/${id_colaborador}`);
+    const { data_ocorrencia } = req.query;
+    console.log(`[API] DELETE /api/atividades_realizadas_participantes/${id_atividade}/${id_colaborador}`, data_ocorrencia || '');
     try {
-        const query = 'DELETE FROM atividades_realizadas_participantes WHERE id_atividade = ? AND id_colaborador = ?';
-        await pool.query(query, [id_atividade, id_colaborador]);
+        if (data_ocorrencia) {
+            // Remove somente a ocorrência informada (atividade recorrente)
+            await pool.query(
+                'DELETE FROM atividades_realizadas_participantes WHERE id_atividade = ? AND id_colaborador = ? AND data_ocorrencia = ?',
+                [id_atividade, id_colaborador, data_ocorrencia]
+            );
+        } else {
+            const query = 'DELETE FROM atividades_realizadas_participantes WHERE id_atividade = ? AND id_colaborador = ?';
+            await pool.query(query, [id_atividade, id_colaborador]);
+        }
         res.json({ success: true });
     } catch (err) {
         console.error('[API ERROR] DELETE /api/atividades_realizadas_participantes:', err);
@@ -986,6 +1013,7 @@ app.get('/api/atividades_realizadas/:id/participantes', async (req, res) => {
 app.post('/api/atividades_realizadas/:id/participantes', async (req, res) => {
     const { id } = req.params;
     const { colaboradores } = req.body;
+    const dataOcorrencia = req.body.data_ocorrencia || null;
 
     if (!id) {
         return res.status(400).json({ success: false, error: 'ID da atividade é obrigatório.' });
@@ -997,13 +1025,13 @@ app.post('/api/atividades_realizadas/:id/participantes', async (req, res) => {
     try {
         for (const colabId of colaboradores) {
             const [exists] = await pool.query(
-                'SELECT 1 FROM atividades_realizadas_participantes WHERE id_atividade = ? AND id_colaborador = ?',
-                [parseInt(id), parseInt(colabId)]
+                'SELECT 1 FROM atividades_realizadas_participantes WHERE id_atividade = ? AND id_colaborador = ? AND data_ocorrencia <=> ?',
+                [parseInt(id), parseInt(colabId), dataOcorrencia]
             );
             if (exists.length === 0) {
                 await pool.query(
-                    'INSERT INTO atividades_realizadas_participantes (id_atividade, id_colaborador) VALUES (?, ?)',
-                    [parseInt(id), parseInt(colabId)]
+                    'INSERT INTO atividades_realizadas_participantes (id_atividade, id_colaborador, data_ocorrencia) VALUES (?, ?, ?)',
+                    [parseInt(id), parseInt(colabId), dataOcorrencia]
                 );
             }
         }
@@ -4664,6 +4692,80 @@ app.delete('/api/regionais/:id', async (req, res) => {
     }
 });
 
+// Função Identifica_perfil: define o perfil de acesso do colaborador autenticado
+// pela hierarquia de coordenações (somente consultas SELECT).
+// Perfis: 1=Admin, 2=Colaborador, 3=Coordenador Regional,
+//         4=Coordenador Arquidiocesano, 5=Coordenador Paroquial
+async function Identifica_perfil(user) {
+    const result = {
+        id_perfil: 2,
+        nome_perfil: 'Colaborador',
+        id_paroquia: '',
+        id_regional: '',
+        id_arquidiocese: ''
+    };
+    const joinIds = (rows, field) => [...new Set(rows.map(r => r[field]).filter(v => v !== null && v !== undefined))].join(',');
+
+    // 1. Admin: acesso irrestrito
+    if (user.perfil === 'Admin') {
+        result.id_perfil = 1;
+        result.nome_perfil = 'Admin';
+        return result;
+    }
+
+    // 1.2. Perfil 'Outro' (ou demais): Colaborador, com id_paroquia do cadastro
+    result.id_paroquia = user.id_paroquia !== null && user.id_paroquia !== undefined ? String(user.id_paroquia) : '';
+
+    // 2. Coordenador Regional
+    const [regionais] = await pool.query(
+        `SELECT a.id_regional
+         FROM regional_coordenadores a, colaboradores b
+         WHERE a.id_colaborador = b.id_colaborador
+           AND a.data_fim_coordenador IS NULL
+           AND b.id_colaborador = ?`,
+        [user.id_colaborador]
+    );
+    if (regionais.length > 0) {
+        result.id_perfil = 3;
+        result.nome_perfil = 'Coordenador Regional';
+        result.id_regional = joinIds(regionais, 'id_regional');
+        return result;
+    }
+
+    // 3. Coordenador Arquidiocesano
+    const [arquidioceses] = await pool.query(
+        `SELECT a.id_arquidiocese
+         FROM arquidiocese_coordenadores a, colaboradores b
+         WHERE a.id_colaborador = b.id_colaborador
+           AND a.data_fim_coordenador IS NULL
+           AND b.id_colaborador = ?`,
+        [user.id_colaborador]
+    );
+    if (arquidioceses.length > 0) {
+        result.id_perfil = 4;
+        result.nome_perfil = 'Coordenador Arquidiocesano';
+        result.id_arquidiocese = joinIds(arquidioceses, 'id_arquidiocese');
+        return result;
+    }
+
+    // 4. Coordenador Paroquial
+    const [paroquias] = await pool.query(
+        `SELECT a.id_paroquia
+         FROM paroquia_coordenadores a, colaboradores b
+         WHERE a.id_colaborador = b.id_colaborador
+           AND a.data_fim_coordenador IS NULL
+           AND b.id_colaborador = ?`,
+        [user.id_colaborador]
+    );
+    if (paroquias.length > 0) {
+        result.id_perfil = 5;
+        result.nome_perfil = 'Coordenador Paroquial';
+        const ids = joinIds(paroquias, 'id_paroquia');
+        result.id_paroquia = [...new Set([...ids.split(','), ...(result.id_paroquia ? [result.id_paroquia] : [])])].join(',');
+    }
+    return result;
+}
+
 // Rota de Login/Autenticação de Colaborador
 app.post('/api/login', async (req, res) => {
     const { colaborador, senha } = req.body;
@@ -4723,6 +4825,14 @@ app.post('/api/login', async (req, res) => {
             console.error('[API ERROR] Failed to increment access count for collaborator:', dbErr);
         }
 
+        let perfilInfo;
+        try {
+            perfilInfo = await Identifica_perfil(user);
+        } catch (perfErr) {
+            console.error('[API ERROR] Falha ao identificar perfil:', perfErr);
+            return res.status(500).json({ success: false, error: 'Erro ao identificar o perfil do usuário.' });
+        }
+
         let fotoDataUrl = null;
         if (user.foto_colaborador && user.foto_colaborador.length > 0) {
             let fotoBuffer = user.foto_colaborador;
@@ -4754,8 +4864,11 @@ app.post('/api/login', async (req, res) => {
                 email: user.email,
                 telefone: user.telefone,
                 foto_colaborador: fotoDataUrl,
-                id_perfil: user.id_perfil,
-                nome_perfil: user.nome_perfil
+                id_perfil: perfilInfo.id_perfil,
+                nome_perfil: perfilInfo.nome_perfil,
+                id_paroquia: perfilInfo.id_paroquia,
+                id_regional: perfilInfo.id_regional,
+                id_arquidiocese: perfilInfo.id_arquidiocese
             }
         });
     } catch (err) {

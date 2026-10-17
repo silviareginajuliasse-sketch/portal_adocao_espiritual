@@ -679,6 +679,7 @@
 
                 <div class="instructions-sidebar-text">
                     Nessa página são listados os banners já cadastrados no sistema.
+                    Apenas usuários com perfil Admin poderão incluir, alterar ou excluir banners.
                 </div>
 
                 <div class="instructions-sidebar-text">
@@ -692,8 +693,7 @@
 
                 <div class="instructions-sidebar-text">
                     Ao clicar sobre o ícone de inclusão <a href="registro_banner_aniversariantes.html"><img src="./arquidioceses-header-icon.png" style="width: 18px;"></a>
-                    o usuário é direcionado para a página de inclusão de banners. Apenas usuários com o perfil
-                    Coordenador Nacional poderão realizar inclusões de banners.
+                    o usuário é direcionado para a página de inclusão de banners.
                 </div>
 
                 <div class="instructions-sidebar-text">
@@ -712,7 +712,7 @@
                 <!-- Search Header -->
                 <div class="search-row">
                     <div class="subtitle-with-icon">
-                        <a href="registro_banner_aniversariantes.html"><img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon"></a>
+                        <a id="link-incluir-banner" href="registro_banner_aniversariantes.html"><img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon"></a>
                         Lista de banners aniversariantes do mês
                     </div>
                     <div class="search-container">
@@ -762,6 +762,8 @@
     <script src="assets/js/header.js"></script>
     <script>
         const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+        // Apenas o perfil Admin (user_id_perfil = 1) pode incluir e excluir banners
+        const IS_ADMIN = localStorage.getItem('user_id_perfil') === '1';
         const monthNames = [
             'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
             'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -829,7 +831,7 @@
                 
                 return `
                     <div class="list-item" onclick="window.location.href='registro_banner_aniversariantes.html?ano=${banner.ano}&mes=${banner.mes}'">
-                        <i class="fa-regular fa-trash-can trash-icon" onclick="deleteBanner(event, ${banner.ano}, ${banner.mes})"></i>
+                        ${IS_ADMIN ? `<i class="fa-regular fa-trash-can trash-icon" onclick="deleteBanner(event, ${banner.ano}, ${banner.mes})"></i>` : ''}
                         <span class="banner-name">
                             <a href="registro_banner_aniversariantes.html?ano=${banner.ano}&mes=${banner.mes}" style="text-decoration: none; color: inherit;">
                                 ${displayText}
@@ -892,7 +894,13 @@
             });
         }
 
-        window.addEventListener('DOMContentLoaded', fetchBanners);
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!IS_ADMIN) {
+                const linkIncluir = document.getElementById('link-incluir-banner');
+                if (linkIncluir) linkIncluir.style.display = 'none';
+            }
+            fetchBanners();
+        });
     </script>
 </body>
 
