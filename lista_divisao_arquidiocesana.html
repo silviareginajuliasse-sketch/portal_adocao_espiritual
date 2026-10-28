@@ -563,6 +563,95 @@
             border-radius: 4px;
             font-weight: bold;
         }
+
+        /* Help Icon Styles */
+        .help-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+
+        .help-icon-container:hover {
+            transform: scale(1.05);
+        }
+
+        .help-icon-circle {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #3498db;
+            background-color: white;
+            font-weight: bold;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Help Modal */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        .help-card {
+            background: white;
+            width: 90%;
+            max-width: 720px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 35px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .help-card-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: #777;
+            cursor: pointer;
+        }
+
+        .help-card-title {
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .help-card-content {
+            font-size: 1rem;
+            color: #444;
+            line-height: 1.6;
+        }
     </style>
 </head>
 
@@ -669,37 +758,7 @@
     <main class="main-container">
 
         <div class="layout-split">
-            <!-- Left Side: Instructions -->
-            <aside class="instructions-sidebar">
-                <h2 class="instructions-sidebar-title">Orientações de uso</h2>
-
-                <div class="instructions-sidebar-text">
-                    Nessa página são listadas todas as divisões arquidiocesanas cadastradas.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Ao clicar sobre o ícone lixeira, <i class="fa-regular fa-trash-can"></i> a divisão será
-                    excluída definitivamente.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Ao clicar sobre o título <strong>Lista de Divisão Arquidiocesana</strong> ou o ícone ao lado,
-                    o usuário é direcionado para a página de inclusão. Apenas usuários com o perfil
-                    Coordenador Nacional poderão realizar inclusões de divisões.
-                </div>
-
-                <div class="instructions-sidebar-text">
-                    Na lista de Divisões, ao clicar sobre o item o sistema apresentará todos os
-                    dados do cadastro, para que os dados sejam alterados se necessário.
-                </div>
-
-                <div class="instructions-sidebar-tip">
-                    Dica: Utilize o campo busca, localizado acima da lista para exibir na lista apenas divisões
-                    que contenham no nome ou no nome da arquidiocese parte de uma expressão.
-                </div>
-            </aside>
-
-            <!-- Right Side: Existing Content -->
+            <!-- Main Content taking full width -->
             <div class="main-content">
                 <!-- Search Header -->
                 <div class="search-row" id="header-search-row">
@@ -707,9 +766,15 @@
                         <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
                         Lista de Divisão Arquidiocesana
                     </div>
-                    <div class="search-container">
-                        <input type="text" id="search-input" class="search-input" placeholder="busca"
-                            oninput="filterList()">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div class="search-container">
+                            <input type="text" id="search-input" class="search-input" placeholder="busca"
+                                oninput="filterList()">
+                        </div>
+                        <div class="help-icon-container" onclick="toggleHelp()">
+                            <div class="help-icon-circle">?</div>
+                            <span class="help-text">Ajuda</span>
+                        </div>
                     </div>
                 </div>
 
@@ -774,7 +839,28 @@
                 // Determine API URL dynamically (fallback to localhost:3000 if served via file://)
                 const apiPath = 'divisao_arquidiocesana/detalhes';
                 const data = await fetchData(apiPath);
-                allSubdivisoes = data;
+                let list = Array.isArray(data) ? data : [];
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+                // 1. Coordenador Regional (user_id_perfil = 3): exibe apenas itens onde arquidioceses.id_regional existe em user_id_regional
+                if (userIdPerfil === '3') {
+                    const userRegionais = (localStorage.getItem('user_id_regional') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    list = list.filter(item => item.id_regional && userRegionais.includes(String(item.id_regional)));
+                }
+                // 2. Coordenador Arquidiocesano (user_id_perfil = 4): exibe apenas itens onde arquidioceses.id_arquidiocese existe em user_id_arquidiocese
+                else if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    list = list.filter(item => item.id_arquidiocese && userArquidioceses.includes(String(item.id_arquidiocese)));
+                }
+
+                allSubdivisoes = list;
                 filteredSubdivisoes = [...allSubdivisoes];
                 renderList();
             } catch (error) {
@@ -811,13 +897,14 @@
                 
                 const regional = itemData.nome_regional || 'N/A';
                 const arquidiocese = itemData.nome_arquidiocese || 'N/A';
+                const estado = itemData.nome_estado || itemData.sigla_estado || 'N/A';
                 const subdivisao = itemData.nome_divisao_arquidiocesana || itemData.nome_subdivisao || 'N/A';
                 const status = itemData.status ? itemData.status.toUpperCase() : 'N/A';
 
                 item.innerHTML = `
                     <i class="fa-regular fa-trash-can trash-icon" onclick="event.stopPropagation(); deleteSubdivisao(${itemData.id_subdivisao}, '${subdivisao}')"></i>
                     <span style="color: #707b7c; font-size: 0.95rem; font-weight: 400; flex-grow: 1;">
-                        ${subdivisao} - ${arquidiocese} - ${regional} - ${status}
+                        ${subdivisao} - ${arquidiocese} - ${regional} - ${estado} - ${status}
                     </span>
                 `;
                 container.appendChild(item);
@@ -851,7 +938,9 @@
                 (s.nome_divisao_arquidiocesana && s.nome_divisao_arquidiocesana.toLowerCase().includes(query)) ||
                 (s.nome_subdivisao && s.nome_subdivisao.toLowerCase().includes(query)) ||
                 (s.nome_arquidiocese && s.nome_arquidiocese.toLowerCase().includes(query)) ||
-                (s.nome_regional && s.nome_regional.toLowerCase().includes(query))
+                (s.nome_regional && s.nome_regional.toLowerCase().includes(query)) ||
+                (s.nome_estado && s.nome_estado.toLowerCase().includes(query)) ||
+                (s.sigla_estado && s.sigla_estado.toLowerCase().includes(query))
             );
             currentPage = 1;
             renderList();
@@ -900,7 +989,7 @@
                 </style>
                 </head>
                 <body><table>
-                    <tr class="header-row"><td>Divisão Arquidiocesana</td><td>(Arqui)Diocese</td><td>Regional</td><td>Status</td></tr>
+                    <tr class="header-row"><td>Divisão Arquidiocesana</td><td>(Arqui)Diocese</td><td>Regional</td><td>Estado</td><td>Status</td></tr>
             `;
 
             filteredSubdivisoes.forEach(s => {
@@ -909,6 +998,7 @@
                         <td>${s.nome_divisao_arquidiocesana || s.nome_subdivisao || ''}</td>
                         <td>${s.nome_arquidiocese || ''}</td>
                         <td>${s.nome_regional || ''}</td>
+                        <td>${s.nome_estado || s.sigla_estado || ''}</td>
                         <td>${s.status || ''}</td>
                     </tr>
                 `;
@@ -926,11 +1016,39 @@
             document.body.removeChild(link);
         }
 
+        function toggleHelp() {
+            const overlay = document.getElementById('help-overlay');
+            if (overlay) {
+                overlay.classList.toggle('active');
+            }
+        }
+
         window.onload = function() {
             updateUserName();
             initData();
         };
     </script>
+
+    <!-- Help Modal -->
+    <div class="help-overlay" id="help-overlay" onclick="toggleHelp()">
+        <div class="help-card" onclick="event.stopPropagation()">
+            <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
+            <h2 class="help-card-title">Orientações de uso</h2>
+            <div class="help-card-content">
+                <p style="margin-bottom: 15px;">Nessa página são listadas todas as divisões arquidiocesanas cadastradas.</p>
+                <p style="margin-bottom: 15px;">Ao clicar sobre o ícone lixeira <i class="fa-regular fa-trash-can"></i>, a divisão será excluída definitivamente.</p>
+                <p style="margin-bottom: 15px;">Ao clicar sobre o título <strong>Lista de Divisão Arquidiocesana</strong>, o usuário é direcionado para a página de inclusão.</p>
+                <p style="margin-bottom: 15px;">Na lista de divisões arquidiocesanas, ao clicar sobre a divisão o sistema apresentará todos os dados do cadastro, para que os dados sejam alterados se necessário.</p>
+                <p style="margin-bottom: 6px;">Poderão visualizar e realizar manutenção nesse cadastro, usuários com os perfis:</p>
+                <ul style="margin: 0 0 15px 20px; line-height: 1.5;">
+                    <li><strong>Admin:</strong> Em qualquer arquidiocese cadastrada no sistema</li>
+                    <li><strong>Coordenador Regional:</strong> Em qualquer divisão que pertença a regional em que o usuário logado é coordenador</li>
+                    <li><strong>Coordenador Arquidiocesano:</strong> Apenas divisão que pertença às arquidioceses em que o usuário logado é coordenador</li>
+                </ul>
+                <p style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px; font-style: italic; color: #555;">Dica: Utilize o campo busca, localizado acima da lista, para visualizar apenas divisões que contenham no nome ou em parte do nome a expressão digitada. A busca é realizada pelo sistema em qualquer parte da lista apresentada.</p>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

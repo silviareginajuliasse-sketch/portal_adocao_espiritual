@@ -864,7 +864,7 @@
                 </button>
                 <button type="button" class="tab-btn" id="tab-btn-coordenadores" onclick="switchTab(event, 'tab-coordenadores')">
                     <i class="fa-solid fa-users" style="color: #f1c40f;"></i> COORDENADORES
-                    <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddCoordenador()" title="Adicionar Coordenador" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                    <i class="fa-solid fa-circle-plus" id="btn-add-coordenador" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddCoordenador()" title="Adicionar Coordenador" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                 </button>
             </div>
 
@@ -958,6 +958,9 @@
     <script src="assets/js/header.js"></script>
     <script src="assets/js/api.js"></script>
     <script>
+        // Apenas o perfil Admin (user_id_perfil = 1) pode salvar ou alterar regionais e coordenadores
+        const IS_ADMIN = localStorage.getItem('user_id_perfil') === '1';
+
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode') || 'new';
         const id = urlParams.get('id');
@@ -1248,7 +1251,7 @@
 
             const submitBtn = document.querySelector('.submit-btn');
             if (submitBtn) {
-                if (tabId === 'tab-coordenadores') {
+                if (tabId === 'tab-coordenadores' || !IS_ADMIN) {
                     submitBtn.style.display = 'none';
                 } else {
                     submitBtn.style.display = 'block';
@@ -1320,7 +1323,11 @@
 
             list.forEach((coord, idx) => {
                 const tr = document.createElement('tr');
-                tr.onclick = () => editCoordenador(idx);
+                if (IS_ADMIN) {
+                    tr.onclick = () => editCoordenador(idx);
+                } else {
+                    tr.style.cursor = 'default';
+                }
 
                 const dtInicio = formatToDDMMYYYY(coord.data_inicio_coordenador);
                 const dtFim = formatToDDMMYYYY(coord.data_fim_coordenador);
@@ -1328,10 +1335,14 @@
 
                 const colabName = coord.nome_colaborador || `Colaborador #${coord.id_colaborador}`;
 
-                tr.innerHTML = `
-                    <td class="col-delete" onclick="event.stopPropagation(); deleteCoordenador(${idx})">
+                const deleteColHtml = IS_ADMIN
+                    ? `<td class="col-delete" onclick="event.stopPropagation(); deleteCoordenador(${idx})">
                         <i class="fa-regular fa-trash-can"></i>
-                    </td>
+                       </td>`
+                    : '';
+
+                tr.innerHTML = `
+                    ${deleteColHtml}
                     <td class="col-info">
                         <div style="font-size: 0.92rem; color: #333; line-height: 1.4;">
                             <strong>${colabName}</strong>${periodText}
@@ -1426,6 +1437,14 @@
         }
 
         window.onload = async () => {
+            if (!IS_ADMIN) {
+                const submitBtn = document.querySelector('.submit-btn');
+                if (submitBtn) submitBtn.style.display = 'none';
+
+                const btnAddCoord = document.getElementById('btn-add-coordenador');
+                if (btnAddCoord) btnAddCoord.style.display = 'none';
+            }
+
             await loadCountries();
             // Default load states for selected country (BRASIL = 1)
             await loadStates(document.getElementById('pais').value);

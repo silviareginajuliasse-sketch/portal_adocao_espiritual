@@ -467,7 +467,9 @@
         .help-card {
             background: white;
             width: 90%;
-            max-width: 500px;
+            max-width: 720px;
+            max-height: 85vh;
+            overflow-y: auto;
             border-radius: 12px;
             padding: 35px;
             position: relative;
@@ -1258,7 +1260,6 @@
             <h2 class="help-card-title">Orientações de uso</h2>
             <div class="help-card-content">
                 <p style="margin-bottom: 15px;">O cadastro de arquidiocese é necessário para o cadastro de novas paróquias.</p>
-                <p style="margin-bottom: 15px;">Apenas colaboradores com o Perfil Coordenador Nacional tem permissão para incluir ou alterar cadastros de Arquidioceses.</p>
                 <p style="margin-bottom: 15px;">Um registro de arquidiocese não pode ser excluído se houverem Paróquias registradas na Arquidiocese. Caso deseje que o nome da Arquidiocese não seja mais apresentado no cadastro de Paróquias altere o campo Status para Inativo.</p>
                 <p style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px; font-style: italic; color: #555;">Dica: Para excluir definitivamente uma Arquidiocese, lembrando que só é possível se não houver Paróquia vinculada, clique no botão Excluir.</p>
             </div>
@@ -1466,7 +1467,16 @@
                     return acc;
                 }, {});
 
-                const filteredRegionals = Object.values(grouped).filter(r => r.ID_PAIS == countryId || !r.ID_PAIS);
+                let filteredRegionals = Object.values(grouped).filter(r => r.ID_PAIS == countryId || !r.ID_PAIS);
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+                if (mode === 'new' && userIdPerfil === '3') {
+                    const userRegionais = (localStorage.getItem('user_id_regional') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    filteredRegionals = filteredRegionals.filter(r => userRegionais.includes(String(r.id_regional)));
+                }
 
                 regionalSelect.innerHTML = '<option value="" disabled selected>Selecione a regional</option>';
                 filteredRegionals.forEach(r => {

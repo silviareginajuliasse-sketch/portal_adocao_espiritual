@@ -17,8 +17,51 @@
 ### Regras de Negócio e Comportamento:
 1. **Identificação do Usuário ([identificacao.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/identificacao.html)):**
    * O colaborador se identifica por CPF / credencial cadastrada.
-   * Ao efetuar login, os dados essenciais (`id_colaborador`, `nome`, `cpf`, `funcao`, `perfil`) são persistidos no `localStorage` sob as chaves de sessão.
-2. **Componente de Cabeçalho Global ([assets/js/header.js](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/assets/js/header.js)):**
+   * Ao efetuar login, os dados essenciais são persistidos em `localStorage`:
+     * `user_nome`: Nome do usuário logado.
+     * `user_id_colaborador`: Identificador do colaborador no banco.
+     * `user_cod_colaborador`: CPF do colaborador.
+     * `adocao_user_photo`: Foto de perfil em base64/URL.
+     * `user_id_perfil`: ID do perfil de acesso (1 a 5).
+     * `user_nome_perfil`: Nome textual do perfil (`Admin`, `Colaborador`, `Coordenador Regional`, `Coordenador Arquidiocesano`, `Coordenador Paroquial`).
+     * `user_id_regional`: Lista/ID dos regionais vinculados ao usuário logado.
+     * `user_id_arquidiocese`: Lista/ID das arquidioceses vinculadas ao usuário logado.
+     * `user_id_paroquia`: Lista/ID das paróquias vinculadas ao usuário logado.
+2. **Mapeamento de Perfis de Acesso (`user_id_perfil`):**
+   * `1`: **Admin / Coordenador Geral** — Permissão irrestrita em todas as telas, inclusões, alterações e exclusões.
+   * `2`: **Colaborador** — Consulta e operações básicas permitidas.
+   * `3`: **Coordenador Regional** — Gestão delimitada aos regionais sob sua coordenação (`user_id_regional`).
+   * `4`: **Coordenador Arquidiocesano** — Gestão delimitada às arquidioceses sob sua coordenação (`user_id_arquidiocese`).
+   * `5`: **Coordenador Paroquial** — Gestão delimitada às paróquias sob sua coordenação (`user_id_paroquia`).
+3. **Regras de Permissão por Perfil nos Módulos Geográficos/Hierárquicos:**
+   * **Regionais ([lista_regionais.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/lista_regionais.html) e [registro_regional.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_regional.html)):**
+     * Se `user_id_perfil !== '1'` (não é Admin):
+       * Na listagem, o ícone de inclusão e os ícones de exclusão (lixeira) ficam ocultos.
+       * Na tela de registro, na aba *Identificação*, o botão `SALVAR` é ocultado.
+       * Na aba *Coordenadores*, os coordenadores já cadastrados são exibidos, mas os botões de adicionar (`+`) e excluir (lixeira) ficam ocultos, além de desabilitar o clique para edição.
+   * **Arquidioceses ([arquidioceses.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/arquidioceses.html) e [registro_arquidiocese.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_arquidiocese.html)):**
+     * Na listagem:
+       * Se `user_id_perfil === '3'` (Coordenador Regional): exibe apenas arquidioceses onde `id_regional` existe em `user_id_regional`.
+       * Se `user_id_perfil === '4'` (Coordenador Arquidiocesano): exibe apenas a sua arquidiocese vinculada a `user_id_arquidiocese` e inibe o botão/ícone de inclusão de arquidioceses.
+     * No formulário de inclusão (`mode === 'new'`), para Coordenador Regional (`user_id_perfil === '3'`), o campo **Regional** exibe apenas as regionais em que o usuário logado é coordenador.
+   * **Divisão Arquidiocesana ([lista_divisao_arquidiocesana.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/lista_divisao_arquidiocesana.html) e [registro_divisao_arquidiocesana.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_divisao_arquidiocesana.html)):**
+     * Na listagem:
+       * Se `user_id_perfil === '3'`: filtra as divisões onde `arquidioceses.id_regional` existe em `user_id_regional`.
+       * Se `user_id_perfil === '4'`: filtra as divisões onde `arquidioceses.id_arquidiocese` existe em `user_id_arquidiocese`.
+       * Cada linha exibe: `${subdivisao} - ${arquidiocese} - ${regional} - ${estado} - ${status}`.
+       * Suporte a busca unificada (incluindo nome/sigla do estado) e exportação para Excel formatada.
+       * Modal de **Ajuda** padronizado (`? Ajuda`) descrevendo os acessos por perfil e a busca.
+     * No cadastro ([registro_divisao_arquidiocesana.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_divisao_arquidiocesana.html)):
+       * Para `user_id_perfil === '3'` (Coordenador Regional):
+         * Campo **Estado**: exibe apenas os estados pertencentes às regionais em `user_id_regional`.
+         * Campo **Regional**: exibe apenas as regionais em `user_id_regional`.
+       * Para `user_id_perfil === '4'` (Coordenador Arquidiocesano):
+         * Campo **Estado**: exibe apenas os estados das arquidioceses em `user_id_arquidiocese`.
+         * Campo **Regional**: exibe apenas os regionais das arquidioceses em `user_id_arquidiocese`.
+         * Campo **(Arqui)Diocese**: exibe apenas as arquidioceses em `user_id_arquidiocese`.
+4. **Padrão dos Modais de Ajuda (`.help-card`):**
+   * Largura ampliada globalmente para `max-width: 720px; max-height: 85vh; overflow-y: auto;` garantindo leitura confortável e responsiva de orientações detalhadas sem truncamentos.
+5. **Componente de Cabeçalho Global ([assets/js/header.js](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/assets/js/header.js)):**
    * **Injeção Dinâmica:** O header e o menu sanduíche são injetados automaticamente em todas as telas que importam o script.
    * **Card do Perfil:** Exibe a foto do colaborador (ou avatar padrão com ícone), nome completo em destaque e CPF formatado (`000.000.000-00`).
    * **Alteração de Foto Rápida:** Ao clicar no avatar ou no badge de câmera, permite upload direto de nova foto atualizando o perfil via API.
@@ -154,3 +197,10 @@
 | | `DELETE` | `/api/atividades_calendario/:id` | Exclui evento pastoral |
 | **Satisfação** | `GET` | `/api/pesquisa_satisfacao/stats` | Retorna métricas consolidadas e NPS |
 | | `POST` | `/api/pesquisa_satisfacao/save` | Salva resposta identificada ou recusa |
+| **Regionais** | `GET` | `/api/regionais/detalhes` | Lista regionais com estados e países vinculados |
+| | `GET` | `/api/regionais/estado/:id_estado` | Lista regionais de determinado estado |
+| **Arquidioceses** | `GET` | `/api/arquidioceses/detalhes` | Lista arquidioceses com país, regional e estado |
+| | `GET` | `/api/arquidioceses/regional/:id_regional` | Lista arquidioceses vinculadas a um regional |
+| **Divisões Arquidiocesanas** | `GET` | `/api/divisao_arquidiocesana/detalhes` | Lista divisões arquidiocesanas com arquidiocese, regional e estado |
+| | `GET` | `/api/divisao_arquidiocesana/:id` | Retorna detalhes de uma divisão específica |
+| | `DELETE` | `/api/divisao_arquidiocesana/:id` | Exclui registro de divisão arquidiocesana |

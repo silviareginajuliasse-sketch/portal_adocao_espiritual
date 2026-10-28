@@ -59,13 +59,37 @@ Este documento consolida o histórico de entregas, melhorias, correções recent
 
 ---
 
-## 5. Resumo dos Arquivos Modificados / Criados
+## 5. Controle de Acesso e Gestão Hierárquica (Regionais, Arquidioceses e Divisões)
+
+* **Controle de Permissões por Perfil (`user_id_perfil`):**
+  * **Regionais ([lista_regionais.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/lista_regionais.html) e [registro_regional.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_regional.html)):** Ocultação de botões de inclusão, exclusão e edição para usuários não Administradores (`user_id_perfil !== '1'`).
+  * **Arquidioceses ([arquidioceses.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/arquidioceses.html) e [registro_arquidiocese.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_arquidiocese.html)):**
+    * Filtragem por regional para perfil 3 (`Coordenador Regional`).
+    * Filtragem por arquidiocese e inibição do botão de inclusão para perfil 4 (`Coordenador Arquidiocesano`).
+    * No cadastro de arquidiocese (`mode === 'new'`), filtragem das opções de regionais de acordo com a coordenação do usuário logado.
+    * Limpeza de menções obsoletas de "Coordenador Nacional" nos textos de Ajuda.
+  * **Divisão Arquidiocesana ([lista_divisao_arquidiocesana.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/lista_divisao_arquidiocesana.html) e [registro_divisao_arquidiocesana.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_divisao_arquidiocesana.html)):**
+    * Filtragem na listagem por regional (perfil 3) e arquidiocese (perfil 4).
+    * Restrição em cascata nos campos **Estado**, **Regional** e **Arquidiocese** no cadastro de divisão de acordo com as permissões dos perfis 3 e 4.
+    * Inclusão do **Estado** na linha de exibição da lista (`${subdivisao} - ${arquidiocese} - ${regional} - ${estado} - ${status}`), busca e exportação Excel.
+    * Remoção da barra de orientações lateral fixa e integração completa do modal popup de **Ajuda** (`? Ajuda`).
+    * Backend: atualização da rota `/api/subdivisao_arquidiocesana/detalhes` para incluir `id_regional`.
+* **Padronização Visual dos Modais de Ajuda:**
+  * Ampliação da largura dos cards `.help-card` para `max-width: 720px; max-height: 85vh; overflow-y: auto;` em todo o projeto.
+
+---
+
+## 6. Resumo dos Arquivos Modificados / Criados
 
 | Arquivo | Descrição |
 | :--- | :--- |
-| `HISTORICO_ATIVIDADES.md` | Documento consolidado com as atividades e progresso. |
+| `DOCUMENTACAO_SISTEMA_E_REGRAS.md` | Documentação geral completa, detalhamento de perfis e regras de negócio. |
+| `HISTORICO_ATIVIDADES.md` | Documento consolidado com as atividades e histórico de entregas. |
 | `.agents/skills/gerenciar-banco-docker/` | Skill criada para monitorar e inicializar os containers Docker. |
-| `backend/server.js` | Rotas de API, suporte a datas, esquemas e regras de negócio. |
+| `backend/server.js` | Rotas de API, suporte a datas, esquemas e retorno de campos relacionais. |
 | `assets/js/header.js` | Cabeçalho comum, lógica de navegação e autenticação de usuário. |
 | `calendario.html` & `registro_calendario.html` | Visualização, filtros, cadastro e exportação do cronograma. |
+| `lista_regionais.html` & `registro_regional.html` | Controle de visualização e permissão estrita para Admin. |
+| `arquidioceses.html` & `registro_arquidiocese.html` | Filtragem por perfil (3 e 4), inibição de inclusão e atualização de Ajuda. |
+| `lista_divisao_arquidiocesana.html` & `registro_divisao_arquidiocesana.html` | Filtros por perfil, adição do estado, novo popup de ajuda e layout full-width. |
 | `Banner_aniversario.html` & `registro_banner_aniversariantes.html` | Funcionalidade e interface do banner de aniversários. |

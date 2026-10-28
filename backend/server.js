@@ -4431,7 +4431,7 @@ app.get('/api/subdivisao_arquidiocesana/detalhes', async (req, res) => {
             SELECT d.*, 
                    d.id_divisao_arquidiocesana AS id_subdivisao, 
                    d.nome_divisao_arquidiocesana AS nome_subdivisao, 
-                   a.nome_arquidiocese, r.nome_regional, p.nome_pais, e.nome_estado
+                   a.nome_arquidiocese, a.id_regional, r.nome_regional, p.nome_pais, e.nome_estado
             FROM divisao_arquidiocesana d
             LEFT JOIN arquidioceses a ON d.id_arquidiocese = a.id_arquidiocese
             LEFT JOIN regional r ON a.id_regional = r.id_regional

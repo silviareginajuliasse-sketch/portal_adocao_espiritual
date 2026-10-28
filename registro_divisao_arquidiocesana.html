@@ -1154,7 +1154,48 @@
             try {
                 const response = await fetch(`${API_URL}/estados/pais/${countryId}`);
                 if (!response.ok) throw new Error('Erro ao buscar estados');
-                const states = await response.json();
+                let states = await response.json();
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+                // 1.1 Coordenador Regional (perfil 3): apenas estados das regionais em user_id_regional
+                if (userIdPerfil === '3') {
+                    const userRegionais = (localStorage.getItem('user_id_regional') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    try {
+                        const regDetails = await fetchData('regionais/detalhes');
+                        const allowedStateIds = new Set(
+                            regDetails
+                                .filter(rd => rd.id_regional && userRegionais.includes(String(rd.id_regional)))
+                                .map(rd => String(rd.id_estado))
+                        );
+                        states = states.filter(est => allowedStateIds.has(String(est.id_estado)));
+                    } catch (err) {
+                        console.warn("Erro ao buscar regionais/detalhes:", err);
+                    }
+                }
+                // 2.1 Coordenador Arquidiocesano (perfil 4): apenas estados das arquidioceses em user_id_arquidiocese
+                else if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    try {
+                        const arqDetails = await fetchData('arquidioceses/detalhes');
+                        const allowedStateIds = new Set(
+                            arqDetails
+                                .filter(ad => ad.id_arquidiocese && userArquidioceses.includes(String(ad.id_arquidiocese)))
+                                .map(ad => String(ad.id_estado))
+                        );
+                        states = states.filter(est => allowedStateIds.has(String(est.id_estado)));
+                    } catch (err) {
+                        console.warn("Erro ao buscar arquidioceses/detalhes:", err);
+                    }
+                }
 
                 states.forEach(est => {
                     const option = document.createElement('option');
@@ -1184,7 +1225,37 @@
             try {
                 const response = await fetch(`${API_URL}/regionais/estado/${stateId}`);
                 if (!response.ok) throw new Error('Erro ao buscar regionais');
-                const regionals = await response.json();
+                let regionals = await response.json();
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+                // 1.2 Coordenador Regional (perfil 3): apenas regionais em user_id_regional
+                if (userIdPerfil === '3') {
+                    const userRegionais = (localStorage.getItem('user_id_regional') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    regionals = regionals.filter(r => userRegionais.includes(String(r.id_regional)));
+                }
+                // 2.2 Coordenador Arquidiocesano (perfil 4): apenas regionais das arquidioceses em user_id_arquidiocese
+                else if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    try {
+                        const arqDetails = await fetchData('arquidioceses/detalhes');
+                        const allowedRegionalIds = new Set(
+                            arqDetails
+                                .filter(ad => ad.id_arquidiocese && userArquidioceses.includes(String(ad.id_arquidiocese)))
+                                .map(ad => String(ad.id_regional))
+                        );
+                        regionals = regionals.filter(r => allowedRegionalIds.has(String(r.id_regional)));
+                    } catch (err) {
+                        console.warn("Erro ao buscar arquidioceses/detalhes:", err);
+                    }
+                }
 
                 regionalSelect.innerHTML = '<option value="" disabled selected>Selecione a regional</option>';
                 regionals.forEach(r => {
@@ -1215,7 +1286,18 @@
             try {
                 const response = await fetch(`${API_URL}/arquidioceses/regional/${regionalId}`);
                 if (!response.ok) throw new Error('Erro ao buscar arquidioceses');
-                const arqs = await response.json();
+                let arqs = await response.json();
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+                // 2.3 Coordenador Arquidiocesano (perfil 4): apenas arquidioceses em user_id_arquidiocese
+                if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    arqs = arqs.filter(a => userArquidioceses.includes(String(a.id_arquidiocese)));
+                }
                 
                 arqSelect.innerHTML = '<option value="" disabled selected>Selecione a arquidiocese</option>';
                 arqs.forEach(a => {

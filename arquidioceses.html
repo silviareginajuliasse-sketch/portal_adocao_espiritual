@@ -736,7 +736,9 @@
         .help-card {
             background: white;
             width: 90%;
-            max-width: 550px;
+            max-width: 720px;
+            max-height: 85vh;
+            overflow-y: auto;
             border-radius: 12px;
             padding: 35px;
             position: relative;
@@ -872,8 +874,8 @@
             <div class="main-content">
                 <!-- Search Header -->
                 <div class="search-row" id="header-search-row">
-                    <div class="subtitle-with-icon" onclick="goToRegistro('new')" style="cursor: pointer;">
-                        <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
+                    <div class="subtitle-with-icon" id="subtitle-incluir-arquidiocese" onclick="goToRegistro('new')" style="cursor: pointer;">
+                        <img src="./arquidioceses-header-icon.png" class="subtitle-icon" id="icon-incluir-arquidiocese" alt="Icon">
                         Lista de Arquidioceses
                     </div>
                     <div class="search-container" style="display: flex; align-items: center; gap: 15px;">
@@ -977,7 +979,28 @@
         async function initData() {
             try {
                 const data = await fetchData('arquidioceses/detalhes');
-                allArquidioceses = data;
+                let list = Array.isArray(data) ? data : [];
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+                // 1. Coordenador Regional (user_id_perfil = 3): exibe apenas arquidioceses do seu regional
+                if (userIdPerfil === '3') {
+                    const userRegionais = (localStorage.getItem('user_id_regional') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    list = list.filter(arq => arq.id_regional && userRegionais.includes(String(arq.id_regional)));
+                }
+                // 2. Coordenador Arquidiocesano (user_id_perfil = 4): exibe apenas a sua arquidiocese
+                else if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    list = list.filter(arq => arq.id_arquidiocese && userArquidioceses.includes(String(arq.id_arquidiocese)));
+                }
+
+                allArquidioceses = list;
                 filteredArquidioceses = [...allArquidioceses];
                 renderList();
                 
@@ -1239,6 +1262,17 @@
         }
 
         window.onload = function() {
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
+            if (userIdPerfil === '4') {
+                const icon = document.getElementById('icon-incluir-arquidiocese');
+                if (icon) icon.style.display = 'none';
+                const subtitle = document.getElementById('subtitle-incluir-arquidiocese');
+                if (subtitle) {
+                    subtitle.removeAttribute('onclick');
+                    subtitle.style.cursor = 'default';
+                }
+            }
+
             updateUserName();
             initData();
         };
@@ -1252,8 +1286,14 @@
             <div class="help-card-content">
                 <p style="margin-bottom: 15px;">Nessa página são listadas todas as arquidioceses cadastradas.</p>
                 <p style="margin-bottom: 15px;">Ao clicar sobre o ícone lixeira <i class="fa-regular fa-trash-can"></i>, a arquidiocese será excluída definitivamente, caso não existam paróquias ligadas a ela.</p>
-                <p style="margin-bottom: 15px;">Ao clicar sobre o ícone de inclusão <img src="./arquidioceses-header-icon.png" style="width: 18px; vertical-align: middle;">, o usuário é direcionado para a página de inclusão de Arquidioceses. Apenas usuários com o perfil Coordenador Nacional poderão realizar inclusões de arquidioceses.</p>
-                <p style="margin-bottom: 15px;">Na lista de Arquidioceses, ao clicar sobre o nome da arquidiocese o sistema apresentará todos os dados do cadastro, para que os dados sejam alterados se necessário. Apenas usuários com o perfil Coordenador Nacional poderão realizar inclusões de arquidioceses.</p>
+                <p style="margin-bottom: 15px;">Ao clicar sobre o ícone de inclusão <img src="./arquidioceses-header-icon.png" style="width: 18px; vertical-align: middle;">, o usuário é direcionado para a página de inclusão de Arquidioceses.</p>
+                <p style="margin-bottom: 12px;">Na lista de Arquidioceses, ao clicar sobre o nome da arquidiocese o sistema apresentará todos os dados do cadastro, para que sejam realizadas as alterações necessárias.</p>
+                <p style="margin-bottom: 6px;">Poderão visualizar e realizar manutenção nesse cadastro usuários com os perfis:</p>
+                <ul style="margin: 0 0 15px 20px; line-height: 1.5;">
+                    <li><strong>Admin:</strong> Em qualquer arquidiocese cadastrada no sistema</li>
+                    <li><strong>Coordenador Regional:</strong> Em qualquer arquidiocese que pertença a regional em que o usuário logado é coordenador</li>
+                    <li><strong>Coordenador Arquidiocesano:</strong> Apenas nas arquidioceses em que o usuário logado é coordenador</li>
+                </ul>
                 <p style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px; font-style: italic; color: #555;">Dica: Utilize o campo busca, localizado acima da lista para exibir na lista apenas arquidioceses que contenham no nome parte de uma expressão, como exemplo Vitoria.</p>
             </div>
         </div>
