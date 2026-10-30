@@ -671,7 +671,7 @@ app.get('/api/colaboradores', async (req, res) => {
         const photoField = isLight ? '' : 'c.foto_colaborador,';
         const query = `
              SELECT c.id_colaborador, c.cod_colaborador, c.nome_colaborador, c.apelido_colaborador, c.cidade, c.telefone, c.email,
-                    ${photoField} e.nome_estado, e.sigla_estado, p.nome_pais, c.perfil AS nome_perfil,
+                    ${photoField} c.id_estado, e.nome_estado, e.sigla_estado, p.nome_pais, c.perfil AS nome_perfil,
                     c.atualizado_em, c.criado_em, c.status, c.perfil AS id_perfil, pa.nome_paroquia,
                     arq.nome_arquidiocese, da.nome_divisao_arquidiocesana,
                     c.selo_colaborador, pa.id_arquidiocese, pa.id_arquidiocese AS paroquia_id_arquidiocese, c.id_paroquia
@@ -1047,7 +1047,17 @@ app.post('/api/atividades_realizadas/:id/participantes', async (req, res) => {
 app.get('/api/treinamentos', async (req, res) => {
     console.log('[API] GET /api/treinamentos');
     try {
-        const query = 'SELECT * FROM treinamentos ORDER BY criado_em DESC';
+        const query = `
+            SELECT t.*, 
+                   MIN(ti.data) AS data_inicio, 
+                   MAX(ti.data) AS data_fim,
+                   GROUP_CONCAT(DISTINCT COALESCE(c.apelido_colaborador, c.nome_colaborador) ORDER BY COALESCE(c.apelido_colaborador, c.nome_colaborador) SEPARATOR ', ') AS instrutores
+            FROM treinamentos t
+            LEFT JOIN treinamento_instrutores ti ON t.id_treinamento = ti.id_treinamento
+            LEFT JOIN colaboradores c ON ti.id_colaborador = c.id_colaborador
+            GROUP BY t.id_treinamento
+            ORDER BY t.criado_em DESC
+        `;
         const [rows] = await pool.query(query);
         res.json(rows);
     } catch (err) {

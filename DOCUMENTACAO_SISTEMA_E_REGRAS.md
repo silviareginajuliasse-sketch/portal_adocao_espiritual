@@ -41,9 +41,15 @@
        * Na aba *Coordenadores*, os coordenadores já cadastrados são exibidos, mas os botões de adicionar (`+`) e excluir (lixeira) ficam ocultos, além de desabilitar o clique para edição.
    * **Arquidioceses ([arquidioceses.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/arquidioceses.html) e [registro_arquidiocese.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_arquidiocese.html)):**
      * Na listagem:
-       * Se `user_id_perfil === '3'` (Coordenador Regional): exibe apenas arquidioceses onde `id_regional` existe em `user_id_regional`.
+       * Se `user_id_perfil === '2'` (Colaborador): inibe o ícone de inclusão e os ícones de exclusão (lixeira) de arquidioceses.
+        * Se `user_id_perfil === '3'` (Coordenador Regional): exibe apenas arquidioceses onde `id_regional` existe em `user_id_regional`.
        * Se `user_id_perfil === '4'` (Coordenador Arquidiocesano): exibe apenas a sua arquidiocese vinculada a `user_id_arquidiocese` e inibe o botão/ícone de inclusão de arquidioceses.
-     * No formulário de inclusão (`mode === 'new'`), para Coordenador Regional (`user_id_perfil === '3'`), o campo **Regional** exibe apenas as regionais em que o usuário logado é coordenador.
+      * No formulário de cadastro/edição ([registro_arquidiocese.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_arquidiocese.html)):
+        * Se `user_id_perfil === '2'` (Colaborador):
+          * **Aba IDENTIFICAÇÃO:** Botões `Salvar` e `Excluir` são ocultados.
+          * **Aba LIDERANÇA:** O botão de adicionar liderança (`+`), o ícone de exclusão (`lixeira`) e a ação de clique nas linhas para edição são desabilitados/ocultados.
+          * **Aba COORDENADORES:** O botão de adicionar coordenador (`+`), o ícone de exclusão (`lixeira`) e a ação de clique nas linhas para edição são desabilitados/ocultados.
+      * No formulário de inclusão (`mode === 'new'`), para Coordenador Regional (`user_id_perfil === '3'`), o campo **Regional** exibe apenas as regionais em que o usuário logado é coordenador.
    * **Divisão Arquidiocesana ([lista_divisao_arquidiocesana.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/lista_divisao_arquidiocesana.html) e [registro_divisao_arquidiocesana.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/registro_divisao_arquidiocesana.html)):**
      * Na listagem:
        * Se `user_id_perfil === '3'`: filtra as divisões onde `arquidioceses.id_regional` existe em `user_id_regional`.
@@ -59,6 +65,17 @@
          * Campo **Estado**: exibe apenas os estados das arquidioceses em `user_id_arquidiocese`.
          * Campo **Regional**: exibe apenas os regionais das arquidioceses em `user_id_arquidiocese`.
          * Campo **(Arqui)Diocese**: exibe apenas as arquidioceses em `user_id_arquidiocese`.
+    * **Colaboradores ([colaboradores.html](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/colaboradores.html)):**
+      * **Perfil 2 (Colaborador):**
+        * Exibe na lista apenas o registro do próprio colaborador logado (`user_id_colaborador`).
+        * Oculta o ícone de lixeira (exclusão).
+        * Oculta o ícone no topo da lista que permite a inclusão de novos colaboradores.
+      * **Perfil 3 (Coordenador Regional):**
+        * Exibe na lista apenas os colaboradores cujo estado (`colaboradores.id_estado`) pertença a um regional vinculado ao usuário logado (`regional_estado.id_regional IN user_id_regional`).
+      * **Perfil 4 (Coordenador Arquidiocesano):**
+        * Exibe na lista apenas os colaboradores cuja paróquia pertença a uma arquidiocese vinculada ao usuário logado (`paroquias.id_arquidiocese IN user_id_arquidiocese`).
+      * **Perfil 5 (Coordenador Paroquial):**
+        * Exibe na lista apenas os colaboradores cuja paróquia pertença às paróquias vinculadas ao usuário logado (`colaboradores.id_paroquia IN user_id_paroquia`).
 4. **Padrão dos Modais de Ajuda (`.help-card`):**
    * Largura ampliada globalmente para `max-width: 720px; max-height: 85vh; overflow-y: auto;` garantindo leitura confortável e responsiva de orientações detalhadas sem truncamentos.
 5. **Componente de Cabeçalho Global ([assets/js/header.js](file:///c:/Users/ASUS/Desktop/Projeto%20Ado%C3%A7%C3%A3o%20Espiritual/assets/js/header.js)):**
@@ -143,6 +160,34 @@
 2. **Dados Cadastrais e Endereçamento:**
    * Associação geográfica hierárquica: Regional $\rightarrow$ Arquidiocese/Diocese $\rightarrow$ Paróquia.
    * Validação de unicidade e formato de CPF e e-mail.
+3. **Regras de Visualização e Permissões por Perfil (`colaboradores.html` e `registro_colaboradores.html`):**
+   * **Admin (`user_id_perfil = 1`):** Acesso irrestrito a todos os colaboradores, estados, paróquias, inclusão, alteração e exclusão.
+   * **Colaborador (`user_id_perfil = 2`):**
+     * Na listagem (`colaboradores.html`): visualiza apenas o seu próprio registro cadastral, sem ícone de exclusão e sem o botão de incluir novo colaborador.
+     * No formulário (`registro_colaboradores.html`):
+       * Aba *Dados Pessoais*: botão 'Excluir' ocultado.
+       * Aba *Talentos e Observações*: botão 'Excluir' ocultado.
+       * Abas *Coordenações*, *Treinamentos* e *Certificados*: desabilitadas quaisquer funções ou botões de inclusão, alteração e exclusão de dados (somente leitura).
+   * **Coordenador Regional (`user_id_perfil = 3`):**
+     * Na listagem (`colaboradores.html`): lista apenas colaboradores cujo estado de residência (`colaboradores.id_estado`) pertença à regional gerenciada por ele (`regional_estado.id_regional = user_id_regional`).
+     * No formulário (`registro_colaboradores.html`):
+       * Aba *Dados Pessoais*: campo de seleção de Estado restrito apenas aos Estados pertencentes à sua regional vinculada (`user_id_regional`).
+   * **Coordenador Arquidiocesano (`user_id_perfil = 4`):**
+     * Na listagem (`colaboradores.html`): lista apenas colaboradores pertencentes a paróquias sob sua arquidiocese vinculada (`paroquias.id_arquidiocese = user_id_arquidiocese`).
+     * No formulário (`registro_colaboradores.html`):
+       * Aba *Dados Pessoais*: campo Estado lista apenas os Estados das arquidioceses vinculadas a `user_id_arquidiocese`; campo Paróquia lista estritamente paróquias pertencentes à sua arquidiocese (`paroquias.id_arquidiocese = user_id_arquidiocese`).
+   * **Coordenador Paroquial (`user_id_perfil = 5`):**
+     * Na listagem (`colaboradores.html`): lista apenas colaboradores da paróquia que coordena (`colaboradores.id_paroquia = user_id_paroquia`).
+     * No formulário (`registro_colaboradores.html`):
+       * Aba *Dados Pessoais*: campo Estado restrito ao Estado da sua paróquia; campo Paróquia lista estritamente a paróquia que coordena (`id_paroquia = user_id_paroquia`).
+       * Abas *Coordenações*, *Treinamentos* e *Certificados*: desabilitadas quaisquer funções ou botões de inclusão, alteração e exclusão de dados (somente leitura).
+
+4. **Regras de Visualização e Permissões de Treinamentos (`treinamentos.html`):**
+   * **Admin (`user_id_perfil = 1`):** Acesso irrestrito com visibilidade total do ícone de inclusão de novos treinamentos, ícones de exclusão (lixeira) e permissão de clique sobre a linha para editar o treinamento.
+   * **Demais Perfis (`user_id_perfil <> 1`):**
+     * O ícone de inclusão no cabeçalho (ao lado do título "Lista de Treinamentos") é ocultado e a ação de clique no título desabilitada.
+     * Os ícones de exclusão (lixeira) em todas as linhas da lista de treinamentos são ocultados.
+     * O clique sobre a linha da listagem é desabilitado (cursor padrão `default` e sem ação de redirecionamento para edição).
 
 ---
 

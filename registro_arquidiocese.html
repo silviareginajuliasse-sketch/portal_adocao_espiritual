@@ -1091,11 +1091,11 @@
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-lideranca" onclick="switchTab(event, 'tab-lideranca')">
                             <i class="fa-solid fa-circle-user" style="color: #00bcd4;"></i> LIDERANÇA
-                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddLideranca()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                            <i class="fa-solid fa-circle-plus" id="btn-add-lideranca" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddLideranca()" title="Adicionar Liderança" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                         <button type="button" class="tab-btn" id="tab-btn-coordenadores" onclick="switchTab(event, 'tab-coordenadores')">
                             <i class="fa-solid fa-users" style="color: #f1c40f;"></i> COORDENADORES
-                            <i class="fa-solid fa-circle-plus" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddCoordenador()" title="Adicionar Coordenador" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
+                            <i class="fa-solid fa-circle-plus" id="btn-add-coordenador" style="margin-left: 8px; font-size: 1.1rem; cursor: pointer; color: #2e7d32; transition: transform 0.2s;" onclick="event.stopPropagation(); openAddCoordenador()" title="Adicionar Coordenador" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></i>
                         </button>
                     </div>
 
@@ -1346,10 +1346,14 @@
             }
             document.getElementById(tabId).classList.add('active');
 
-            // Hide/Show the Delete button depending on the active tab
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+            // Hide/Show the Delete button depending on the active tab and profile
             const deleteBtn = document.getElementById('delete-btn');
             if (deleteBtn) {
-                if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') {
+                if (userIdPerfil === '2') {
+                    deleteBtn.style.display = 'none';
+                } else if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') {
                     deleteBtn.style.display = 'none';
                 } else {
                     if (id) {
@@ -1360,10 +1364,12 @@
                 }
             }
 
-            // Hide/Show the Submit (Salvar) button depending on the active tab
+            // Hide/Show the Submit (Salvar) button depending on the active tab and profile
             const submitBtn = document.getElementById('submit-btn');
             if (submitBtn) {
-                if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') {
+                if (userIdPerfil === '2') {
+                    submitBtn.style.display = 'none';
+                } else if (tabId === 'tab-lideranca' || tabId === 'tab-coordenadores') {
                     submitBtn.style.display = 'none';
                 } else {
                     submitBtn.style.display = 'block';
@@ -1565,6 +1571,11 @@
         }
 
         async function deleteArquidiocese() {
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
+            if (userIdPerfil === '2') {
+                alert('Colaboradores não possuem permissão para excluir arquidioceses.');
+                return;
+            }
             if (!id) {
                 alert("Não é possível excluir um novo registro.");
                 return;
@@ -1596,6 +1607,11 @@
 
         async function saveArquidiocese(event) {
             event.preventDefault();
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
+            if (userIdPerfil === '2') {
+                alert('Colaboradores não possuem permissão para salvar alterações.');
+                return;
+            }
 
             // Automatically set bishop-input hidden field value based on registered leadership
             const tempLiderancas = JSON.parse(localStorage.getItem('temp_arquidiocese_lideranca') || '[]');
@@ -1938,9 +1954,14 @@
                 return;
             }
 
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
             list.forEach((member) => {
                 const tr = document.createElement('tr');
-                tr.onclick = () => editLideranca(member.originalIndex);
+                if (userIdPerfil !== '2') {
+                    tr.onclick = () => editLideranca(member.originalIndex);
+                } else {
+                    tr.style.cursor = 'default';
+                }
 
                 const periodText = (member.inicio || member.fim) 
                     ? ` (${member.inicio || ''} - ${member.fim || ''})`
@@ -1957,10 +1978,11 @@
                 if (member.anivEpisc) anniversaries.push(`Episcopal: ${member.anivEpisc}`);
                 const anniversariesText = anniversaries.length > 0 ? ` — Aniv. ${anniversaries.join(' | ')}` : '';
 
+                const deleteColHtml = userIdPerfil !== '2'
+                    ? `<td class="col-delete" onclick="event.stopPropagation(); deleteLideranca(${member.originalIndex})"><i class="fa-regular fa-trash-can"></i></td>`
+                    : '';
                 tr.innerHTML = `
-                    <td class="col-delete" onclick="event.stopPropagation(); deleteLideranca(${member.originalIndex})">
-                        <i class="fa-regular fa-trash-can"></i>
-                    </td>
+                    ${deleteColHtml}
                     <td class="col-info">
                         <div style="font-size: 0.92rem; color: #333; line-height: 1.4;">
                             <strong style="color: var(--primary-red);">${member.titulo}</strong> — <strong>${member.nome}</strong>${periodText}${contactText}<span style="font-size: 0.82rem; color: #8b1e1e; font-style: italic; margin-left: 8px;">${anniversariesText}</span>
@@ -1973,6 +1995,7 @@
 
 
         function openAddLideranca() {
+            if (localStorage.getItem('user_id_perfil') === '2') return;
             saveParentFormState();
             const nomeUser = urlParams.get('nome') || '';
             const cpfUser = urlParams.get('cpf') || '';
@@ -1981,6 +2004,7 @@
         }
 
         function editLideranca(index) {
+            if (localStorage.getItem('user_id_perfil') === '2') return;
             saveParentFormState();
             const nomeUser = urlParams.get('nome') || '';
             const cpfUser = urlParams.get('cpf') || '';
@@ -1989,6 +2013,7 @@
         }
 
         async function deleteLideranca(index) {
+            if (localStorage.getItem('user_id_perfil') === '2') return;
             if (confirm("Deseja realmente remover este membro da liderança?")) {
                 const list = JSON.parse(localStorage.getItem('temp_arquidiocese_lideranca') || '[]');
                 const member = list[index];
@@ -2130,9 +2155,14 @@
                 return;
             }
 
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
             list.forEach((coord, idx) => {
                 const tr = document.createElement('tr');
-                tr.onclick = () => editCoordenador(idx);
+                if (userIdPerfil !== '2') {
+                    tr.onclick = () => editCoordenador(idx);
+                } else {
+                    tr.style.cursor = 'default';
+                }
 
                 const dtInicio = formatToDDMMYYYY(coord.data_inicio_coordenador);
                 const dtFim = formatToDDMMYYYY(coord.data_fim_coordenador);
@@ -2140,10 +2170,11 @@
 
                 const colabName = coord.nome_colaborador || `Colaborador #${coord.id_colaborador}`;
 
+                const deleteColHtml = userIdPerfil !== '2'
+                    ? `<td class="col-delete" onclick="event.stopPropagation(); deleteCoordenador(${idx})"><i class="fa-regular fa-trash-can"></i></td>`
+                    : '';
                 tr.innerHTML = `
-                    <td class="col-delete" onclick="event.stopPropagation(); deleteCoordenador(${idx})">
-                        <i class="fa-regular fa-trash-can"></i>
-                    </td>
+                    ${deleteColHtml}
                     <td class="col-info">
                         <div style="font-size: 0.92rem; color: #333; line-height: 1.4;">
                             <strong>${colabName}</strong>${periodText}
@@ -2155,6 +2186,7 @@
         }
 
         function openAddCoordenador() {
+            if (localStorage.getItem('user_id_perfil') === '2') return;
             localStorage.setItem('temp_arquidiocese_active_tab', 'tab-coordenadores');
             saveParentFormState();
             const nomeUser = urlParams.get('nome') || '';
@@ -2164,6 +2196,7 @@
         }
 
         function editCoordenador(index) {
+            if (localStorage.getItem('user_id_perfil') === '2') return;
             localStorage.setItem('temp_arquidiocese_active_tab', 'tab-coordenadores');
             saveParentFormState();
             const list = JSON.parse(localStorage.getItem('temp_arquidiocese_coordenadores') || '[]');
@@ -2177,6 +2210,7 @@
         }
 
         async function deleteCoordenador(index) {
+            if (localStorage.getItem('user_id_perfil') === '2') return;
             if (confirm("Deseja realmente remover este coordenador?")) {
                 const list = JSON.parse(localStorage.getItem('temp_arquidiocese_coordenadores') || '[]');
                 const coord = list[index];
@@ -2270,6 +2304,18 @@
                 } else if (tabParam === 'lideranca') {
                     switchTab(null, 'tab-lideranca');
                 }
+            }
+
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
+            if (userIdPerfil === '2') {
+                const delBtn = document.getElementById('delete-btn');
+                if (delBtn) delBtn.style.display = 'none';
+                const subBtn = document.getElementById('submit-btn');
+                if (subBtn) subBtn.style.display = 'none';
+                const addLidBtn = document.getElementById('btn-add-lideranca');
+                if (addLidBtn) addLidBtn.style.display = 'none';
+                const addCoordBtn = document.getElementById('btn-add-coordenador');
+                if (addCoordBtn) addCoordBtn.style.display = 'none';
             }
         };
     </script>

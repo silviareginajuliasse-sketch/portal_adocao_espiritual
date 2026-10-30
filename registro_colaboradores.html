@@ -1526,15 +1526,32 @@
             <h2 class="help-card-title">Orientações de uso</h2>
             <div class="help-card-content">
                 <p style="margin-bottom: 15px;">Composto por quatro abas, o cadastro de colaboradores reúne em uma única página o conjunto de informações de mesmo interesse.</p>
-                
-                <p style="margin-bottom: 10px;">O cadastro só pode ser incluído ou alterado por usuários com o perfil Coordenador Nacional, Coordenador Arquidiocesano ou Coordenador Paroquial, observando as seguintes particularidades nas abas de paróquias, treinamentos e Atividades:</p>
-                <ul style="margin-bottom: 15px; margin-left: 20px;">
-                    <li>Coordenador Nacional: sem restrição</li>
-                    <li>Coordenador Arquidiocesano: Apenas paróquias de sua arquidiocese</li>
-                    <li>Coordenador Paroquial: Apenas a paróquia que coordena</li>
+                <p style="margin-bottom: 15px;">Os dados que podem ser incluídos, alterados ou excluídos, dependem do perfil da pessoa que está usando a função, conforme abaixo:</p>
+                <ul style="margin-bottom: 15px; margin-left: 20px; list-style-type: disc;">
+                    <li style="margin-bottom: 8px;"><strong>Admin:</strong> Tem permissão irrestrita para incluir, alterar e excluir dados.</li>
+                    <li style="margin-bottom: 8px;">
+                        <strong>Coordenador Regional:</strong> Pode incluir dados em todas as abas, exceto na aba TREINAMENTOS. Também há restrição de Estados e Paróquias para seleção no cadastro de colaboradores:
+                        <ul style="margin-top: 5px; margin-left: 20px; list-style-type: circle;">
+                            <li><strong>Estados:</strong> apenas aqueles das Regionais em que é coordenador.</li>
+                            <li><strong>Paróquias:</strong> apenas aquelas das Regionais em que é coordenador.</li>
+                        </ul>
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                        <strong>Coordenador Arquidiocesano:</strong> Pode incluir dados em todas as abas, exceto na aba TREINAMENTOS. Também há restrição de Estados e Paróquias para seleção no cadastro de colaboradores:
+                        <ul style="margin-top: 5px; margin-left: 20px; list-style-type: circle;">
+                            <li><strong>Estados:</strong> apenas aqueles das Arquidioceses em que é coordenador.</li>
+                            <li><strong>Paróquias:</strong> apenas aquelas das Arquidioceses em que é coordenador.</li>
+                        </ul>
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                        <strong>Coordenador Paroquial:</strong> Pode incluir dados em todas as abas, exceto na aba TREINAMENTOS. Também há restrição de Estados e Paróquias para seleção no cadastro de colaboradores:
+                        <ul style="margin-top: 5px; margin-left: 20px; list-style-type: circle;">
+                            <li><strong>Estados:</strong> apenas aqueles das Paróquias em que é coordenador.</li>
+                            <li><strong>Paróquias:</strong> apenas aquelas das Paróquias em que é coordenador.</li>
+                        </ul>
+                    </li>
                 </ul>
-
-                <p>Um colaborador não poderá ser excluído se houver registro de informações de Paróquias, Treinamentos e Atividades. Se por algum motivo o colaborador não deve mais surgir nas funções de registros/cadastros, o mesmo deve colocado no status Inativo.</p>
+                <p>Um colaborador não poderá ser excluído se houver registro de informações de Paróquias, Treinamentos e Atividades. Se por algum motivo o colaborador não deve mais surgir nas funções de registros/cadastros, ele deve colocado no status Inativo.</p>
             </div>
         </div>
     </div>
@@ -1713,6 +1730,13 @@
                 if (!res.ok) throw new Error('Falha ao carregar países');
                 const data = await res.json();
                 populateSelect('select-pais', data, 'id_pais', 'nome_pais', 'Selecione...');
+                const selectPais = document.getElementById('select-pais');
+                if (selectPais && !selectPais.value) {
+                    const brasilOption = data.find(p => String(p.id_pais) === '1' || (p.nome_pais && p.nome_pais.toUpperCase() === 'BRASIL'));
+                    if (brasilOption) {
+                        selectPais.value = brasilOption.id_pais;
+                    }
+                }
             } catch (err) {
                 console.error('Erro ao carregar países:', err);
             }
@@ -1753,7 +1777,28 @@
             try {
                 const res = await fetch(`${API_URL}/paroquias/estado/${id_estado}`);
                 if (!res.ok) throw new Error('Falha ao carregar paróquias');
-                allMainParoquias = await res.json();
+                let paroquias = await res.json();
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+                // 3.1.2 Coordenador Arquidiocesano (perfil 4): listar apenas paróquias onde id_arquidiocese existe em user_id_arquidiocese
+                if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    paroquias = paroquias.filter(p => p.id_arquidiocese && userArquidioceses.includes(String(p.id_arquidiocese)));
+                }
+                // 4.1.2 Coordenador Paroquial (perfil 5): listar apenas paróquias que existem em user_id_paroquia
+                else if (userIdPerfil === '5') {
+                    const userParoquias = (localStorage.getItem('user_id_paroquia') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                    paroquias = paroquias.filter(p => p.id_paroquia && userParoquias.includes(String(p.id_paroquia)));
+                }
+
+                allMainParoquias = paroquias;
                 allMainParoquias.sort((a, b) => (a.nome_paroquia || '').localeCompare(b.nome_paroquia || ''));
                 renderMainParoquiaDropdown(searchInput.value);
             } catch (err) {
@@ -1883,7 +1928,7 @@
             await loadParoquiasMain(id_estado);
         }
 
-        // --- Load States filtered by selected country ---
+        // --- Load States filtered by selected country and user profile ---
         async function loadStates(id_pais) {
             const selectEstado = document.getElementById('select-estado');
             if (!id_pais) {
@@ -1893,8 +1938,78 @@
             try {
                 const res = await fetch(`${API_URL}/estados/pais/${id_pais}`);
                 if (!res.ok) throw new Error('Falha ao carregar estados');
-                const data = await res.json();
-                populateSelect('select-estado', data, 'id_estado', 'nome_estado', 'Selecione...');
+                let states = await res.json();
+
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+
+                // 2.1 Coordenador Regional (perfil 3): apenas estados que existem em regional_estado onde id_regional existe em user_id_regional
+                if (userIdPerfil === '3') {
+                    const userRegionais = (localStorage.getItem('user_id_regional') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    try {
+                        const regDetailsRes = await fetch(`${API_URL}/regionais/detalhes`);
+                        if (regDetailsRes.ok) {
+                            const regDetails = await regDetailsRes.json();
+                            const allowedStateIds = new Set(
+                                regDetails
+                                    .filter(rd => rd.id_regional && userRegionais.includes(String(rd.id_regional)))
+                                    .map(rd => String(rd.id_estado))
+                            );
+                            states = states.filter(est => allowedStateIds.has(String(est.id_estado)));
+                        }
+                    } catch (errReg) {
+                        console.error('Erro ao buscar detalhes de regionais para filtro de estados:', errReg);
+                    }
+                }
+                // 3.1.1 Coordenador Arquidiocesano (perfil 4): apenas estados que existem em arquidioceses vinculadas a user_id_arquidiocese
+                else if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    try {
+                        const arqDetailsRes = await fetch(`${API_URL}/arquidioceses/detalhes`);
+                        if (arqDetailsRes.ok) {
+                            const arqDetails = await arqDetailsRes.json();
+                            const allowedStateIds = new Set(
+                                arqDetails
+                                    .filter(ad => ad.id_arquidiocese && userArquidioceses.includes(String(ad.id_arquidiocese)))
+                                    .map(ad => String(ad.id_estado))
+                            );
+                            states = states.filter(est => allowedStateIds.has(String(est.id_estado)));
+                        }
+                    } catch (errArq) {
+                        console.error('Erro ao buscar detalhes de arquidioceses para filtro de estados:', errArq);
+                    }
+                }
+                // 4.1.1 Coordenador Paroquial (perfil 5): apenas estados que existem em paróquias vinculadas a user_id_paroquia
+                else if (userIdPerfil === '5') {
+                    const userParoquias = (localStorage.getItem('user_id_paroquia') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    try {
+                        const parDetailsRes = await fetch(`${API_URL}/paroquias/detalhes`);
+                        if (parDetailsRes.ok) {
+                            const parDetails = await parDetailsRes.json();
+                            const allowedStateSiglas = new Set(
+                                parDetails
+                                    .filter(pd => pd.id_paroquia && userParoquias.includes(String(pd.id_paroquia)))
+                                    .map(pd => String(pd.sigla_estado || '').toUpperCase())
+                            );
+                            states = states.filter(est => allowedStateSiglas.has(String(est.sigla_estado || '').toUpperCase()));
+                        }
+                    } catch (errPar) {
+                        console.error('Erro ao buscar detalhes de paróquias para filtro de estados:', errPar);
+                    }
+                }
+
+                populateSelect('select-estado', states, 'id_estado', 'nome_estado', 'Selecione...');
             } catch (err) {
                 console.error('Erro ao carregar estados:', err);
             }
@@ -2110,10 +2225,11 @@
                 }
                 const id = urlParams.get('id');
                 const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
                 if (id) {
                     currentColaboradorId = id;
                     await loadCollaboratorData(id);
-                    if (deleteBtn && !isAdmin) {
+                    if (deleteBtn && (!isAdmin || userIdPerfil === '2')) {
                         deleteBtn.style.display = 'none';
                     }
                 } else {
@@ -2134,6 +2250,11 @@
                         } catch (codeErr) {
                             console.error('Erro ao buscar próximo código:', codeErr);
                         }
+                    }
+                    // Inclusão: carregar estados e paróquias para o país selecionado (padrão Brasil)
+                    const paisSelect = document.getElementById('select-pais');
+                    if (paisSelect && paisSelect.value) {
+                        await loadStates(paisSelect.value);
                     }
                     updateTabStates();
                 }
@@ -2345,11 +2466,12 @@
             const saveBtn   = document.getElementById('btn-save');
             if (deleteBtn && saveBtn) {
                 const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
                 if (tabId === 'tab-treinamentos' || tabId === 'tab-atividades' || tabId === 'tab-lideranca' || tabId === 'tab-paroquias') {
                     deleteBtn.style.display = 'none';
                     saveBtn.style.display   = 'none';
                 } else {
-                    deleteBtn.style.display = (currentColaboradorId && isAdmin) ? 'block' : 'none';
+                    deleteBtn.style.display = (currentColaboradorId && isAdmin && userIdPerfil !== '2') ? 'block' : 'none';
                     saveBtn.style.display   = 'block';
                 }
             }
@@ -2394,6 +2516,10 @@
         };
 
         function openModal() {
+            const userPerfilModal = localStorage.getItem('user_id_perfil');
+            if (userPerfilModal === '2' || userPerfilModal === '5') {
+                return;
+            }
             if (document.getElementById('tab-btn-treinamentos') && document.getElementById('tab-btn-treinamentos').hasAttribute('disabled')) {
                 return;
             }
@@ -2409,6 +2535,10 @@
         function closeAtividadesModal() { document.getElementById('modal-atividades').style.display  = 'none'; }
 
         async function openLiderancasModal() {
+            const userPerfilModal = localStorage.getItem('user_id_perfil');
+            if (userPerfilModal === '2' || userPerfilModal === '5') {
+                return;
+            }
             if (document.getElementById('tab-btn-lideranca') && document.getElementById('tab-btn-lideranca').hasAttribute('disabled')) {
                 return;
             }
@@ -2483,17 +2613,26 @@
                 const atPlus = atTabBtn.querySelector('.fa-circle-plus');
                 if (atPlus) atPlus.style.pointerEvents = 'auto';
 
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+                const isRestrictedTabUser = (userIdPerfil === '2' || userIdPerfil === '5');
+
                 ldTabBtn.removeAttribute('disabled');
                 ldTabBtn.style.opacity = '1';
                 ldTabBtn.style.cursor = 'pointer';
                 const ldPlus = ldTabBtn.querySelector('.fa-circle-plus');
-                if (ldPlus) ldPlus.style.pointerEvents = 'auto';
+                if (ldPlus) {
+                    ldPlus.style.display = isRestrictedTabUser ? 'none' : 'inline-block';
+                    ldPlus.style.pointerEvents = isRestrictedTabUser ? 'none' : 'auto';
+                }
 
                 paTabBtn.removeAttribute('disabled');
                 paTabBtn.style.opacity = '1';
                 paTabBtn.style.cursor = 'pointer';
                 const paPlus = paTabBtn.querySelector('.fa-circle-plus');
-                if (paPlus) paPlus.style.pointerEvents = 'auto';
+                if (paPlus) {
+                    paPlus.style.display = isRestrictedTabUser ? 'none' : 'inline-block';
+                    paPlus.style.pointerEvents = isRestrictedTabUser ? 'none' : 'auto';
+                }
             }
         }
 
@@ -2701,31 +2840,37 @@
                 item.style.alignItems = 'center';
                 item.style.gap = '15px';
                 
-                const actions = document.createElement('div');
-                actions.style.display = 'flex';
-                actions.style.gap = '10px';
-                actions.style.color = '#777';
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+                const isRestrictedUser = (userIdPerfil === '2' || userIdPerfil === '5');
 
-                const editIcon = document.createElement('i');
-                editIcon.className = 'fa-regular fa-pen-to-square';
-                editIcon.style.cursor = 'pointer';
-                editIcon.title = 'Editar Certificado';
-                editIcon.onclick = (e) => {
-                    e.stopPropagation();
-                    editLeadership(lead);
-                };
+                if (!isRestrictedUser) {
+                    const actions = document.createElement('div');
+                    actions.style.display = 'flex';
+                    actions.style.gap = '10px';
+                    actions.style.color = '#777';
 
-                const trash = document.createElement('i');
-                trash.className = 'fa-regular fa-trash-can trash-icon';
-                trash.style.cursor = 'pointer';
-                trash.title = 'Remover Certificado';
-                trash.onclick = (e) => {
-                    e.stopPropagation();
-                    deleteLeadership(lead.id_movimentacao);
-                };
-                
-                actions.appendChild(editIcon);
-                actions.appendChild(trash);
+                    const editIcon = document.createElement('i');
+                    editIcon.className = 'fa-regular fa-pen-to-square';
+                    editIcon.style.cursor = 'pointer';
+                    editIcon.title = 'Editar Certificado';
+                    editIcon.onclick = (e) => {
+                        e.stopPropagation();
+                        editLeadership(lead);
+                    };
+
+                    const trash = document.createElement('i');
+                    trash.className = 'fa-regular fa-trash-can trash-icon';
+                    trash.style.cursor = 'pointer';
+                    trash.title = 'Remover Certificado';
+                    trash.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteLeadership(lead.id_movimentacao);
+                    };
+                    
+                    actions.appendChild(editIcon);
+                    actions.appendChild(trash);
+                    item.appendChild(actions);
+                }
 
                 const span = document.createElement('span');
                 const formattedInicio = formatSQLDate(lead.data_inicio);
@@ -3168,19 +3313,25 @@
                 return;
             }
             
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
+            const isRestrictedUser = (userIdPerfil === '2' || userIdPerfil === '5');
+
             filtered.forEach(c => {
                 const item = document.createElement('div');
                 item.className = 'list-item';
-                item.style.cursor = 'pointer';
-                item.title = 'Clique para editar o período da coordenação';
-                item.onclick = () => editCollaboratorCoordenacao(c);
-                
-                const trash = document.createElement('i');
-                trash.className = 'fa-regular fa-trash-can trash-icon';
-                trash.onclick = (e) => {
-                    e.stopPropagation();
-                    deleteCollaboratorCoordenacao(c.tipo, c.entity_id, c.entity_name);
-                };
+                if (!isRestrictedUser) {
+                    item.style.cursor = 'pointer';
+                    item.title = 'Clique para editar o período da coordenação';
+                    item.onclick = () => editCollaboratorCoordenacao(c);
+                    
+                    const trash = document.createElement('i');
+                    trash.className = 'fa-regular fa-trash-can trash-icon';
+                    trash.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteCollaboratorCoordenacao(c.tipo, c.entity_id, c.entity_name);
+                    };
+                    item.appendChild(trash);
+                }
                 
                 const span = document.createElement('span');
                 const labelTipo = c.tipo === 'regional' ? 'Coordenador Regional' : (c.tipo === 'arquidiocese' ? 'Coordenador (Arqui)Diocesano' : 'Coordenador Paroquial');
@@ -3190,7 +3341,6 @@
                 
                 span.innerHTML = `<strong>${labelTipo}:</strong> ${c.entity_name}${datesPart}`;
                 
-                item.appendChild(trash);
                 item.appendChild(span);
                 listContainer.appendChild(item);
             });
@@ -3313,6 +3463,10 @@
 
         async function openParoquiasModal() {
             if (!currentColaboradorId) return;
+            const userPerfilModal = localStorage.getItem('user_id_perfil');
+            if (userPerfilModal === '2' || userPerfilModal === '5') {
+                return;
+            }
             
             document.getElementById('modal-paroquias').style.display = 'flex';
             
@@ -3611,6 +3765,10 @@
         }
 
         async function openModal() {
+            const userPerfilModal = localStorage.getItem('user_id_perfil');
+            if (userPerfilModal === '2' || userPerfilModal === '5') {
+                return;
+            }
             if (document.getElementById('tab-btn-treinamentos') && document.getElementById('tab-btn-treinamentos').hasAttribute('disabled')) {
                 return;
             }

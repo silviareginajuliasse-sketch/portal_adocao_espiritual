@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colaboradores - Adoção Espiritual</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>:root {
             --primary-red: #8b1e1e;
             --text-dark: #333;
@@ -433,64 +434,21 @@
             justify-content: center;
         }
 
-        /* Pagination & Footer Actions */
-        .list-footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .export-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
         .excel-icon {
             color: #1d6f42;
             /* Excel Green */
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.2s;
+            margin-left: 5px;
         }
 
         .excel-icon:hover {
             opacity: 0.8;
+            transform: scale(1.1);
         }
 
-        .export-separator {
-            width: 1px;
-            height: 24px;
-            background-color: var(--primary-red);
-        }
 
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.95rem;
-        }
-
-        .page-num {
-            color: #777;
-            padding: 2px 8px;
-            cursor: pointer;
-        }
-
-        .page-num.active {
-            color: #3498db;
-            border: 1px solid #3498db;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .next-link {
-            color: #777;
-            text-decoration: none;
-        }
 
         /* Desktop Media Query */
         @media (min-width: 768px) {
@@ -951,10 +909,11 @@
             <div class="main-content">
                 <!-- Search Header -->
                 <div class="search-row">
-                    <div class="subtitle-with-icon" onclick="window.location.href='registro_colaboradores.html'"
-                        style="cursor: pointer;">
-                        <img src="./arquidioceses-header-icon.png" class="subtitle-icon" alt="Icon">
-                        Lista de Colaboradores
+                    <div class="subtitle-with-icon" id="subtitle-header">
+                        <img src="./arquidioceses-header-icon.png" class="subtitle-icon" id="subtitle-icon-incluir" alt="Icon"
+                            onclick="goToInclusao()" title="Incluir Colaborador" style="cursor: pointer;">
+                        <span id="subtitle-title-text" onclick="goToInclusao()" style="cursor: pointer;">Lista de Colaboradores</span>
+                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel" onclick="exportToExcel()"></i>
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <div class="search-container">
@@ -971,25 +930,6 @@
                 <!-- The List -->
                 <div class="list-container" id="collaborators-list">
                     <!-- Dynamic collaborators will go here -->
-                </div>
-
-                <!-- List Footer -->
-                <div class="list-footer">
-                    <div class="export-group">
-                        <i class="fa-solid fa-sliders" title="Filtrar"
-                            style="color: #1a3a6b; font-size: 1.2rem; cursor: pointer;" onclick="openFilterModal()"></i>
-                        <div class="export-separator"></div>
-                        <i class="fa-solid fa-file-excel excel-icon" title="Exportar para Excel" onclick="exportToExcel()"></i>
-                        <div class="export-separator"></div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="pagination">
-                        <span class="page-num active">1</span>
-                        <span class="page-num">2</span>
-                        <span class="page-num">3</span>
-                        <a href="#" class="next-link">Seguinte ></a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1126,11 +1066,91 @@
             }
         }
 
+        function goToInclusao() {
+            const userIdPerfil = localStorage.getItem('user_id_perfil');
+            if (userIdPerfil === '2') {
+                return;
+            }
+            window.location.href = 'registro_colaboradores.html';
+        }
+
         async function loadCollaborators() {
             try {
+                const userIdPerfil = localStorage.getItem('user_id_perfil');
+                const userIdColaborador = localStorage.getItem('user_id_colaborador');
+
+                // 1.2 Ocultar apenas o ícone no topo da lista que permite a inclusão de novos colaboradores se user_id_perfil = 2 (Colaborador)
+                const subtitleIconIncluir = document.getElementById('subtitle-icon-incluir');
+                const subtitleTitleText = document.getElementById('subtitle-title-text');
+                if (subtitleIconIncluir) {
+                    if (userIdPerfil === '2') {
+                        subtitleIconIncluir.style.display = 'none';
+                        if (subtitleTitleText) {
+                            subtitleTitleText.style.cursor = 'default';
+                        }
+                    } else {
+                        subtitleIconIncluir.style.display = 'inline-block';
+                        if (subtitleTitleText) {
+                            subtitleTitleText.style.cursor = 'pointer';
+                        }
+                    }
+                }
+
                 const res = await fetch(`${API_URL}/colaboradores?_=${new Date().getTime()}`);
                 if (!res.ok) throw new Error('Erro ao buscar colaboradores');
-                const collaborators = await res.json();
+                let collaborators = await res.json();
+
+                // Regras de filtro por perfil:
+                // 1. se user_id_perfil = 2 (Colaborador): apenas o registro do colaborador logado
+                if (userIdPerfil === '2') {
+                    collaborators = collaborators.filter(c => String(c.id_colaborador) === String(userIdColaborador));
+                }
+                // 2. se user_id_perfil = 3 (Coordenador Regional):
+                // apenas itens onde colaboradores.id_estado existe em regional_estado onde id_regional existe em user_id_regional
+                else if (userIdPerfil === '3') {
+                    const userRegionais = (localStorage.getItem('user_id_regional') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    try {
+                        const regDetailsRes = await fetch(`${API_URL}/regionais/detalhes`);
+                        if (regDetailsRes.ok) {
+                            const regDetails = await regDetailsRes.json();
+                            const allowedStateIds = new Set(
+                                regDetails
+                                    .filter(rd => rd.id_regional && userRegionais.includes(String(rd.id_regional)))
+                                    .map(rd => String(rd.id_estado))
+                            );
+                            collaborators = collaborators.filter(c => c.id_estado && allowedStateIds.has(String(c.id_estado)));
+                        }
+                    } catch (errReg) {
+                        console.error('Erro ao buscar detalhes de regionais para filtro:', errReg);
+                    }
+                }
+                // 3. se user_id_perfil = 4 (Coordenador Arquidiocesano):
+                // apenas itens onde colaboradores.id_paroquia existe em paróquias com id_arquidiocese constante em user_id_arquidiocese
+                else if (userIdPerfil === '4') {
+                    const userArquidioceses = (localStorage.getItem('user_id_arquidiocese') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    collaborators = collaborators.filter(c => {
+                        const arqId = c.id_arquidiocese || c.paroquia_id_arquidiocese;
+                        return c.id_paroquia && arqId && userArquidioceses.includes(String(arqId));
+                    });
+                }
+                // 4. se user_id_perfil = 5 (Coordenador Paroquial):
+                // apenas itens onde colaboradores.id_paroquia possui valor constante em user_id_paroquia
+                else if (userIdPerfil === '5') {
+                    const userParoquias = (localStorage.getItem('user_id_paroquia') || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    collaborators = collaborators.filter(c => c.id_paroquia && userParoquias.includes(String(c.id_paroquia)));
+                }
                 
                 const listContainer = document.getElementById('collaborators-list');
                 if (!listContainer) return;
@@ -1188,7 +1208,8 @@
 
                     listItem.onclick = function() { window.location.href = 'registro_colaboradores.html?id=' + c.id_colaborador; };
                     const isAdmin = localStorage.getItem('user_nome_perfil') === 'Admin';
-                    const trashHtml = isAdmin ? `<i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #555;"></i>` : '';
+                    const canDelete = isAdmin && userIdPerfil !== '2';
+                    const trashHtml = canDelete ? `<i class="fa-regular fa-trash-can trash-icon" onclick="deleteCollaborator(event, ${c.id_colaborador})" style="cursor: pointer; color: #555;"></i>` : '';
                     listItem.innerHTML = `
                         ${trashHtml}
                         <div class="selo-col" style="width: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
@@ -1239,7 +1260,7 @@
         function exportToExcel() {
             const listItems = document.querySelectorAll('#collaborators-list .list-item');
             const timestamp = new Date().toISOString().slice(0, 10);
-            const fileName = `colaboradores_${timestamp}.xls`;
+            const fileName = `colaboradores_${timestamp}.xlsx`;
 
             const visibleCollaborators = [];
             listItems.forEach(item => {
@@ -1253,143 +1274,140 @@
                 return;
             }
 
-            const headerBg = "#1652b4";
-            const headerTextColor = "#ffffff";
-
-            function escapeXml(str) {
-                if (str === null || str === undefined) return '';
-                return String(str)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;');
+            if (typeof XLSX === 'undefined') {
+                alert("Biblioteca de exportação não carregada. Verifique sua conexão com a internet.");
+                return;
             }
 
-            let htmlContent = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head>
-                    <meta charset="utf-8">
-                    <!--[if gte mso 9]>
-                    <xml>
-                        <x:ExcelWorkbook>
-                            <x:ExcelWorksheets>
-                                <x:ExcelWorksheet>
-                                    <x:Name>Colaboradores</x:Name>
-                                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-                                </x:ExcelWorksheet>
-                            </x:ExcelWorksheets>
-                        </x:ExcelWorkbook>
-                    </xml>
-                    <![endif]-->
-                    <style>
-                        table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
-                        .header-row th {
-                            background-color: ${headerBg} !important;
-                            color: ${headerTextColor} !important;
-                            font-weight: bold;
-                            font-size: 13px;
-                            height: 35px;
-                            text-align: left;
-                            vertical-align: middle;
-                            border: 0.5pt solid #0d3b82;
-                            padding: 8px 12px;
-                        }
-                        .data-row td {
-                            border: 0.5pt solid #cccccc;
-                            padding: 6px 10px;
-                            color: #333333;
-                            font-size: 12px;
-                            vertical-align: middle;
-                        }
-                        .data-row:nth-child(even) {
-                            background-color: #f9f9f9;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <table>
-                        <thead>
-                            <tr class="header-row">
-                                <th>Código</th>
-                                <th>Nome</th>
-                                <th>Apelido</th>
-                                <th>Perfil</th>
-                                <th>Status</th>
-                                <th>Telefone</th>
-                                <th>E-mail</th>
-                                <th>Cidade</th>
-                                <th>UF</th>
-                                <th>Arquidiocese</th>
-                                <th>Divisão Arquidiocesana</th>
-                                <th>Paróquia</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+            const headerStyle = {
+                fill: { fgColor: { rgb: "1652B4" } },
+                font: { name: "Arial", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+                alignment: { horizontal: "left", vertical: "center" },
+                border: {
+                    top: { style: "thin", color: { rgb: "0D3B82" } },
+                    bottom: { style: "thin", color: { rgb: "0D3B82" } },
+                    left: { style: "thin", color: { rgb: "0D3B82" } },
+                    right: { style: "thin", color: { rgb: "0D3B82" } }
+                }
+            };
 
-            visibleCollaborators.forEach(c => {
-                const cod = c.cod_colaborador || '';
-                const nome = c.nome_colaborador || '';
-                const apelido = c.apelido_colaborador || '';
-                const perfil = c.nome_perfil || '';
-                const status = c.status || '';
-                const tel = c.telefone || '';
-                const email = c.email || '';
-                const cidade = c.cidade || '';
-                const uf = c.sigla_estado || c.nome_estado || '';
-                const arq = c.nome_arquidiocese || '';
-                const div = c.nome_divisao_arquidiocesana || '';
-                const par = c.nome_paroquia || '';
+            const dataEvenStyle = {
+                fill: { fgColor: { rgb: "F9F9F9" } },
+                font: { name: "Arial", sz: 10, color: { rgb: "333333" } },
+                alignment: { vertical: "center" },
+                border: {
+                    top: { style: "thin", color: { rgb: "CCCCCC" } },
+                    bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                    left: { style: "thin", color: { rgb: "CCCCCC" } },
+                    right: { style: "thin", color: { rgb: "CCCCCC" } }
+                }
+            };
 
-                htmlContent += `
-                    <tr class="data-row">
-                        <td>${escapeXml(cod)}</td>
-                        <td>${escapeXml(nome)}</td>
-                        <td>${escapeXml(apelido)}</td>
-                        <td>${escapeXml(perfil)}</td>
-                        <td>${escapeXml(status)}</td>
-                        <td>${escapeXml(tel)}</td>
-                        <td>${escapeXml(email)}</td>
-                        <td>${escapeXml(cidade)}</td>
-                        <td>${escapeXml(uf)}</td>
-                        <td>${escapeXml(arq)}</td>
-                        <td>${escapeXml(div)}</td>
-                        <td>${escapeXml(par)}</td>
-                    </tr>
-                `;
+            const dataOddStyle = {
+                fill: { fgColor: { rgb: "FFFFFF" } },
+                font: { name: "Arial", sz: 10, color: { rgb: "333333" } },
+                alignment: { vertical: "center" },
+                border: {
+                    top: { style: "thin", color: { rgb: "CCCCCC" } },
+                    bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                    left: { style: "thin", color: { rgb: "CCCCCC" } },
+                    right: { style: "thin", color: { rgb: "CCCCCC" } }
+                }
+            };
+
+            const headers = [
+                "Código",
+                "Nome",
+                "Apelido",
+                "Status",
+                "Telefone",
+                "E-mail",
+                "Cidade",
+                "UF",
+                "Arquidiocese",
+                "Divisão Arquidiocesana",
+                "Paróquia"
+            ];
+
+            const ws = {};
+
+            // Headers na linha 0 (r: 0)
+            headers.forEach((h, colIdx) => {
+                const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIdx });
+                ws[cellRef] = { v: h, t: 's', s: headerStyle };
             });
 
-            htmlContent += `
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `;
+            // Dados a partir da linha 1
+            visibleCollaborators.forEach((c, rowIdx) => {
+                const r = 1 + rowIdx;
+                const style = rowIdx % 2 === 0 ? dataOddStyle : dataEvenStyle;
 
-            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+                const rowValues = [
+                    c.cod_colaborador !== null && c.cod_colaborador !== undefined ? String(c.cod_colaborador) : '',
+                    c.nome_colaborador || '',
+                    c.apelido_colaborador || '',
+                    c.status || '',
+                    c.telefone || '',
+                    c.email || '',
+                    c.cidade || '',
+                    c.sigla_estado || c.nome_estado || '',
+                    c.nome_arquidiocese || '',
+                    c.nome_divisao_arquidiocesana || '',
+                    c.nome_paroquia || ''
+                ];
+
+                rowValues.forEach((val, colIdx) => {
+                    const cellRef = XLSX.utils.encode_cell({ r, c: colIdx });
+                    ws[cellRef] = { v: val, t: 's', s: style };
+                });
+            });
+
+            const totalRows = 1 + visibleCollaborators.length;
+            ws['!ref'] = XLSX.utils.encode_range({
+                s: { r: 0, c: 0 },
+                e: { r: Math.max(totalRows - 1, 0), c: headers.length - 1 }
+            });
+
+            ws['!cols'] = [
+                { wch: 10 }, // Código
+                { wch: 32 }, // Nome
+                { wch: 20 }, // Apelido
+                { wch: 12 }, // Status
+                { wch: 18 }, // Telefone
+                { wch: 30 }, // E-mail
+                { wch: 22 }, // Cidade
+                { wch: 8 },  // UF
+                { wch: 30 }, // Arquidiocese
+                { wch: 30 }, // Divisão Arquidiocesana
+                { wch: 35 }  // Paróquia
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
+            XLSX.writeFile(wb, fileName);
         }
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', loadCollaborators);
     </script>
-    <div class="help-overlay" id="help-overlay">
-        <div class="help-card">
+    <div class="help-overlay" id="help-overlay" onclick="toggleHelp()">
+        <div class="help-card" onclick="event.stopPropagation()">
             <i class="fa-solid fa-xmark help-card-close" onclick="toggleHelp()"></i>
             <h2 class="help-card-title">Orientações de uso</h2>
             <div class="help-card-content">
-                <p style="margin-bottom: 15px;">Nessa página são listados todos os colaboradores cadastrados no sistema.</p>
-                <p style="margin-bottom: 15px;">Ao clicar sobre o ícone lixeira <i class="fa-regular fa-trash-can"></i>, o colaborador será excluído definitivamente, caso não existam treinamentos e atividades vinculados a ele.</p>
-                <p style="margin-bottom: 15px;">Ao clicar sobre o ícone de inclusão <img src="./arquidioceses-header-icon.png" style="width: 18px; vertical-align: middle;">, o usuário é direcionado para a página de inclusão de colaboradores. Apenas usuários com o perfil Coordenador Nacional e Coordenador Arquidiocesano poderão realizar inclusões.</p>
-                <p style="margin-bottom: 15px;">Na lista de colaboradores, ao clicar sobre o nome do colaborador o sistema apresentará todos os dados do cadastro, para que sejam alterados se necessário.</p>
-                <p style="border-top: 1px solid #eee; padding-top: 15px; font-style: italic; color: #777;">Dica: Utilize o campo busca, localizado acima da lista, para filtrar os colaboradores, cidades ou paróquias, informando apenas alguns caracteres do texto a ser localizado.</p>
+                <p style="margin-bottom: 12px;">Nessa página são listados os colaboradores, conforme o perfil do usuário que está acessando a função de acordo com as regras abaixo:</p>
+                <p style="margin-bottom: 8px;">Poderão visualizar e realizar manutenção nesse cadastro, usuários com os perfis:</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px; list-style-type: disc;">
+                    <li style="margin-bottom: 6px;"><strong>Admin:</strong> Visualiza todos os colaboradores cadastrados no sistema e tem permissão irrestrita para incluir, alterar e excluir cadastros.</li>
+                    <li style="margin-bottom: 6px;"><strong>Coordenador Regional:</strong> Visualiza todos os colaboradores que têm seus endereços nos Estados abrangidos pela Regional em que ele é coordenador, e tem permissão para incluir e alterar cadastros de colaboradores de sua regional.</li>
+                    <li style="margin-bottom: 6px;"><strong>Coordenador Arquidiocesano:</strong> Visualiza todos os colaboradores das paróquias que pertencem a Arquidiocese em que ele é coordenador, e tem permissão para incluir e alterar cadastros de colaboradores de sua arquidiocese.</li>
+                    <li style="margin-bottom: 6px;"><strong>Coordenador Paroquial:</strong> Visualiza todos os colaboradores das paróquias em que ele é coordenador, e tem permissão para incluir e alterar cadastros de colaboradores de sua paróquia.</li>
+                </ul>
+                <p style="margin-bottom: 12px;">Quando o usuário logado não se enquadra em nenhuma dos perfis acima, ele só visualiza seu próprio cadastro.</p>
+                <p style="margin-bottom: 12px;">Apenas usuários com perfil Admin poderão excluir cadastros de colaboradores, desde que não existam registros de treinamentos e atividades que ele participa. Ao clicar sobre o ícone lixeira, o colaborador será excluído definitivamente.</p>
+                <p style="margin-bottom: 12px;">Ao clicar sobre o título Lista de Colaboradores, o usuário é direcionado para a página de inclusão.</p>
+                <p style="margin-bottom: 15px;">Na lista de colaboradores, ao clicar sobre o colaborador o sistema apresentará todos os dados do cadastro, para que os dados sejam alterados se necessário.</p>
+                <p style="border-top: 1px solid #eee; padding-top: 15px; font-style: italic; color: #777;">Dica: Utilize o campo busca, localizado acima da lista, para visualizar apenas colaboradores que contenham em seus dados, ou em parte deles, a expressão digitada. A busca é realizada pelo sistema em qualquer parte da lista apresentada.</p>
             </div>
         </div>
     </div>
